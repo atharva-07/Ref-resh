@@ -1,0 +1,3 @@
+const postQueries = {};
+
+const postMutations = {};
