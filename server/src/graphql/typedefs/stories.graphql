@@ -1,0 +1,7 @@
+type Story implements TimeStamps {
+  image: String!
+  caption: String
+  author: User!
+  createdAt: String!
+  updatedAt: String!
+}

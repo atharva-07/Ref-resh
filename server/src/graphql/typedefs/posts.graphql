@@ -1,0 +1,9 @@
+type Post implements TimeStamps {
+  _id: ID!
+  content: String!
+  images: [String!]
+  likes: [User!]
+  author: User!
+  createdAt: String!
+  updatedAt: String!
+}

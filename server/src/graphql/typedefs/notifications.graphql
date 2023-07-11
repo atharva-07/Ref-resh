@@ -1,0 +1,9 @@
+type Notification implements TimeStamps {
+  _id: ID!
+  eventType: String!
+  publisher: User!
+  subscriber: User!
+  redirectionURL: String!
+  createdAt: String!
+  updatedAt: String!
+}

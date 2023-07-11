@@ -1,3 +1,26 @@
-type User {
-    name: String!
+type User implements TimeStamps {
+  _id: ID!
+  firstName: String!
+  lastName: String!
+  userName: String!
+  email: String!
+  password: String
+  gender: String!
+  dob: String!
+  privateAccount: Boolean!
+  joinedDate: String!
+  pfpPath: String
+  bannerPath: String
+  bio: String
+  followers: [User]
+  following: [User]
+  followingRequests: [User]
+  blockedAccounts: [User]
+  posts: [Post]
+  savedPosts: [Post]
+  activeStories: [Story]
+  authType: String
+  lastLogin: String
+  createdAt: String!
+  updatedAt: String!
 }
