@@ -2,7 +2,9 @@ type Call implements TimeStamps {
   _id: ID!
   caller: ID!
   receiver: ID!
-  chatId: Chat!
+  chat: Chat!
+  startTime: String!
+  endTime: String!
   createdAt: String!
   updatedAt: String!
 }
