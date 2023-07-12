@@ -45,7 +45,7 @@ mongoose
     httpServer.listen({ port: process.env.DEV_PORT || 4000 });
   })
   .then(() => {
-    console.log(`Server is up and running at ${process.env.DEV_PORT}`);
+    console.log(`Server is up and running at port ${process.env.DEV_PORT}`);
   })
   .catch((err) => {
     console.log("Error establishing the connection.", err);

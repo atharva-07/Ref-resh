@@ -1,6 +1,6 @@
 import { Schema, Types, model } from "mongoose";
 
-enum NotificationEvents {
+export enum NotificationEvents {
   LIKED_POST = "LP",
   LIKED_COMMENT = "LC",
   COMMENTED_ON_POST = "COP",

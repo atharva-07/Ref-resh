@@ -1,6 +1,15 @@
+enum NotificationEvents {
+  LIKED_POST
+  LIKED_COMMENT
+  COMMENTED_ON_POST
+  REPLIED_TO_COMMENT
+  FOLLOW_REQUEST_RECEIVED
+  FOLLOW_REQUEST_ACCEPTED
+}
+
 type Notification implements TimeStamps {
   _id: ID!
-  eventType: String!
+  eventType: NotificationEvents!
   publisher: User!
   subscriber: User!
   redirectionURL: String!

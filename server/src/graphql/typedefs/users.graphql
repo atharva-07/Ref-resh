@@ -1,3 +1,15 @@
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AuthType {
+  EMAIL
+  GOOGLE
+  META
+}
+
 type User implements TimeStamps {
   _id: ID!
   firstName: String!
@@ -5,7 +17,7 @@ type User implements TimeStamps {
   userName: String!
   email: String!
   password: String
-  gender: String!
+  gender: Gender!
   dob: String!
   privateAccount: Boolean!
   joinedDate: String!
@@ -19,7 +31,7 @@ type User implements TimeStamps {
   posts: [Post]
   savedPosts: [Post]
   activeStories: [Story]
-  authType: String
+  authType: AuthType
   lastLogin: String
   createdAt: String!
   updatedAt: String!
