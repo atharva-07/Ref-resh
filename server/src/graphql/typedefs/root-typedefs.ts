@@ -22,12 +22,18 @@ dotGraphqlFiles.forEach((file) => {
 const Queries: string = `
   type Query {
     getUsers: [User!]!
+    login(loginData: LoginData): AuthData!
   }
 `;
 
-// const Mutations: string = ``;
+const Mutations: string = `
+  type Mutation {
+    signup(signupData: SignUpData): User!
+  }
+`;
 
 export const typeDefs: string = `#graphql
   ${Queries}
   ${sdlTypeDefs}
+  ${Mutations}
 `;
