@@ -10,7 +10,7 @@ import bodyParser from "body-parser";
 import { typeDefs, resolvers } from "./graphql/schema";
 import mongoose from "mongoose";
 
-interface MyContext {
+interface AppContext {
   token?: string;
 }
 
@@ -21,10 +21,14 @@ const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env
 const app = express();
 const httpServer = http.createServer(app);
 
-const server = new ApolloServer<MyContext>({
+const server = new ApolloServer<AppContext>({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  formatError(formattedError, error) {
+    console.log(formattedError);
+    return formattedError;
+  },
 });
 
 await server.start();

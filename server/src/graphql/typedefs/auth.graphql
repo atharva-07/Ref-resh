@@ -1,0 +1,23 @@
+type AuthData {
+  userId: ID!
+  access_token: String!
+  refres_token: String!
+  pfp: String!
+  fullname: String!
+  username: String!
+  tokenExpiration: Int!
+}
+
+input LoginData {
+  email: String!
+  password: String!
+}
+
+input SignUpData {
+  firstName: String!
+  lastName: String!
+  dob: String!
+  gender: String!
+  email: String!
+  password: String!
+}
