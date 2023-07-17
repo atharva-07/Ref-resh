@@ -40,13 +40,39 @@ const userSchema: Schema = new Schema<UserType>(
   {
     firstName: { type: Schema.Types.String, require: true, maxlength: 26 },
     lastName: { type: Schema.Types.String, require: true, maxlength: 26 },
-    userName: { type: Schema.Types.String, require: true, maxlength: 20 },
-    email: { type: Schema.Types.String, require: true, match: RegExp("") },
+    userName: {
+      type: Schema.Types.String,
+      require: true,
+      minlength: 6,
+      maxlength: 20,
+      /*
+        Minimum 6 and maximum 29 characters
+        can have lowercase characters, numbers, underscore [_] and dot [.] only
+        can only start with lowercase characters or underscore
+      */
+      match: RegExp("^[a-z_][a-z0-9_.]{6,20}$"),
+    },
+    email: {
+      type: Schema.Types.String,
+      require: true,
+      /*
+        Using Regular Expressions for email validation is generally conisdered a bad idea.
+        Just for simplicity's sake, a simple expression is being used.
+        This is bound to fail with weird cases 
+      */
+      match: RegExp("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"),
+    },
     password: {
       type: Schema.Types.String,
       minlength: 8,
       maxlength: 20,
-      match: RegExp(""),
+      /*
+        Minimum 8 and maximum 20 characters
+        at least one uppercase letter, one lowercase letter, one number and one special character
+      */
+      match: RegExp(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,20}$"
+      ),
     },
     gender: { type: Schema.Types.String, enum: Gender, require: true },
     dob: { type: Schema.Types.Date, required: true },
