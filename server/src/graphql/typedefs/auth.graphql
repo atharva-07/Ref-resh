@@ -1,11 +1,7 @@
 type AuthData {
-  userId: ID!
   access_token: String!
-  refres_token: String!
-  pfp: String!
-  fullname: String!
-  username: String!
-  tokenExpiration: Int!
+  refresh_token: String!
+  exp: Int!
 }
 
 input LoginData {

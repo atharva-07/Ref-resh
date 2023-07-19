@@ -39,8 +39,6 @@ export const authQueries = {
       loginData.password,
       <string>user.password
     );
-    console.log(isEqual);
-    console.log(user.password, loginData.password);
     if (!isEqual) {
       throw new GraphQLError("Invalid Email or Password", {
         extensions: {
@@ -52,8 +50,6 @@ export const authQueries = {
       {
         sub: user.id, // userId
         aud: user.userName, // userName
-        fullName: `${user.firstName} ${user.lastName}`,
-        pfp: user.pfpPath,
       },
       privateKey,
       { algorithm: "RS256", expiresIn: "15m" }

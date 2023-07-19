@@ -4,16 +4,28 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerErrorCode } from "@apollo/server/errors";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
-import express from "express";
-import http from "http";
+import express, { Request, Response } from "express";
+import http, { request } from "http";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { typeDefs, resolvers } from "./graphql/schema";
-import mongoose from "mongoose";
-import { HttpErrorResponse } from "./graphql/utility-types";
+import mongoose, { Types } from "mongoose";
+import { HttpResponse } from "./graphql/utility-types";
+import { authMiddleware } from "./middleware/check-auth";
 
-interface AppContext {
-  token?: string;
+declare module "express-serve-static-core" {
+  interface Request {
+    isAuthenticated: boolean;
+    userId: Types.ObjectId;
+    userName: string;
+    fullName: string;
+    email: string;
+    pfp: string;
+  }
+}
+
+export interface AppContext {
+  loggedInUserId: Types.ObjectId;
 }
 
 dotenv.config();
@@ -23,12 +35,14 @@ const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env
 const app = express();
 const httpServer = http.createServer(app);
 
+// app.use(authMiddleware);
+
 const server = new ApolloServer<AppContext>({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   formatError(formattedError, error) {
-    const errorResponse: HttpErrorResponse = {
+    const errorResponse: HttpResponse = {
       success: false,
       code: formattedError.extensions?.code || 500,
       message: formattedError.message,
@@ -76,7 +90,11 @@ app.use(
   cors<cors.CorsRequest>(),
   bodyParser.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
+    context: async ({ req }) => {
+      return {
+        loggedInUserId: req.userId,
+      };
+    },
   })
 );
 

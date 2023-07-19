@@ -1,18 +1,18 @@
 import { Schema, Types, model } from "mongoose";
 
-enum Gender {
+export enum Gender {
   MALE = "MALE",
   FEMALE = "FEMALE",
   OTHER = "OTHER",
 }
 
-enum AuthType {
+export enum AuthType {
   EMAIL = "EMAIL",
   GOOGLE = "GOOGLE",
   META = "META",
 }
 
-interface UserType {
+export interface UserType {
   firstName: string;
   lastName: string;
   userName: string;
@@ -32,7 +32,7 @@ interface UserType {
   posts?: Types.Array<Types.ObjectId>;
   savedPosts?: Types.Array<Types.ObjectId>;
   activeStories?: Types.Array<Types.ObjectId>;
-  authType?: AuthType;
+  authType: AuthType;
   lastLogin?: Date;
 }
 
@@ -44,13 +44,14 @@ const userSchema: Schema = new Schema<UserType>(
       type: Schema.Types.String,
       require: true,
       minlength: 6,
-      maxlength: 20,
+      maxlength: 30,
+      lowercase: true,
       /*
-        Minimum 6 and maximum 29 characters
+        Minimum 6 and maximum 30 characters
         can have lowercase characters, numbers, underscore [_] and dot [.] only
         can only start with lowercase characters or underscore
       */
-      match: RegExp("^[a-z_][a-z0-9_.]{6,20}$"),
+      match: RegExp("^[a-z_][a-z0-9_.]{6,30}$"),
     },
     email: {
       type: Schema.Types.String,
@@ -60,23 +61,27 @@ const userSchema: Schema = new Schema<UserType>(
         Just for simplicity's sake, a simple expression is being used.
         This is bound to fail with weird cases 
       */
-      match: RegExp("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"),
+      // match: RegExp("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"),
     },
     password: {
       type: Schema.Types.String,
       minlength: 8,
-      maxlength: 20,
+      maxlength: 72,
       /*
+        Will be used in frontend.
         Minimum 8 and maximum 20 characters
         at least one uppercase letter, one lowercase letter, one number and one special character
       */
-      match: RegExp(
-        "^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,20}$"
-      ),
+      // match:
+      //   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
     },
     gender: { type: Schema.Types.String, enum: Gender, require: true },
     dob: { type: Schema.Types.Date, required: true },
-    privateAccount: { type: Schema.Types.Boolean, require: true },
+    privateAccount: {
+      type: Schema.Types.Boolean,
+      default: false,
+      require: true,
+    },
     joinedDate: { type: Schema.Types.Date, default: new Date(), require: true },
     pfpPath: Schema.Types.String,
     bannerPath: Schema.Types.String,

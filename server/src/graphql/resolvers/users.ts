@@ -1,11 +1,8 @@
+import { GraphQLError } from "graphql";
+
 export const userQueries = {
   getUsers: () => {
-    return [
-      {
-        firstName: "Atharva",
-        lastName: "Wankhede",
-      },
-    ];
+    return [];
   },
 };
 

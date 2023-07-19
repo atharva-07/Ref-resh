@@ -22,7 +22,7 @@ dotGraphqlFiles.forEach((file) => {
 const Queries: string = `
   type Query {
     getUsers: [User!]!
-    login(loginData: LoginData): AuthData!
+    credentialsLogin(loginData: LoginData): AuthData!
   }
 `;
 
