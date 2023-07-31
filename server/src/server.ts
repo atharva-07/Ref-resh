@@ -5,8 +5,9 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerErrorCode } from "@apollo/server/errors";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import express, { Request, Response } from "express";
-import http, { request } from "http";
+import http from "http";
 import cors from "cors";
+import { v2 as cloudinary } from "cloudinary";
 import bodyParser from "body-parser";
 import { typeDefs, resolvers } from "./graphql/schema";
 import mongoose, { Types } from "mongoose";
@@ -32,10 +33,14 @@ dotenv.config();
 
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_CLUSTER_URI}/${process.env.MONGODB_DBNAME}?retryWrites=true`;
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDIANRY_CLOUD_NAME,
+  api_key: process.env.CLOUDIANRY_API_KEY,
+  api_secret: process.env.CLOUDIANRY_API_SECRET,
+});
+
 const app = express();
 const httpServer = http.createServer(app);
-
-// app.use(authMiddleware);
 
 const server = new ApolloServer<AppContext>({
   typeDefs,
@@ -45,7 +50,7 @@ const server = new ApolloServer<AppContext>({
     const errorResponse: HttpResponse = {
       success: false,
       code: formattedError.extensions?.code || 500,
-      message: formattedError.message,
+      message: formattedError.message || "Something went wrong.",
     };
     if (
       formattedError.extensions?.code === ApolloServerErrorCode.BAD_USER_INPUT
@@ -84,6 +89,8 @@ const server = new ApolloServer<AppContext>({
 });
 
 await server.start();
+
+app.use(authMiddleware);
 
 app.use(
   "/api",
