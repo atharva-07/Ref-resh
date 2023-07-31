@@ -7,3 +7,8 @@ type Post implements TimeStamps {
   createdAt: String!
   updatedAt: String!
 }
+
+input PostData {
+  content: String!
+  images: [String!]
+}

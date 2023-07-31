@@ -24,15 +24,30 @@ type User implements TimeStamps {
   pfpPath: String
   bannerPath: String
   bio: String
-  followers: [User]
-  following: [User]
-  followingRequests: [User]
-  blockedAccounts: [User]
-  posts: [Post]
-  savedPosts: [Post]
-  activeStories: [Story]
+  followers: [User!]
+  following: [User!]
+  followingRequests: [User!]
+  blockedAccounts: [User!]
+  posts: [Post!]
+  savedPosts: [Post!]
+  activeStories: [Story!]
   authType: AuthType
   lastLogin: String
   createdAt: String!
   updatedAt: String!
+}
+
+type BasicUserData {
+  firstName: String!
+  lastName: String!
+  userName: String!
+  pfpPath: String!
+  bannerPath: String!
+  bio: String!
+}
+
+input UserProfileData {
+  pfpPath: String
+  bannerPath: String
+  bio: String
 }

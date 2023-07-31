@@ -21,14 +21,33 @@ dotGraphqlFiles.forEach((file) => {
 
 const Queries: string = `
   type Query {
-    getUsers: [User!]!
-    credentialsLogin(loginData: LoginData): AuthData!
+    credentialsLogin(loginData: LoginData!): AuthData!
+    fetchUserProfile(userName: String!): User!
+    fetchUserFollowers(userName: String!): [User!]
+    fetchUserFollowings(userName: String!): [User!]
+    fetchUpcomingBirthdays: [User!]
+    loadFeed: [Post!]
+    fetchUserPosts(userName: String!): [Post!]
+    fetchSinglePost(postId: ID!): Post!
   }
 `;
 
 const Mutations: string = `
   type Mutation {
-    signup(signupData: SignUpData): User!
+    signup(signupData: SignUpData!): User!
+    followUser(userName: String!): ID!
+    unfollowUser(userName: String!): ID!
+    blockUser(userName: String!): ID!
+    unblockUser(userName: String!): ID!
+    updateUserProfile(userProfileData: UserProfileData!): BasicUserData!
+    createPost(postData: PostData): Post!
+    editPost(postId: ID!, postData: PostData): Post!
+    likeOrUnlikePost(postId: ID!): ID!
+    removePost(postId: ID!): ID!
+    postComment(content: String!, postId: ID!, commentId: ID): Comment!
+    editComment(content: String!, commentId: ID!): Comment!
+    likeOrUnlikeComment(commentId: ID!): ID!
+    removeComment(commentId: ID!): ID!
   }
 `;
 
