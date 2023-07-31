@@ -1,9 +1,10 @@
 import { Schema, Types, model } from "mongoose";
 
-interface PostType {
+export interface PostType {
   content: string;
   images?: string[];
   likes?: Types.Array<Types.ObjectId>;
+  edited?: boolean;
   author: Types.ObjectId;
 }
 
@@ -19,8 +20,14 @@ const postSchema: Schema = new Schema<PostType>(
       type: [Schema.Types.ObjectId],
       ref: "User",
     },
+    edited: {
+      type: Schema.Types.Boolean,
+      required: true,
+      default: false,
+    },
     author: {
       type: Schema.Types.ObjectId,
+      required: true,
       ref: "User",
     },
   },

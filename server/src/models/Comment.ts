@@ -1,11 +1,12 @@
 import { Schema, Types, model } from "mongoose";
 
-interface CommentType {
+export interface CommentType {
   content: string;
+  edited?: boolean;
   commenter: Types.ObjectId;
   post: Types.ObjectId;
   likes?: Types.Array<Types.ObjectId>;
-  parentComment: Types.ObjectId;
+  parentComment?: Types.ObjectId;
 }
 
 const commmentSchema: Schema = new Schema<CommentType>(
@@ -14,6 +15,11 @@ const commmentSchema: Schema = new Schema<CommentType>(
       type: Schema.Types.String,
       required: true,
       maxlength: 500,
+    },
+    edited: {
+      type: Schema.Types.Boolean,
+      required: true,
+      default: false,
     },
     commenter: {
       type: Schema.Types.ObjectId,
@@ -29,6 +35,7 @@ const commmentSchema: Schema = new Schema<CommentType>(
     },
     parentComment: {
       type: Schema.Types.ObjectId,
+      required: true,
       default: null,
     },
   },
