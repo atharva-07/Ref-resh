@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { GraphQLError } from "graphql";
 import validator from "validator";
 import { HttpResponse } from "../utility-types";
 import User, { UserType, Gender, AuthType } from "../../models/User";
@@ -7,6 +6,7 @@ import { Document } from "mongodb";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
+import { newGqlError } from "../utility-functions";
 
 const privateKey: string = readFileSync(
   path.join(path.resolve(), "private.key"),
@@ -16,55 +16,48 @@ const privateKey: string = readFileSync(
 export const authQueries = {
   credentialsLogin: async (_: any, { loginData }: any) => {
     const errors: { message: string }[] = [];
-    if (!validator.isEmail(loginData.email)) {
+    if (!validator.isEmail(loginData.email))
       errors.push({ message: "Entered Email Address is invalid." });
-    }
-    if (errors.length > 0) {
-      console.log(errors);
-      throw new GraphQLError("Provided user input is invalid.", {
-        extensions: {
-          code: 422,
+    if (errors.length > 0)
+      throw newGqlError(
+        `Provided user input is invalid. ${errors[0].message}`,
+        422
+      );
+    try {
+      const user = await User.findOne({ email: loginData.email });
+      if (!user) throw newGqlError(`Invalid Email or Password.`, 401);
+      const isEqual = await bcrypt.compare(
+        loginData.password,
+        <string>user.password
+      );
+      if (!isEqual) throw newGqlError("Invalid Email or Password.", 401);
+      const token = jwt.sign(
+        {
+          sub: user.id, // userId
+          aud: user.userName, // userName
         },
-      });
-    }
-    const user = await User.findOne({ email: loginData.email });
-    if (!user) {
-      throw new GraphQLError("Invalid Email or Password", {
-        extensions: {
-          code: 401,
+        privateKey,
+        {
+          algorithm: "RS256",
+          // Change expiresIn to "15m" afterwards
+          expiresIn: 129600, // 36 hours
+        }
+      );
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User logged-in successfully.",
+        data: {
+          access_token: token,
+          refresh_token: "REFRESH_TOKEN_PLACEHOLDER",
+          // Change to "!5" afterwards
+          exp: 60,
         },
-      });
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-    const isEqual = await bcrypt.compare(
-      loginData.password,
-      <string>user.password
-    );
-    if (!isEqual) {
-      throw new GraphQLError("Invalid Email or Password", {
-        extensions: {
-          code: 401,
-        },
-      });
-    }
-    const token = jwt.sign(
-      {
-        sub: user.id, // userId
-        aud: user.userName, // userName
-      },
-      privateKey,
-      { algorithm: "RS256", expiresIn: "15m" }
-    );
-    const response: HttpResponse = {
-      success: true,
-      code: 200,
-      message: "User logged-in successfully.",
-      data: {
-        access_token: token,
-        refresh_token: "REFRESH_TOKEN_PLACEHOLDER",
-        exp: 15,
-      },
-    };
-    return response.data;
   },
 };
 
@@ -116,65 +109,64 @@ export const authMutations = {
         message: "Entered Date of Birth is not in correct format.",
       });
     }
-    if (errors.length > 0) {
-      console.log(errors);
-      throw new GraphQLError("Provided user input is invalid.", {
-        extensions: {
-          code: 422,
-        },
-      });
-    }
-    const existingUser = await User.findOne({ email: signupData.email });
-    if (existingUser) {
-      throw new GraphQLError(
-        "This email address is already registered with us.",
-        {
-          extensions: {
-            code: 409,
-          },
-        }
+    if (errors.length > 0)
+      throw newGqlError(
+        `Provided user input is invalid. ${errors[0].message}`,
+        422
       );
-    } else {
-      let generatedUsername: string = " ";
-      let uniqueUsernameGenerated: boolean = false;
-      do {
-        generatedUsername = `${(<string>signupData.firstName)
-          .substring(0, 5)
-          .toLowerCase()}.${(<string>signupData.lastName)
-          .substring(0, 5)
-          .toLowerCase()}_${Math.floor(Math.random() * 1000)}`;
-        const existingUsername = await User.findOne({
+    try {
+      const existingUser = await User.findOne({ email: signupData.email });
+      if (existingUser) {
+        throw newGqlError(
+          "This email address is already registered with us.",
+          409
+        );
+      } else {
+        let generatedUsername: string = " ";
+        let uniqueUsernameGenerated: boolean = false;
+        do {
+          generatedUsername = `${(<string>signupData.firstName)
+            .substring(0, 5)
+            .toLowerCase()}.${(<string>signupData.lastName)
+            .substring(0, 5)
+            .toLowerCase()}_${Math.floor(Math.random() * 1000)}`;
+          const existingUsername = await User.findOne({
+            userName: generatedUsername,
+          });
+          if (existingUsername === null) uniqueUsernameGenerated = true;
+        } while (!uniqueUsernameGenerated);
+        const dateOfBirth = new Date(signupData.dob);
+        dateOfBirth.setDate(dateOfBirth.getDate() + 1);
+        const hashedPassword = await bcrypt.hash(signupData.password, 10);
+        const newUser = new User<UserType>({
+          firstName: signupData.firstName,
+          lastName: signupData.lastName,
           userName: generatedUsername,
+          email: validator.normalizeEmail(signupData.email, {
+            gmail_remove_dots: false,
+          }) as string,
+          password: hashedPassword,
+          gender: signupData.gender,
+          dob: dateOfBirth,
+          authType: AuthType.EMAIL,
+          privateAccount: false,
+          joinedDate: new Date(),
         });
-        if (existingUsername === null) uniqueUsernameGenerated = true;
-      } while (!uniqueUsernameGenerated);
-      const hashedPassword = await bcrypt.hash(signupData.password, 10);
-      const newUser = new User<UserType>({
-        firstName: signupData.firstName,
-        lastName: signupData.lastName,
-        userName: generatedUsername,
-        email: validator.normalizeEmail(signupData.email, {
-          gmail_remove_dots: false,
-        }) as string,
-        password: hashedPassword,
-        gender: Gender.MALE,
-        dob: new Date(signupData.dob),
-        authType: AuthType.EMAIL,
-        privateAccount: false,
-        joinedDate: new Date(),
-      });
-      const result: Document = await newUser.save();
-      const response: HttpResponse = {
-        success: true,
-        code: 201,
-        message: "User successfully created.",
-        data: {
-          _id: result.id,
-          ...result._doc,
-          password: "Unretrievable",
-        },
-      };
-      return response.data;
+        const result: Document = await newUser.save();
+        const response: HttpResponse = {
+          success: true,
+          code: 201,
+          message: "User successfully created.",
+          data: {
+            _id: result.id,
+            ...result._doc,
+            password: "Unretrievable",
+          },
+        };
+        return response.data;
+      }
+    } catch (error) {
+      throw error;
     }
   },
 };
