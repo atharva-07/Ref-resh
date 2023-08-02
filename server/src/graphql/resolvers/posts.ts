@@ -1,17 +1,17 @@
 import { Document } from "mongodb";
-import validator from "validator";
-import Post, { PostType } from "../../models/Post";
-import { AppContext } from "../../server";
-import { HttpResponse } from "../utility-types";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { GraphQLError } from "graphql";
 import { Types } from "mongoose";
+import validator from "validator";
+import { AppContext } from "../../server";
+import { checkAuthorization, newGqlError } from "../utility-functions";
+import { HttpResponse } from "../utility-types";
+import Post, { PostType } from "../../models/Post";
+import User from "../../models/User";
 import Comment from "../../models/Comment";
 
 export const postQueries = {
   loadFeed: async (_: any, __: any, ctx: AppContext) => {
     try {
-      // Load Posts
+      // Load Posts [Only top 10 posts. Others should be fetched with lazy loading.]
       // Load Stories
       // Load Upcoming Birthdays
       const posts = await Post.find();
@@ -21,9 +21,21 @@ export const postQueries = {
     }
   },
   fetchUserPosts: async (_: any, { userName }: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
     try {
-      const posts = await Post.find();
-      return posts;
+      const authorId = await User.findOne({ userName: userName }).select("_id");
+      if (!authorId) throw newGqlError("User not found.", 404);
+      const posts = await Post.find({ author: authorId }).populate({
+        path: "author",
+        select: "_id userName firstName lastName pfpPath",
+      });
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User's posts fetched successfully.",
+        data: posts,
+      };
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -31,20 +43,18 @@ export const postQueries = {
   fetchSinglePost: async (_: any, { postId }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const postComponents = [
-        Post.findById(postId),
-        Comment.find({ post: postId }),
-      ];
-      const post = await Promise.allSettled(postComponents);
-      console.log(post);
+      const post = await Post.findById(postId);
+      await post!.populate({
+        path: "author likes",
+        select: "_id userName firstName lastName pfpPath",
+      });
       if (!post) throw newGqlError("Post not found.", 404);
       const response: HttpResponse = {
         success: true,
-        code: 201,
+        code: 200,
         message: "Post fetched successfully.",
         data: post,
       };
-      // Have to fetch  comments and shit.
       return response.data;
     } catch (error) {
       throw error;
@@ -116,7 +126,7 @@ export const postMutations = {
         if (alreadyLiked) {
           post.likes?.pull(ctx.loggedInUserId);
           if (post.author._id.equals(ctx.loggedInUserId)) {
-            // If authot isn't the one liking, trigger notification.
+            // If author isn't the one liking, trigger notification.
           }
         } else {
           post.likes?.push(ctx.loggedInUserId);
@@ -142,12 +152,12 @@ export const postMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const deletedPost = await Post.findByIdAndDelete(postId);
-      // Remove all comments of this post as well.
+      await Comment.deleteMany({ post: postId });
       if (deletedPost) {
         const response: HttpResponse = {
           success: true,
           code: 200,
-          message: "Post deleted successfully.",
+          message: "Post and associated comments deleted successfully.",
           data: deletedPost.id,
         };
         return response.data;
