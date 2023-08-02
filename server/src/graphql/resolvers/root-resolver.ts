@@ -2,6 +2,7 @@
 import { authQueries } from "./auth";
 import { userQueries } from "./users";
 import { postQueries } from "./posts";
+import { commentQueries } from "./comments";
 
 // Mutation Imports
 import { authMutations } from "./auth";
@@ -17,6 +18,7 @@ export const resolvers = {
     ...authQueries,
     ...userQueries,
     ...postQueries,
+    ...commentQueries,
   },
   Mutation: {
     ...authMutations,

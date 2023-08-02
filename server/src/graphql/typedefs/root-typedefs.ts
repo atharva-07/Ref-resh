@@ -29,6 +29,8 @@ const Queries: string = `
     loadFeed: [Post!]
     fetchUserPosts(userName: String!): [Post!]
     fetchSinglePost(postId: ID!): Post!
+    fetchTopLevelComments(postId: ID!): [Comment!]
+    fetchChildComments(postId: ID, commentId: ID): [Comment!]
   }
 `;
 
@@ -44,10 +46,10 @@ const Mutations: string = `
     editPost(postId: ID!, postData: PostData): Post!
     likeOrUnlikePost(postId: ID!): ID!
     removePost(postId: ID!): ID!
-    postComment(content: String!, postId: ID!, commentId: ID): Comment!
+    postComment(content: String!, postId: ID!, parentCommentId: ID, topLevelCommentId: ID): Comment!
     editComment(content: String!, commentId: ID!): Comment!
     likeOrUnlikeComment(commentId: ID!): ID!
-    removeComment(commentId: ID!): ID!
+    removeComment(postId: ID!, commentId: ID!): ID!
   }
 `;
 

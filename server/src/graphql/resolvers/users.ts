@@ -1,6 +1,10 @@
-import { GraphQLError } from "graphql";
-import User from "../../models/User";
+import { Document } from "mongodb";
+import { Types } from "mongoose";
+import validator from "validator";
 import { AppContext } from "../../server";
+import { checkAuthorization, newGqlError } from "../utility-functions";
+import { HttpResponse } from "../utility-types";
+import User from "../../models/User";
 
 export const userQueries = {
   fetchUserProfile: async (_: any, { userName }: any) => {

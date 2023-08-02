@@ -1,12 +1,12 @@
-import { readFileSync } from "fs";
-import validator from "validator";
-import { HttpResponse } from "../utility-types";
-import User, { UserType, Gender, AuthType } from "../../models/User";
-import { Document } from "mongodb";
+import path from "path";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import path from "path";
+import { readFileSync } from "fs";
+import { Document } from "mongodb";
+import validator from "validator";
 import { newGqlError } from "../utility-functions";
+import { HttpResponse } from "../utility-types";
+import User, { UserType, AuthType } from "../../models/User";
 
 const privateKey: string = readFileSync(
   path.join(path.resolve(), "private.key"),
