@@ -1,10 +1,11 @@
 type Comment implements TimeStamps {
   _id: ID!
   content: String!
-  commenter: ID!
+  commenter: User!
   post: ID!
   likes: [User!]
   parentComment: Comment
+  topLevelComment: Comment
   createdAt: String!
   updatedAt: String!
 }

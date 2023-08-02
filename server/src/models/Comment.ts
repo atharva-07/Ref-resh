@@ -7,6 +7,7 @@ export interface CommentType {
   post: Types.ObjectId;
   likes?: Types.Array<Types.ObjectId>;
   parentComment?: Types.ObjectId;
+  topLevelComment?: Types.ObjectId;
 }
 
 const commmentSchema: Schema = new Schema<CommentType>(
@@ -24,6 +25,7 @@ const commmentSchema: Schema = new Schema<CommentType>(
     commenter: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
     post: {
       type: Schema.Types.ObjectId,
@@ -35,7 +37,10 @@ const commmentSchema: Schema = new Schema<CommentType>(
     },
     parentComment: {
       type: Schema.Types.ObjectId,
-      required: true,
+      default: null,
+    },
+    topLevelComment: {
+      type: Schema.Types.ObjectId,
       default: null,
     },
   },
