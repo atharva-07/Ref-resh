@@ -70,13 +70,14 @@ export const commentMutations = {
     if (validator.isEmpty(content))
       throw newGqlError("Comment body cannot be empty.", 422);
     try {
-      const newComment: Document = await new Comment<CommentType>({
+      const newComment: Document = new Comment<CommentType>({
         content: content,
         post: postId,
         commenter: ctx.loggedInUserId,
         parentComment: parentCommentId || null,
         topLevelComment: topLevelCommentId || null,
       });
+      // Implement Notifications later: COMMENTED_ON_POST [OR] REPLIED_TO_COMMENT
       await newComment.save();
       await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
       const response: HttpResponse = {
@@ -120,7 +121,7 @@ export const commentMutations = {
         if (alreadyLiked) {
           comment.likes?.pull(ctx.loggedInUserId);
           if (comment.commenter._id.equals(ctx.loggedInUserId)) {
-            // If author isn't the one liking, trigger notification.
+            // Implement Notifications later: LIKED_COMMENT
           }
         } else {
           comment.likes?.push(ctx.loggedInUserId);

@@ -129,7 +129,7 @@ export const authMutations = {
             .substring(0, 5)
             .toLowerCase()}.${(<string>signupData.lastName)
             .substring(0, 5)
-            .toLowerCase()}_${Math.floor(Math.random() * 1000)}`;
+            .toLowerCase()}_${Math.floor(Math.random() * 10000)}`;
           const existingUsername = await User.findOne({
             userName: generatedUsername,
           });

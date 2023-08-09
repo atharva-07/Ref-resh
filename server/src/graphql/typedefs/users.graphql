@@ -31,19 +31,20 @@ type User implements TimeStamps {
   posts: [Post!]
   savedPosts: [Post!]
   activeStories: [Story!]
-  authType: AuthType
+  authType: AuthType!
   lastLogin: String
   createdAt: String!
   updatedAt: String!
 }
 
 type BasicUserData {
+  _id: ID!
   firstName: String!
   lastName: String!
   userName: String!
   pfpPath: String!
   bannerPath: String!
-  bio: String!
+  bio: String
 }
 
 input UserProfileData {

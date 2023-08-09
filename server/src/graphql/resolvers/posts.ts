@@ -122,11 +122,10 @@ export const postMutations = {
         const alreadyLiked = post.likes?.find((val: Types.ObjectId) =>
           val.equals(ctx.loggedInUserId)
         );
-        console.log(alreadyLiked);
         if (alreadyLiked) {
           post.likes?.pull(ctx.loggedInUserId);
-          if (post.author._id.equals(ctx.loggedInUserId)) {
-            // If author isn't the one liking, trigger notification.
+          if (!post.author._id.equals(ctx.loggedInUserId)) {
+            // Implement Notifications later: LIKED_POST
           }
         } else {
           post.likes?.push(ctx.loggedInUserId);
