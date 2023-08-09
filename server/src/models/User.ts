@@ -36,6 +36,10 @@ export interface UserType {
   lastLogin?: Date;
 }
 
+// Add default Cloudinary path afterwards
+const DEFAULT_PFP_PATH = "";
+const DEFAULT_BANNER_PATH = "";
+
 const userSchema: Schema = new Schema<UserType>(
   {
     firstName: { type: Schema.Types.String, require: true, maxlength: 26 },
@@ -83,8 +87,16 @@ const userSchema: Schema = new Schema<UserType>(
       require: true,
     },
     joinedDate: { type: Schema.Types.Date, default: new Date(), require: true },
-    pfpPath: Schema.Types.String,
-    bannerPath: Schema.Types.String,
+    pfpPath: {
+      type: Schema.Types.String,
+      required: true,
+      default: DEFAULT_PFP_PATH,
+    },
+    bannerPath: {
+      type: Schema.Types.String,
+      required: true,
+      default: DEFAULT_BANNER_PATH,
+    },
     bio: { type: Schema.Types.String, maxlength: 50 },
     followers: { type: [Schema.Types.ObjectId], ref: "User" },
     following: { type: [Schema.Types.ObjectId], ref: "User" },
