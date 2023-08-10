@@ -23,8 +23,9 @@ const Queries: string = `
   type Query {
     credentialsLogin(loginData: LoginData!): AuthData!
     fetchUserProfile(userName: String!): User!
-    fetchUserFollowers(userName: String!): [User!]
-    fetchUserFollowings(userName: String!): [User!]
+    fetchUserFollowers(userName: String!): [BasicUserData!]
+    fetchUserFollowings(userName: String!): [BasicUserData!]
+    fetchIncomingFollowRequests: [BasicUserData!]
     fetchUpcomingBirthdays: [User!]
     loadFeed: [Post!]
     fetchUserPosts(userName: String!): [Post!]
@@ -37,10 +38,10 @@ const Queries: string = `
 const Mutations: string = `
   type Mutation {
     signup(signupData: SignUpData!): User!
-    followUser(userName: String!): ID!
-    unfollowUser(userName: String!): ID!
-    blockUser(userName: String!): ID!
-    unblockUser(userName: String!): ID!
+    followOrUnfollowUser(userName: String!): ID!
+    acceptFollowRequest(userId: ID!): ID!
+    rejectFollowRequest(userId: ID!): ID!
+    blockOrUnblockUser(userName: String!): ID!
     updateUserProfile(userProfileData: UserProfileData!): BasicUserData!
     createPost(postData: PostData): Post!
     editPost(postId: ID!, postData: PostData): Post!
