@@ -101,11 +101,35 @@ export const userQueries = {
     }
   },
   fetchUpcomingBirthdays: async (_: any, __: any, ctx: AppContext) => {
-    // Fetch birthdays of followings coming in next 7 days
-    // This should be loaded with feed
     checkAuthorization(ctx.loggedInUserId);
     try {
+      const userData = await User.findById(ctx.loggedInUserId, {
+        following: 1,
+      }).lean();
+      const userFollowingsArray = userData.following;
+      const userFollowingsData = await User.find(
+        { _id: { $in: userFollowingsArray } },
+        "_id userName firstName lastName dob pfpPath bannerPath bio"
+      ).lean();
+      // Users with birthdays in next 7 days (inclusive of current date)
+      const usersWithUpcomingBirthdays = [];
+      for (const user of userFollowingsData) {
+        user.dob.setFullYear(new Date().getFullYear());
+        const oneDay = 1000 * 60 * 60 * 24;
+        const diff = Math.ceil(
+          (user.dob.getTime() - new Date().getTime()) / oneDay
+        );
+        if (diff <= 7 && diff >= 0) usersWithUpcomingBirthdays.push(user);
+      }
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "Upcoming Birthdays of user's following fetched successfully.",
+        data: usersWithUpcomingBirthdays,
+      };
+      return response.data;
     } catch (error) {
+      console.log(error);
       throw error;
     }
   },
@@ -117,11 +141,19 @@ export const userMutations = {
     try {
       const targetUser = await User.findOne(
         { userName: userName },
-        { privateAccount: 1, followers: 1, following: 1, followingRequests: 1 }
+        {
+          privateAccount: 1,
+          followers: 1,
+          following: 1,
+          followingRequests: 1,
+          blockedAccounts: 1,
+        }
       );
       if (!targetUser) throw newGqlError("User not found", 404);
       if (targetUser._id.equals(ctx.loggedInUserId))
         throw newGqlError("Not Allowed.", 405);
+      if (targetUser.blockedAccounts?.includes(ctx.loggedInUserId))
+        throw newGqlError("Forbidden", 403);
       let action: string = " ";
       if (targetUser.privateAccount) {
         const alreadyRequested = targetUser.followingRequests?.includes(
