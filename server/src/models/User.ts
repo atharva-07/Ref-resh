@@ -89,12 +89,10 @@ const userSchema: Schema = new Schema<UserType>(
     joinedDate: { type: Schema.Types.Date, default: new Date(), require: true },
     pfpPath: {
       type: Schema.Types.String,
-      required: true,
       default: DEFAULT_PFP_PATH,
     },
     bannerPath: {
       type: Schema.Types.String,
-      required: true,
       default: DEFAULT_BANNER_PATH,
     },
     bio: { type: Schema.Types.String, maxlength: 50 },

@@ -26,7 +26,7 @@ const Queries: string = `
     fetchUserFollowers(userName: String!): [BasicUserData!]
     fetchUserFollowings(userName: String!): [BasicUserData!]
     fetchIncomingFollowRequests: [BasicUserData!]
-    fetchUpcomingBirthdays: [User!]
+    fetchUpcomingBirthdays: [BasicUserData!]
     loadFeed: [Post!]
     fetchUserPosts(userName: String!): [Post!]
     fetchSinglePost(postId: ID!): Post!

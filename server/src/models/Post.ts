@@ -21,7 +21,7 @@ const postSchema: Schema = new Schema<PostType>(
       type: [Schema.Types.ObjectId],
       ref: "User",
     },
-    commentsCount: Schema.Types.Number,
+    commentsCount: { type: Schema.Types.Number, default: 0 },
     edited: {
       type: Schema.Types.Boolean,
       required: true,
