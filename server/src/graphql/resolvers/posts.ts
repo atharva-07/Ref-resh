@@ -10,12 +10,26 @@ import Comment from "../../models/Comment";
 
 export const postQueries = {
   loadFeed: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
     try {
-      // Load Posts [Only top 10 posts. Others should be fetched with lazy loading.]
-      // Load Stories
-      // Load Upcoming Birthdays
-      const posts = await Post.find();
-      return posts;
+      const userData = await User.findById(ctx.loggedInUserId, {
+        following: 1,
+      }).lean();
+      const userFollowingsArray = userData.following;
+      const posts = await Post.find({ author: { $in: userFollowingsArray } })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate({
+          path: "author",
+          select: "_id userName firstName lastName pfpPath",
+        });
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "Feed's posts fetched successfully.",
+        data: posts,
+      };
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -25,10 +39,12 @@ export const postQueries = {
     try {
       const authorId = await User.findOne({ userName: userName }).select("_id");
       if (!authorId) throw newGqlError("User not found.", 404);
-      const posts = await Post.find({ author: authorId }).populate({
-        path: "author",
-        select: "_id userName firstName lastName pfpPath",
-      });
+      const posts = await Post.find({ author: authorId })
+        .sort({ createdAt: -1 })
+        .populate({
+          path: "author",
+          select: "_id userName firstName lastName pfpPath",
+        });
       const response: HttpResponse = {
         success: true,
         code: 200,
