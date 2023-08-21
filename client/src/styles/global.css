@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Default background color of <body />...etc */
+    --background: #ffffff;
+    --foreground: #020817;
+
+    /* Background color for <Card /> */
+    --card: #ffffff;
+    --card-foreground: #020817;
+
+    /* Background color for popovers such as <DropdownMenu />, <HoverCard />, <Popover /> */
+    --popover: #ffffff;
+    --popover-foreground: #020817;
+
+    /* Primary colors for <Button /> */
+    --primary: #0f172a;
+    --primary-foreground: #f8fafc;
+
+    /* Secondary colors for <Button /> */
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+
+    /* Muted backgrounds such as <TabsList />, <Skeleton /> and <Switch /> */
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+
+    /* Used for accents such as hover effects on <DropdownMenuItem>, <SelectItem>...etc */
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+
+    /* Used for destructive actions such as <Button variant="destructive"> */
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+
+    /* Default border color */
+    --border: #e2e8f0;
+
+    /* Border color for inputs such as <Input />, <Select />, <Textarea /> */
+    --input: #e2e8f0;
+
+    /* Used for focus ring */
+    --ring: #020817;
+
+    /* Border radius for card, input and buttons */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #020817;
+    --foreground: #f8fafc;
+
+    --card: #020817;
+    --card-foreground: #f8fafc;
+
+    --popover: #020817;
+    --popover-foreground: #f8fafc;
+
+    --primary: #f8fafc;
+    --primary-foreground: #0f172a;
+
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #cbd5e1;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

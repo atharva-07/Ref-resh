@@ -1,40 +1,79 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import typescriptLogo from './assets/typescript.svg';
-import './App.css';
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "./styles/global.css";
+import {
+  Card,
+  CardTitle,
+  CardContent,
+  CardHeader,
+  CardFooter,
+  CardDescription,
+} from "./components/ui/card";
+import { ThemeProvider } from "./context/theme";
+import { ModeToggle } from "./components/theme-toggle";
+// import { gql } from "@apollo/client/core";
+// import { useQuery } from "@apollo/client/react";
+
+// const GET_USER_PROFILE = gql`
+//   query FetchUserProfile($userName: String!) {
+//     fetchUserProfile(userName: $userName) {
+//       _id
+//       firstName
+//       lastName
+//       userName
+//       email
+//       password
+//       gender
+//       dob
+//       privateAccount
+//       joinedDate
+//       pfpPath
+//       bannerPath
+//       bio
+//       authType
+//       lastLogin
+//       followers {
+//         userName
+//       }
+//       following {
+//         userName
+//       }
+//       createdAt
+//       updatedAt
+//     }
+//   }
+// `;
 
 function App() {
   const [count, setCount] = useState(0);
+  // const { data, error } = useQuery(GET_USER_PROFILE, {
+  //   variables: {
+  //     userName: "athar.wankh_214",
+  //   },
+  // });
+
+  // console.log(data);
+  // console.log(error?.message, error?.name);
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <a
-          href="https://www.typescriptlang.org/docs/handbook/intro.html"
-          target="_blank"
-        >
-          <img src={typescriptLogo} className="logo" alt="TypeScript logo" />
-        </a>
-      </div>
-      <h1>Vite + React + TypeScript</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+      <ModeToggle />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-primary dark:text-primary">
+            Card Title
+          </CardTitle>
+          <CardDescription>Card Description</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Card Content</p>
+        </CardContent>
+        <CardFooter>
+          <p>Card Footer</p>
+        </CardFooter>
+      </Card>
+    </ThemeProvider>
   );
 }
 
