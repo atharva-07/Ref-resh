@@ -8,13 +8,13 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
+    // container: {
+    //   center: true,
+    //   padding: "2rem",
+    //   screens: {
+    //     "2xl": "1400px",
+    //   },
+    // },
     extend: {
       colors: {
         border: "var(--border)",

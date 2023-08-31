@@ -11,68 +11,31 @@ import {
   CardDescription,
 } from "./components/ui/card";
 import { ThemeProvider } from "./context/theme";
-import { ModeToggle } from "./components/theme-toggle";
-// import { gql } from "@apollo/client/core";
+import { ModeToggle } from "./components/layout/right-sidebar/theme-toggle";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import RootLayout from "./routes/RootLayout";
+import HomePage from "./routes/Home";
+
 // import { useQuery } from "@apollo/client/react";
 
-// const GET_USER_PROFILE = gql`
-//   query FetchUserProfile($userName: String!) {
-//     fetchUserProfile(userName: $userName) {
-//       _id
-//       firstName
-//       lastName
-//       userName
-//       email
-//       password
-//       gender
-//       dob
-//       privateAccount
-//       joinedDate
-//       pfpPath
-//       bannerPath
-//       bio
-//       authType
-//       lastLogin
-//       followers {
-//         userName
-//       }
-//       following {
-//         userName
-//       }
-//       createdAt
-//       updatedAt
-//     }
-//   }
-// `;
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      { path: "/", element: <HomePage /> },
+      { path: "/notifications", element: <h1>Notifications</h1> },
+      { path: "/messages", element: <h1>Messages</h1> },
+    ],
+  },
+]);
 
 function App() {
   const [count, setCount] = useState(0);
-  // const { data, error } = useQuery(GET_USER_PROFILE, {
-  //   variables: {
-  //     userName: "athar.wankh_214",
-  //   },
-  // });
-
-  // console.log(data);
-  // console.log(error?.message, error?.name);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-      <ModeToggle />
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-primary dark:text-primary">
-            Card Title
-          </CardTitle>
-          <CardDescription>Card Description</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Card Content</p>
-        </CardContent>
-        <CardFooter>
-          <p>Card Footer</p>
-        </CardFooter>
-      </Card>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }
