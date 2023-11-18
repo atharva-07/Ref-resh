@@ -110,3 +110,5 @@ const userSchema: Schema = new Schema<UserType>(
 const User = model<UserType>("User", userSchema);
 
 export default User;
+
+// 18/11/23: Default Image Path constants were removed.
