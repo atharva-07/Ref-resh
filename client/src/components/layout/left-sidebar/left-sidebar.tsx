@@ -25,7 +25,7 @@ const LeftSidebar = () => {
   const dispatch = useAppDispatch();
 
   return (
-    <div className="flex flex-col gap-20 h-screen w-[260px] shrink-0">
+    <div className="fixed flex flex-col gap-20 h-screen w-[260px] shrink-0">
       <div className="flex items-center gap-6 py-3">
         <RefreshCwOff className="text-accent" size={48} />
         <ModeToggle />

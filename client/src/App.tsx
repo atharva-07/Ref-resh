@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "./styles/global.css";
 import { ThemeProvider } from "./context/theme";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -10,8 +9,6 @@ import Bookmarks from "./routes/Bookmarks";
 import Error from "./routes/Error";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
-
-// import { useQuery } from "@apollo/client/react";
 
 const router = createBrowserRouter([
   {
@@ -30,8 +27,6 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
       <RouterProvider router={router} />
