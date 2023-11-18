@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client/core";
 
-const GET_USER_PROFILE = gql`
+export const GET_USER_PROFILE = gql`
   query FetchUserProfile($userName: String!) {
     fetchUserProfile(userName: $userName) {
       _id
@@ -26,6 +26,29 @@ const GET_USER_PROFILE = gql`
       }
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const GET_POSTS = gql`
+  query LoadFeed {
+    loadFeed {
+      _id
+      content
+      images
+      commentsCount
+      createdAt
+      updatedAt
+      likes {
+        _id
+      }
+      author {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+      }
     }
   }
 `;

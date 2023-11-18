@@ -1,9 +1,9 @@
-import { ModeToggle } from "./theme-toggle";
+import SearchBar from "@/components/ui/search-bar";
 
 const RightSidebar = () => {
   return (
-    <div className="bg-violet-600 w-[350px]">
-      <h1>Search Button</h1>
+    <div className="flex flex-col gap-20 w-[260px] shrink-0">
+      <SearchBar />
       <ul>
         Stories
         <li>Story 1</li>
@@ -11,11 +11,6 @@ const RightSidebar = () => {
         <li>Story 3</li>
       </ul>
       <h3>Upcoming Birthdays</h3>
-      <div>
-        <ModeToggle />
-        <h3>Settings</h3>
-        <h3>Logout</h3>
-      </div>
     </div>
   );
 };

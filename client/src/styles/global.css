@@ -27,6 +27,13 @@ Default: 1
 
 */
 
+@import url("https://fonts.googleapis.com/css2?family=Merriweather&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@font-face {
+  font-family: "chirp";
+  src: url("../assets/twitterchirp.ttf");
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,7 +57,7 @@ Default: 1
     --primary-foreground: #f8fafc;
 
     /* Secondary colors for <Button /> */
-    --secondary: #f1f5f9;
+    --secondary: #c7b1e1;
     --secondary-foreground: #0f172a;
 
     /* Muted backgrounds such as <TabsList />, <Skeleton /> and <Switch /> */
@@ -58,15 +65,19 @@ Default: 1
     --muted-foreground: #64748b;
 
     /* Used for accents such as hover effects on <DropdownMenuItem>, <SelectItem>...etc */
-    --accent: #f1f5f9;
+    --accent: #cbb0f3;
     --accent-foreground: #0f172a;
+
+    /* Used for successful actions */
+    --success: #40c840;
+    --success-foreground: #f8fafc;
 
     /* Used for destructive actions such as <Button variant="destructive"> */
     --destructive: #ef4444;
     --destructive-foreground: #f8fafc;
 
     /* Default border color */
-    --border: #e2e8f0;
+    --border: #242424;
 
     /* Border color for inputs such as <Input />, <Select />, <Textarea /> */
     --input: #e2e8f0;
@@ -79,7 +90,7 @@ Default: 1
   }
 
   .dark {
-    --background: #020817;
+    --background: #000000;
     --foreground: #f8fafc;
 
     --card: #020817;
@@ -91,19 +102,22 @@ Default: 1
     --primary: #f8fafc;
     --primary-foreground: #0f172a;
 
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
+    --secondary: #111010;
+    --secondary-foreground: #8456ef;
 
     --muted: #1e293b;
     --muted-foreground: #94a3b8;
 
-    --accent: #1e293b;
+    --accent: #8b5cf6;
     --accent-foreground: #f8fafc;
 
-    --destructive: #7f1d1d;
+    --success: #3a8b3a;
+    --success-foreground: #f8fafc;
+
+    --destructive: #eb3737;
     --destructive-foreground: #f8fafc;
 
-    --border: #a3bbe2;
+    --border: #334155;
     --input: #1e293b;
     --ring: #cbd5e1;
   }
@@ -114,9 +128,29 @@ Default: 1
     @apply m-0 p-0 box-border;
   }
   html {
-    @apply font-sans;
+    @apply font-chirp;
   }
   body {
-    @apply bg-background text-foreground max-w-[1400px] mx-auto min-h-screen;
+    @apply bg-background text-foreground;
+  }
+  div {
+    [contentEditable="true"]:empty:not(:focus):before {
+      content: attr(data-text);
+      color: #94a3b8;
+    }
+  }
+}
+
+@layer components {
+  .active {
+    @apply text-secondary-foreground bg-secondary rounded-3xl;
+  }
+
+  .hover-primary {
+    @apply hover:bg-accent hover:text-primary;
+  }
+
+  .hover-secondary {
+    @apply hover:text-secondary-foreground hover:bg-secondary;
   }
 }

@@ -56,6 +56,14 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        segoe: ["Segoe UI", "sans-serif"],
+        trebuchet: ["trebuchet MS", "sans-serif"],
+        merriweather: ["Merriweather", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
+        chirp: ["chirp", "sans-serif"],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: 0 },
@@ -72,5 +80,11 @@ export default {
       },
     },
   },
-  plugins: [import("tailwindcss-animate")],
+  plugins: [
+    import("tailwindcss-animate"),
+    function ({ addVariant }) {
+      addVariant("child", "& > *");
+      addVariant("child-hover", "& > *:hover");
+    },
+  ],
 };
