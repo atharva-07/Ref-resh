@@ -1,8 +1,9 @@
 import { Types } from "mongoose";
+
+import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
-import User from "../../models/User";
 
 export const userQueries = {
   fetchUserProfile: async (_: any, { userName }: any, ctx: AppContext) => {

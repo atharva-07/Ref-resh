@@ -1,16 +1,18 @@
-import * as dotenv from "dotenv";
 import "reflect-metadata";
+
 import { ApolloServer } from "@apollo/server";
-import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerErrorCode } from "@apollo/server/errors";
+import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import bodyParser from "body-parser";
+import { v2 as cloudinary } from "cloudinary";
+import cors from "cors";
+import * as dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import http from "http";
-import cors from "cors";
-import { v2 as cloudinary } from "cloudinary";
-import bodyParser from "body-parser";
-import { typeDefs, resolvers } from "./graphql/schema";
 import mongoose, { Types } from "mongoose";
+
+import { resolvers, typeDefs } from "./graphql/schema";
 import { HttpResponse } from "./graphql/utility-types";
 import { authMiddleware } from "./middleware/check-auth";
 

@@ -1,7 +1,9 @@
-import { getRandomAvatarBgColor } from "@/utility/utility-functions";
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Button } from "./button";
 import { Image } from "lucide-react";
+
+import { getRandomAvatarBgColor } from "@/utility/utility-functions";
+
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "./button";
 
 const PostWriter = () => {
   return (

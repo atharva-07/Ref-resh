@@ -1,19 +1,20 @@
-import { Button } from "@/components/ui/button";
-import Navigation from "./navigation";
 import { Edit3, LogOutIcon, RefreshCwOff, Settings2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { authActions } from "@/store/auth";
+
+import { ModeToggle } from "../right-sidebar/theme-toggle";
+import Navigation from "./navigation";
 import UserProfileButton, {
   UserProfileButtonProps,
 } from "./user-profile-button";
-import { ModeToggle } from "../right-sidebar/theme-toggle";
-import { authActions } from "@/store/auth";
-import store from "@/store";
-import { useAppDispatch } from "@/hooks/useAppDispatch";
 
 const userProfileButtonProps: UserProfileButtonProps = {
   imagePath: "https://avatars.githubusercontent.com/u/67833926?v=4",

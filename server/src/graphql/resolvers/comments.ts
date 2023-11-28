@@ -1,11 +1,12 @@
 import { Document } from "mongodb";
 import { Types } from "mongoose";
 import validator from "validator";
+
+import Comment, { CommentType } from "../../models/Comment";
+import Post from "../../models/Post";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
-import Comment, { CommentType } from "../../models/Comment";
-import Post from "../../models/Post";
 
 export const commentQueries = {
   fetchTopLevelComments: async (_: any, { postId }: any, ctx: AppContext) => {

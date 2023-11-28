@@ -1,12 +1,13 @@
 import { Document } from "mongodb";
 import { Types } from "mongoose";
 import validator from "validator";
+
+import Comment from "../../models/Comment";
+import Post, { PostType } from "../../models/Post";
+import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
-import Post, { PostType } from "../../models/Post";
-import User from "../../models/User";
-import Comment from "../../models/Comment";
 
 export const postQueries = {
   loadFeed: async (_: any, __: any, ctx: AppContext) => {

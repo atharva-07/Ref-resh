@@ -1,13 +1,15 @@
 import "./styles/global.css";
-import { ThemeProvider } from "./context/theme";
+
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import RootLayout from "./routes/RootLayout";
-import HomePage from "./routes/Home";
-import Notifications from "./routes/Notifications";
-import Conversations from "./routes/Conversations";
+
+import { ThemeProvider } from "./context/theme";
 import Bookmarks from "./routes/Bookmarks";
+import Conversations from "./routes/Conversations";
 import Error from "./routes/Error";
+import HomePage from "./routes/Home";
 import Login from "./routes/Login";
+import Notifications from "./routes/Notifications";
+import RootLayout from "./routes/RootLayout";
 import Signup from "./routes/Signup";
 
 const router = createBrowserRouter([

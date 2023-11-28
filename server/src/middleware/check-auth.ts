@@ -1,10 +1,10 @@
 import { NextFunction, Response } from "express";
 import { readFileSync } from "fs";
-import path from "path";
-import User from "../models/User";
-import { AuthUserInfo } from "../graphql/utility-types";
-
 import jwt from "jsonwebtoken";
+import path from "path";
+
+import { AuthUserInfo } from "../graphql/utility-types";
+import User from "../models/User";
 
 const publickKey: string = readFileSync(
   path.join(path.resolve(), "public.key"),

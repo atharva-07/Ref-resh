@@ -131,13 +131,28 @@ Default: 1
     @apply font-chirp;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-[101vh] overflow-x-hidden;
   }
   div {
     [contentEditable="true"]:empty:not(:focus):before {
       content: attr(data-text);
       color: #94a3b8;
     }
+  }
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply rounded shadow-inner;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-400 rounded-xl;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
   }
 }
 

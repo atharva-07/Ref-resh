@@ -1,5 +1,6 @@
-import LeftSidebar from "@/components/layout/left-sidebar/left-sidebar";
 import { Outlet } from "react-router-dom";
+
+import LeftSidebar from "@/components/layout/left-sidebar/left-sidebar";
 
 const isAuthenticated: boolean = true;
 

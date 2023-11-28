@@ -1,10 +1,10 @@
-import Post, { PostProps } from "@/components/main/post";
-
-import { transformTimestamps } from "@/utility/utility-functions";
-import { GET_POSTS } from "@/gql-calls/queries";
 import { useQuery } from "@apollo/client";
+
+import Post, { PostProps } from "@/components/main/post";
 import PostWriter from "@/components/ui/post-writer";
+import { GET_POSTS } from "@/gql-calls/queries";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { transformTimestamps } from "@/utility/utility-functions";
 
 const MainWrapper = () => {
   const { data, error, loading } = useQuery(GET_POSTS);

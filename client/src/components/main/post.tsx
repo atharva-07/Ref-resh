@@ -1,5 +1,3 @@
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import ImageGrid, { ImageGridProps } from "./image-grid";
 import {
   Dot,
   Edit,
@@ -8,6 +6,7 @@ import {
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getRandomAvatarBgColor } from "@/utility/utility-functions";
+
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import ImageGrid, { ImageGridProps } from "./image-grid";
 
 export interface TimeStamps {
   createdAt: string;

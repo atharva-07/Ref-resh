@@ -1,4 +1,4 @@
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRandomAvatarBgColor } from "@/utility/utility-functions";
 
 export interface UserProfileButtonProps {

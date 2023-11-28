@@ -1,16 +1,14 @@
 // Query Imports
+import { NotificationEvents } from "../../models/Notification";
 import { authQueries } from "./auth";
-import { userQueries } from "./users";
-import { postQueries } from "./posts";
-import { commentQueries } from "./comments";
-
 // Mutation Imports
 import { authMutations } from "./auth";
-import { userMutations } from "./users";
-import { postMutations } from "./posts";
+import { commentQueries } from "./comments";
 import { commentMutations } from "./comments";
-
-import { NotificationEvents } from "../../models/Notification";
+import { postQueries } from "./posts";
+import { postMutations } from "./posts";
+import { userQueries } from "./users";
+import { userMutations } from "./users";
 
 export const resolvers = {
   NotificationEvents,
