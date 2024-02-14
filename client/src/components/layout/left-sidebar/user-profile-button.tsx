@@ -13,7 +13,7 @@ const UserProfileButton = ({
   username,
 }: UserProfileButtonProps) => {
   return (
-    <div className="flex hover:bg-secondary hover:cursor-pointer">
+    <div className="flex p-1 pr-2 rounded-md hover:bg-secondary hover:cursor-pointer">
       <Avatar>
         <AvatarImage src={imagePath} />
         <AvatarFallback className={getRandomAvatarBgColor()}>
@@ -22,7 +22,7 @@ const UserProfileButton = ({
       </Avatar>
       <div className="ml-4">
         <p>{fullName}</p>
-        <p>@{username}</p>
+        <p className="text-sm text-slate-400">@{username}</p>
       </div>
     </div>
   );

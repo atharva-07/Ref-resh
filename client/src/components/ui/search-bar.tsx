@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 
 const SearchBar = () => {
   return (
-    <div className="flex justify-evenly text-primary rounded-3xl border border-border my-4 p-3 opacity-80 focus-within:bg-accent focus-within:text-primary">
+    <div className="flex justify-evenly text-primary rounded-3xl border border-border my-4 p-3 opacity-80 focus-within:bg-secondary focus-within:text-secondary-foreground focus-within:border-2 focus-within:border-primary hover:cursor-pointer child-hover:cursor-pointer transition-linear-border-primary">
       <Search />
       <input
         type="text"

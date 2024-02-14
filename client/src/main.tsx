@@ -7,7 +7,7 @@ import { Provider as ReduxProvider } from "react-redux";
 
 import App from "./App.tsx";
 import { client } from "./middlewares/auth.ts";
-import store from "./store";
+import store from "./store/store.ts";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

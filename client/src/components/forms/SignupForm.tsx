@@ -136,21 +136,36 @@ const SignupForm = () => {
                   <div className="flex gap-6">
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
-                        <RadioGroupItem value="MALE" />
+                        <RadioGroupItem
+                          className="hover:cursor-pointer"
+                          value="MALE"
+                        />
                       </FormControl>
-                      <FormLabel className="font-normal">Male</FormLabel>
+                      <FormLabel className="font-normal hover:cursor-pointer">
+                        Male
+                      </FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
-                        <RadioGroupItem value="FEMALE" />
+                        <RadioGroupItem
+                          className="hover:cursor-pointer"
+                          value="FEMALE"
+                        />
                       </FormControl>
-                      <FormLabel className="font-normal">Female</FormLabel>
+                      <FormLabel className="font-normal hover:cursor-pointer">
+                        Female
+                      </FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
-                        <RadioGroupItem value="OTHER" />
+                        <RadioGroupItem
+                          className="hover:cursor-pointer"
+                          value="OTHER"
+                        />
                       </FormControl>
-                      <FormLabel className="font-normal">Non-Binary</FormLabel>
+                      <FormLabel className="font-normal hover:cursor-pointer">
+                        Non-Binary
+                      </FormLabel>
                     </FormItem>
                   </div>
                 </RadioGroup>
@@ -239,10 +254,7 @@ const SignupForm = () => {
             </FormItem>
           )}
         />
-        <Button
-          type="submit"
-          className="w-1/2 mx-auto font-semibold hover-primary"
-        >
+        <Button type="submit" className="w-1/2 mx-auto font-semibold">
           Signup
         </Button>
       </form>

@@ -1,5 +1,7 @@
 import { Edit3, LogOutIcon, RefreshCwOff, Settings2 } from "lucide-react";
+import { useState } from "react";
 
+import { Modal, OverlayType } from "@/components/modals/modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { authActions } from "@/store/auth";
+import { authActions } from "@/store/auth-slice";
 
 import { ModeToggle } from "../right-sidebar/theme-toggle";
 import Navigation from "./navigation";
@@ -23,44 +25,65 @@ const userProfileButtonProps: UserProfileButtonProps = {
 };
 
 const LeftSidebar = () => {
+  const [modal, openModal] = useState<boolean>(false);
   const dispatch = useAppDispatch();
 
   return (
-    <div className="fixed flex flex-col gap-20 h-screen w-[260px] shrink-0">
-      <div className="flex items-center gap-6 py-3">
-        <RefreshCwOff className="text-accent" size={48} />
-        <ModeToggle />
+    <>
+      {modal && (
+        <Modal
+          type={OverlayType.NEW_POST}
+          strict={true}
+          onClose={() => {
+            openModal(false);
+          }}
+        />
+      )}
+      <div className="fixed flex flex-col gap-20 h-screen w-[260px] shrink-0">
+        <div className="flex items-center gap-6 py-3">
+          <RefreshCwOff className="text-accent" size={48} />
+          <ModeToggle />
+        </div>
+        <Navigation />
+        <Button
+          className="font-semibold"
+          onClick={() => {
+            openModal(true);
+          }}
+        >
+          Compose New Post
+        </Button>
+        <div className="flex justify-between items-center">
+          <UserProfileButton {...userProfileButtonProps} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Settings2 className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Settings</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => console.log("Password Updated.")}
+              >
+                Update Password
+                <Edit3 className="ml-2 h-[1rem] w-[1rem]" />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => {
+                  dispatch(authActions.logout());
+                  console.log("Logged Out.");
+                }}
+              >
+                Logout
+                <LogOutIcon className="ml-2 h-[1rem] w-[1rem]" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <Navigation />
-      <Button className="font-semibold hover-primary">New Post Button</Button>
-      <div className="flex justify-between items-center">
-        <UserProfileButton {...userProfileButtonProps} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Settings2 className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Settings</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => console.log("Password Updated.")}>
-              Update Password
-              <Edit3 className="ml-2 h-[1rem] w-[1rem]" />
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => {
-                dispatch(authActions.logout());
-                console.log("Logged Out.");
-              }}
-            >
-              Logout
-              <LogOutIcon className="ml-2 h-[1rem] w-[1rem]" />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -9,7 +9,7 @@ const Login = () => {
       <div className="text-muted-foreground text-[12px] text-center uppercase">
         Or Continue With
       </div>
-      <Button className="w-full my-4 font-semibold hover-primary">
+      <Button variant={"outline"} className="w-full my-4 font-semibold">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 48 48"
@@ -35,7 +35,7 @@ const Login = () => {
         </svg>
         &nbsp;&nbsp;Google
       </Button>
-      <Button className="w-full font-semibold hover-primary">
+      <Button variant={"outline"} className="w-full font-semibold">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 48 48"

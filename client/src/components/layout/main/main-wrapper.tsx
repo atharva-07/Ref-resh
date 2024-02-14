@@ -1,17 +1,22 @@
 import { useQuery } from "@apollo/client";
 
-import Post, { PostProps } from "@/components/main/post";
-import PostWriter from "@/components/ui/post-writer";
+import PostWriter from "@/components/main/post/new-post-card";
+import Post, { PostProps } from "@/components/main/post/post";
 import { GET_POSTS } from "@/gql-calls/queries";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { authActions, isAuthenticated } from "@/store/auth-slice";
 import { transformTimestamps } from "@/utility/utility-functions";
 
 const MainWrapper = () => {
   const { data, error, loading } = useQuery(GET_POSTS);
-  const auth = useAppSelector((state) => state.auth.isAuthenticated);
+
+  // This is working.
+  // const isAuth = useAppSelector(isAuthenticated);
+  // const dispatch = useAppDispatch();
 
   return (
-    <main className="border border-slate-700 border-t-0 border-b-0 w-[600px]">
+    <main className="border border-border border-t-0 border-b-0 w-[600px]">
       <PostWriter />
       {data && data.loadFeed.length > 0 ? (
         data.loadFeed.map((element: PostProps) => {

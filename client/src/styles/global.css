@@ -1,32 +1,3 @@
-/*
-
---- 01 TYPOGRAPHY SYSTEM
-- Font sizes (px)
-10 / 12 / 14 / 16 / 18 / 20 / 24 / 30 / 36 / 44 / 52 / 62 / 74 / 86 / 98
-
-- Font weight
-Default: 400
-
-- Line heights
-Default: 1
-
---- 02 COLORS
-- Primary:
-- Tints:
-- Shades:
-- Accents:
-- Greys:
-
---- 05 SHADOWS
-
---- 06 BORDER-RADIUS
-
---- 07 WHITESPACE
-- Spacing system (px)
-2 / 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96 / 128
-
-*/
-
 @import url("https://fonts.googleapis.com/css2?family=Merriweather&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
@@ -41,85 +12,88 @@ Default: 1
 @layer base {
   :root {
     /* Default background color of <body />...etc */
-    --background: #ffffff;
-    --foreground: #020817;
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
 
     /* Background color for <Card /> */
-    --card: #ffffff;
-    --card-foreground: #020817;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
 
     /* Background color for popovers such as <DropdownMenu />, <HoverCard />, <Popover /> */
-    --popover: #ffffff;
-    --popover-foreground: #020817;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
 
     /* Primary colors for <Button /> */
-    --primary: #0f172a;
-    --primary-foreground: #f8fafc;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
 
     /* Secondary colors for <Button /> */
-    --secondary: #c7b1e1;
-    --secondary-foreground: #0f172a;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
 
     /* Muted backgrounds such as <TabsList />, <Skeleton /> and <Switch /> */
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
 
     /* Used for accents such as hover effects on <DropdownMenuItem>, <SelectItem>...etc */
-    --accent: #cbb0f3;
-    --accent-foreground: #0f172a;
-
-    /* Used for successful actions */
-    --success: #40c840;
-    --success-foreground: #f8fafc;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
 
     /* Used for destructive actions such as <Button variant="destructive"> */
-    --destructive: #ef4444;
-    --destructive-foreground: #f8fafc;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
 
     /* Default border color */
-    --border: #242424;
+    --border: 220 13% 91%;
 
     /* Border color for inputs such as <Input />, <Select />, <Textarea /> */
-    --input: #e2e8f0;
+    --input: 220 13% 91%;
 
     /* Used for focus ring */
-    --ring: #020817;
+    --ring: 262.1 83.3% 57.8%;
 
     /* Border radius for card, input and buttons */
     --radius: 0.5rem;
+
+    /* Start of project-specific custom variables */
+    /* Used for post likes */
+    --like: #ef4444;
+    /* Used for post comments */
+    --comment: #0ea5e9;
+    /* Used for post bookmark */
+    --bookmark: #22c55e;
   }
 
   .dark {
-    --background: #000000;
-    --foreground: #f8fafc;
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 263.4 70% 50.4%;
 
-    --card: #020817;
-    --card-foreground: #f8fafc;
+    /* Start of project-specific custom variables */
+    /* Used for post likes */
+    --like: #ef4444;
 
-    --popover: #020817;
-    --popover-foreground: #f8fafc;
+    /* Used for post comments */
+    --comment: #0ea5e9;
 
-    --primary: #f8fafc;
-    --primary-foreground: #0f172a;
-
-    --secondary: #111010;
-    --secondary-foreground: #8456ef;
-
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-
-    --accent: #8b5cf6;
-    --accent-foreground: #f8fafc;
-
-    --success: #3a8b3a;
-    --success-foreground: #f8fafc;
-
-    --destructive: #eb3737;
-    --destructive-foreground: #f8fafc;
-
-    --border: #334155;
-    --input: #1e293b;
-    --ring: #cbd5e1;
+    /* Used for post bookmark */
+    --bookmark: #22c55e;
   }
 }
 
@@ -142,15 +116,12 @@ Default: 1
   ::-webkit-scrollbar {
     @apply w-2;
   }
-
   ::-webkit-scrollbar-track {
     @apply rounded shadow-inner;
   }
-
   ::-webkit-scrollbar-thumb {
     @apply bg-slate-400 rounded-xl;
   }
-
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-500;
   }
@@ -158,14 +129,21 @@ Default: 1
 
 @layer components {
   .active {
-    @apply text-secondary-foreground bg-secondary rounded-3xl;
+    @apply font-bold tracking-tight rounded-3xl underline underline-offset-8;
   }
-
-  .hover-primary {
-    @apply hover:bg-accent hover:text-primary;
+  .transition-linear-bg-primary {
+    @apply transition ease-linear hover:bg-primary duration-200;
   }
-
-  .hover-secondary {
-    @apply hover:text-secondary-foreground hover:bg-secondary;
+  .transition-linear-bg-secondary {
+    @apply transition ease-linear hover:bg-secondary duration-200;
+  }
+  .transition-linear-border-primary {
+    @apply transition ease-linear hover:border-primary duration-200;
+  }
+  .transition-linear-border-secondary {
+    @apply transition ease-linear hover:border-secondary duration-200;
+  }
+  .search-bar-focus {
+    @apply focus-within:bg-secondary focus-within:text-secondary-foreground focus-within:border-2 focus-within:border-primary;
   }
 }

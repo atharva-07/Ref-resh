@@ -82,7 +82,7 @@ const LoginForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full font-semibold hover-primary">
+        <Button type="submit" className="w-full font-semibold">
           Login
         </Button>
       </form>
