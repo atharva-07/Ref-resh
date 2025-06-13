@@ -1,28 +1,21 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAppSelector } from "@/hooks/useAppSelector";
 import { getRandomAvatarBgColor } from "@/utility/utility-functions";
 
-export interface UserProfileButtonProps {
-  imagePath: string;
-  fullName: string;
-  username: string;
-}
+const UserProfileButton = () => {
+  const loggedInUser = useAppSelector((state) => state.auth.user);
 
-const UserProfileButton = ({
-  imagePath,
-  fullName,
-  username,
-}: UserProfileButtonProps) => {
   return (
     <div className="flex p-1 pr-2 rounded-md hover:bg-secondary hover:cursor-pointer">
       <Avatar>
-        <AvatarImage src={imagePath} />
+        <AvatarImage src={loggedInUser?.pfpPath} />
         <AvatarFallback className={getRandomAvatarBgColor()}>
-          {fullName.split(" ")[0][0]}
+          {loggedInUser?.fullName.split(" ")[0][0]}
         </AvatarFallback>
       </Avatar>
       <div className="ml-4">
-        <p>{fullName}</p>
-        <p className="text-sm text-slate-400">@{username}</p>
+        <p>{loggedInUser?.fullName}</p>
+        <p className="text-sm text-slate-400">@{loggedInUser?.username}</p>
       </div>
     </div>
   );

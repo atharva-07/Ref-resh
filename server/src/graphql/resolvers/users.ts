@@ -15,7 +15,6 @@ export const userQueries = {
           email: 0,
           password: 0,
           followingRequests: 0,
-          savedPosts: 0,
         }
       );
       const isLoggedInUserBlocked = user?.blockedAccounts?.find(
@@ -57,6 +56,7 @@ export const userQueries = {
       };
       return response.data;
     } catch (error) {
+      console.log(error);
       throw error;
     }
   },
@@ -115,10 +115,10 @@ export const userQueries = {
       // Users with birthdays in next 7 days (inclusive of current date)
       const usersWithUpcomingBirthdays = [];
       for (const user of userFollowingsData) {
-        user.dob.setFullYear(new Date().getFullYear());
+        user.dob!.setFullYear(new Date().getFullYear());
         const oneDay = 1000 * 60 * 60 * 24;
         const diff = Math.ceil(
-          (user.dob.getTime() - new Date().getTime()) / oneDay
+          (user.dob!.getTime() - new Date().getTime()) / oneDay
         );
         if (diff <= 7 && diff >= 0) usersWithUpcomingBirthdays.push(user);
       }
@@ -155,7 +155,7 @@ export const userMutations = {
         throw newGqlError("Not Allowed.", 405);
       if (targetUser.blockedAccounts?.includes(ctx.loggedInUserId))
         throw newGqlError("Forbidden", 403);
-      let action: string = " ";
+      let action: string = "";
       if (targetUser.privateAccount) {
         const alreadyRequested = targetUser.followingRequests?.includes(
           ctx.loggedInUserId
@@ -320,6 +320,35 @@ export const userMutations = {
         data: updatedUserData,
       };
       return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  setReadNotificationsAt: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const user = await User.findById(ctx.loggedInUserId);
+      if (user) {
+        user.readNotificationsAt = new Date();
+        await user.save();
+      }
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message:
+          "User's Last Notification Read Timestamp updated successfully.",
+        data: user?.readNotificationsAt,
+      };
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  setReadChatsAt: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      //
     } catch (error) {
       throw error;
     }

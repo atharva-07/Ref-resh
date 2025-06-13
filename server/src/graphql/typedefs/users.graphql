@@ -7,7 +7,7 @@ enum Gender {
 enum AuthType {
   EMAIL
   GOOGLE
-  META
+  FACEBOOK
 }
 
 type User implements TimeStamps {
@@ -29,10 +29,11 @@ type User implements TimeStamps {
   followingRequests: [User!]
   blockedAccounts: [User!]
   posts: [Post!]
-  savedPosts: [Post!]
   activeStories: [Story!]
   authType: AuthType!
-  lastLogin: String
+  lastLoginAt: String
+  readNotificationsAt: String
+  readChatsAt: String
   createdAt: String!
   updatedAt: String!
 }

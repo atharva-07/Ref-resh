@@ -4,6 +4,7 @@ type Post implements TimeStamps {
   images: [String!]
   likes: [User!]
   commentsCount: Int!
+  bookmarks: [String!]
   author: User!
   createdAt: String!
   updatedAt: String!
@@ -12,4 +13,19 @@ type Post implements TimeStamps {
 input PostData {
   content: String!
   images: [String!]
+}
+
+type PostEdge {
+  node: Post!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type Feed {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
 }

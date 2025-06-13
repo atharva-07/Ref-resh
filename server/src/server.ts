@@ -8,7 +8,7 @@ import bodyParser from "body-parser";
 import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
 import * as dotenv from "dotenv";
-import express, { Request, Response } from "express";
+import express, { Response } from "express";
 import http from "http";
 import mongoose, { Types } from "mongoose";
 
@@ -29,6 +29,7 @@ declare module "express-serve-static-core" {
 
 export interface AppContext {
   loggedInUserId: Types.ObjectId;
+  res: Response;
 }
 
 dotenv.config();
@@ -49,6 +50,7 @@ const server = new ApolloServer<AppContext>({
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   formatError(formattedError, error) {
+    console.error("GraphQL Error:", formattedError, error);
     const errorResponse: HttpResponse = {
       success: false,
       code: formattedError.extensions?.code || 500,
@@ -96,12 +98,16 @@ app.use(authMiddleware);
 
 app.use(
   "/api",
-  cors<cors.CorsRequest>(),
+  cors<cors.CorsRequest>({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
   bodyParser.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => {
+    context: async ({ req, res }) => {
       return {
         loggedInUserId: req.userId,
+        res,
       };
     },
   })
@@ -114,7 +120,7 @@ mongoose
     httpServer.listen({ port: process.env.DEV_PORT || 4000 });
   })
   .then(() => {
-    console.log(`Server is up and running at port ${process.env.DEV_PORT}`);
+    console.log(`Server is up and running on port ${process.env.DEV_PORT}`);
   })
   .catch((err) => {
     console.log("Error establishing the connection.", err);

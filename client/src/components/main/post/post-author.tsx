@@ -1,4 +1,5 @@
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import moment from "moment";
 
 import {
   DropdownMenu,
@@ -6,11 +7,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getRandomAvatarBgColor } from "@/utility/utility-functions";
+import {
+  getRandomAvatarBgColor,
+  getRelativeTime,
+  ISO_STRING_FORMAT,
+} from "@/utility/utility-functions";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
-interface BasicUserData {
+export interface BasicUserData {
   _id: string;
   userName: string;
   firstName: string;
@@ -24,13 +29,18 @@ interface PostAuthorProps {
 }
 
 export const PostAuthor = ({ author, createdAt }: PostAuthorProps) => {
+  const authorInitials = author.firstName[0] + author.lastName[0];
+
   return (
     <div className="flex">
       <div className="px-3">
-        <Avatar className="w-10 h-10 hover:cursor-pointer">
-          <AvatarImage src={author.pfpPath} />
-          <AvatarFallback className={getRandomAvatarBgColor()}>
-            {author.firstName[0]}
+        <Avatar className="h-8 w-8 rounded-lg hover:cursor-pointer">
+          <AvatarImage
+            src={author?.pfpPath}
+            alt={author?.firstName + author.lastName}
+          />
+          <AvatarFallback className={`rounded-lg ${getRandomAvatarBgColor()}`}>
+            {authorInitials}
           </AvatarFallback>
         </Avatar>
       </div>
@@ -41,9 +51,7 @@ export const PostAuthor = ({ author, createdAt }: PostAuthorProps) => {
           </span>
           <span className="text-slate-500">@{author.userName}</span>
           <div className="w-1 h-1 rounded-full bg-slate-600 opacity-80"></div>
-          <span className="text-slate-500">
-            {new Date(createdAt).toLocaleDateString()}
-          </span>
+          <span className="text-slate-500">{getRelativeTime(createdAt)}</span>
         </div>
         <div className="px-2 rounded-full hover:bg-secondary">
           <DropdownMenu>

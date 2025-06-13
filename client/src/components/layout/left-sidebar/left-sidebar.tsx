@@ -1,7 +1,7 @@
+import { useLazyQuery, useMutation } from "@apollo/client";
 import { Edit3, LogOutIcon, RefreshCwOff, Settings2 } from "lucide-react";
-import { useState } from "react";
 
-import { Modal, OverlayType } from "@/components/modals/modal";
+import PostWriterModal from "@/components/modal/post-writer-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,52 +9,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LOGOUT } from "@/gql-calls/mutation";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
 import { authActions } from "@/store/auth-slice";
 
 import { ModeToggle } from "../right-sidebar/theme-toggle";
 import Navigation from "./navigation";
-import UserProfileButton, {
-  UserProfileButtonProps,
-} from "./user-profile-button";
-
-const userProfileButtonProps: UserProfileButtonProps = {
-  imagePath: "https://avatars.githubusercontent.com/u/67833926?v=4",
-  fullName: "Atharva Wankhede",
-  username: "atharva07",
-};
+import UserProfileButton from "./user-profile-button";
 
 const LeftSidebar = () => {
-  const [modal, openModal] = useState<boolean>(false);
+  const { user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+  const [logout, { data, error, loading }] = useMutation(LOGOUT, {
+    variables: { userId: user?.userId },
+  });
 
   return (
     <>
-      {modal && (
-        <Modal
-          type={OverlayType.NEW_POST}
-          strict={true}
-          onClose={() => {
-            openModal(false);
-          }}
-        />
-      )}
       <div className="fixed flex flex-col gap-20 h-screen w-[260px] shrink-0">
         <div className="flex items-center gap-6 py-3">
           <RefreshCwOff className="text-accent" size={48} />
           <ModeToggle />
         </div>
         <Navigation />
-        <Button
-          className="font-semibold"
-          onClick={() => {
-            openModal(true);
-          }}
-        >
-          Compose New Post
-        </Button>
+        <PostWriterModal>
+          <Button className="font-semibold">Compose New Post</Button>
+        </PostWriterModal>
         <div className="flex justify-between items-center">
-          <UserProfileButton {...userProfileButtonProps} />
+          <UserProfileButton />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
@@ -72,6 +55,7 @@ const LeftSidebar = () => {
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => {
+                  logout();
                   dispatch(authActions.logout());
                   console.log("Logged Out.");
                 }}

@@ -1,37 +1,170 @@
-import { Document } from "mongodb";
-import { Types } from "mongoose";
+import { Document, ObjectId } from "mongodb";
+import { PipelineStage, Types } from "mongoose";
 import validator from "validator";
 
 import Comment from "../../models/Comment";
+import Notification, {
+  NotificationEvents,
+  NotificationType,
+} from "../../models/Notification";
 import Post, { PostType } from "../../models/Post";
 import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
+interface PostEdge {
+  node: PostType;
+  cursor: string;
+}
+
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
+}
+
+interface Feed {
+  edges: PostEdge[];
+  pageInfo: PageInfo;
+}
+
+const RECENCY_WEIGHT = 0.5;
+const POPULARITY_WEIGHT = 0.3;
+const ENGAGEMENT_WEIGHT = 0.2;
+
 export const postQueries = {
-  loadFeed: async (_: any, __: any, ctx: AppContext) => {
+  loadFeed: async (_: any, { pageSize, after }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const userData = await User.findById(ctx.loggedInUserId, {
+      const { following } = await User.findById(ctx.loggedInUserId, {
+        _id: 0,
         following: 1,
       }).lean();
-      const userFollowingsArray = userData.following;
-      const posts = await Post.find({ author: { $in: userFollowingsArray } })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate({
-          path: "author",
-          select: "_id userName firstName lastName pfpPath",
+
+      const postProjectionPaths: { [key: string]: 1 } = {};
+      Object.keys(Post.schema.paths).forEach((path) => {
+        if (path !== "author" && path !== "__v") {
+          postProjectionPaths[path] = 1;
+        }
+      });
+
+      // This is a global max. We need this for normalisation of Engagement Score of all posts
+      const maxInteractionsResult = await Post.aggregate<{
+        _id: null;
+        maxInteractions: number;
+      }>([
+        {
+          $group: {
+            _id: null,
+            maxInteractions: { $max: { $add: ["$likes", "$comments"] } },
+          },
+        },
+      ]).exec();
+
+      const maxInteractions =
+        maxInteractionsResult.length > 0 &&
+        maxInteractionsResult[0].maxInteractions > 0
+          ? maxInteractionsResult[0].maxInteractions
+          : 1; // Avoid division by zero, ensure at least 1
+
+      const aggregate = Post.aggregate().match({
+        author: { $in: following },
+      });
+
+      if (after) {
+        aggregate.match({ _id: { $gt: new ObjectId(after) } });
+      }
+
+      aggregate
+        .addFields({
+          recencyScore: {
+            $divide: [
+              { $subtract: [new Date(), "$createdAt"] },
+              1000 * 60 * 60 * 24 * 7,
+            ],
+          },
+        })
+        .addFields({
+          popularityScore: { $add: [{ $size: "$likes" }, "$commentsCount"] },
+        })
+        .addFields({
+          engagementScore: {
+            $divide: [
+              {
+                $add: [{ $size: "$likes" }, "$commentsCount"],
+              },
+              maxInteractions,
+            ],
+          },
+        })
+        .addFields({
+          combinedScore: {
+            $add: [
+              { $multiply: ["$recencyScore", RECENCY_WEIGHT] },
+              { $multiply: ["$popularityScore", POPULARITY_WEIGHT] },
+              { $multiply: ["$engagementScore", ENGAGEMENT_WEIGHT] },
+            ],
+          },
+        })
+        .sort({ combinedScore: -1 })
+        .limit(pageSize)
+        .lookup({
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        })
+        .unwind("$author")
+        .project({
+          ...postProjectionPaths,
+          "author._id": 1,
+          "author.userName": 1,
+          "author.firstName": 1,
+          "author.lastName": 1,
+          "author.pfpPath": 1,
         });
+
+      const posts = await aggregate.exec();
+
+      const countQuery: any = {
+        author: { $in: following },
+      };
+      if (after) {
+        countQuery._id = { $gt: new ObjectId(after) };
+      }
+
+      const totalDocumentsAfterCursor = await Post.countDocuments(
+        countQuery
+      ).exec();
+      const hasNextPage = totalDocumentsAfterCursor > posts.length;
+
+      const endCursor =
+        posts.length > 0 ? posts[posts.length - 1]._id.toHexString() : null;
+
+      const edges: PostEdge[] = posts.map((post) => ({
+        node: post,
+        cursor: post._id.toHexString(),
+      }));
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const feed: Feed = {
+        edges,
+        pageInfo,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Feed's posts fetched successfully.",
-        data: posts,
+        message: "Feed fetched successfully.",
+        data: feed,
       };
       return response.data;
     } catch (error) {
+      console.log(error);
       throw error;
     }
   },
@@ -141,11 +274,17 @@ export const postMutations = {
         );
         if (alreadyLiked) {
           post.likes?.pull(ctx.loggedInUserId);
-          if (!post.author._id.equals(ctx.loggedInUserId)) {
-            // Implement Notifications later: LIKED_POST
-          }
         } else {
           post.likes?.push(ctx.loggedInUserId);
+          if (!post.author._id.equals(ctx.loggedInUserId)) {
+            const newNotification = new Notification<NotificationType>({
+              eventType: NotificationEvents.LIKED_POST,
+              publisher: ctx.loggedInUserId,
+              subscriber: post.author._id,
+              redirectionURL: `/post/${postId}`,
+            });
+            await newNotification.save();
+          }
         }
         await post.save();
         const response: HttpResponse = {

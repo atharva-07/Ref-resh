@@ -27,11 +27,15 @@ const Queries: string = `
     fetchUserFollowings(userName: String!): [BasicUserData!]
     fetchIncomingFollowRequests: [BasicUserData!]
     fetchUpcomingBirthdays: [BasicUserData!]
-    loadFeed: [Post!]
+    loadFeed(pageSize: Int!, after: String): Feed!
     fetchUserPosts(userName: String!): [Post!]
     fetchSinglePost(postId: ID!): Post!
     fetchTopLevelComments(postId: ID!): [Comment!]
     fetchChildComments(postId: ID, commentId: ID): [Comment!]
+    fetchUnreadNotificationsCount: Int! 
+    fetchChats: [Chat!]
+    fetchChatMessages(chatId: ID!): [Message!]!
+    fetchUnreadChatsCount: Int!
   }
 `;
 
@@ -51,6 +55,11 @@ const Mutations: string = `
     editComment(content: String!, commentId: ID!): Comment!
     likeOrUnlikeComment(commentId: ID!): ID!
     removeComment(postId: ID!, commentId: ID!): ID!
+    logout(userId: ID!): ID!
+    setReadNotificationsAt: String!
+    setReadChatsAt: String!
+    createNewChat(chatMembers: [ID!]!, chatName: String): ID! 
+    sendChatMessage(messageData: MessageData!): Message!
   }
 `;
 

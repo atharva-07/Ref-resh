@@ -3,8 +3,10 @@ import { NotificationEvents } from "../../models/Notification";
 import { authQueries } from "./auth";
 // Mutation Imports
 import { authMutations } from "./auth";
+import { chatMutations, chatQueries } from "./chats";
 import { commentQueries } from "./comments";
 import { commentMutations } from "./comments";
+import { notificationQueries } from "./notifications";
 import { postQueries } from "./posts";
 import { postMutations } from "./posts";
 import { userQueries } from "./users";
@@ -17,11 +19,14 @@ export const resolvers = {
     ...userQueries,
     ...postQueries,
     ...commentQueries,
+    ...notificationQueries,
+    ...chatQueries,
   },
   Mutation: {
     ...authMutations,
     ...userMutations,
     ...postMutations,
     ...commentMutations,
+    ...chatMutations,
   },
 };

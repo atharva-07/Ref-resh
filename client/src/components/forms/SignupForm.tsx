@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import { z } from "zod";
 
 import { cn } from "@/components/lib/utils";
@@ -58,7 +59,7 @@ const formSchema = z
     confirmPassword: z.string({
       required_error: "Re-entered Password cannot be empty.",
     }),
-    authType: z.enum(["EMAIL", "GOOGLE", "META"]),
+    authType: z.enum(["EMAIL", "GOOGLE", "FACEBOOK"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -254,9 +255,16 @@ const SignupForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-1/2 mx-auto font-semibold">
-          Signup
-        </Button>
+        <div className="flex justify-between">
+          <Button type="submit" className="font-semibold">
+            Signup
+          </Button>
+          <Link to="/login">
+            <Button type="button" variant="secondary" className="font-light">
+              Already have an account?&nbsp;Login.
+            </Button>
+          </Link>
+        </div>
       </form>
     </Form>
   );

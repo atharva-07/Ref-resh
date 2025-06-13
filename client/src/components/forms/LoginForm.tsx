@@ -1,7 +1,9 @@
 "use client";
 
+import { useLazyQuery, useQuery } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +16,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { LOGIN } from "@/gql-calls/queries";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { authActions, user } from "@/store/auth-slice";
 
 const formSchema = z.object({
   email: z.string({ required_error: "Email cannot be empty." }).email(),
@@ -35,6 +41,10 @@ const formSchema = z.object({
 });
 
 const LoginForm = () => {
+  // const user = useAppSelector(state => state.auth.user);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,11 +53,33 @@ const LoginForm = () => {
     },
   });
 
+  const [login, { error, loading }] = useLazyQuery(LOGIN);
+
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    try {
+      const { data } = await login({
+        variables: {
+          loginData: {
+            email: form.getValues("email"),
+            password: form.getValues("password"),
+          },
+        },
+        fetchPolicy: "network-only",
+      });
+
+      if (data.credentialsLogin) {
+        const { access_token, refresh_token, __typename, ...payload } =
+          data.credentialsLogin;
+        dispatch(authActions.setUser(payload));
+        dispatch(authActions.setIsAuthenticated(true));
+        // TODO: Notfications connect here.
+        navigate("/");
+      }
+    } catch (err) {
+      /* empty */
+    } // TODO: Is something even required here?
   }
 
   return (
@@ -82,8 +114,13 @@ const LoginForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full font-semibold">
-          Login
+        {error && <p className="text-sm text-red-700">{error?.message}</p>}
+        <Button
+          type="submit"
+          className="w-full font-semibold"
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : "Login"}
         </Button>
       </form>
     </Form>

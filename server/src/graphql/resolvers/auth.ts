@@ -1,21 +1,20 @@
 import bcrypt from "bcrypt";
-import { readFileSync } from "fs";
-import jwt from "jsonwebtoken";
 import { Document } from "mongodb";
-import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 
 import User, { AuthType, UserType } from "../../models/User";
-import { newGqlError } from "../utility-functions";
+import { AppContext } from "../../server";
+import {
+  accessTokenCookieOptions,
+  refreshTokenCookieOptions,
+} from "../../utils/common";
+import { createAccessToken, createRefreshToken } from "../../utils/jwt";
+import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
-const privateKey: string = readFileSync(
-  path.join(path.resolve(), "private.key"),
-  "utf-8"
-);
-
 export const authQueries = {
-  credentialsLogin: async (_: any, { loginData }: any) => {
+  credentialsLogin: async (_: any, { loginData }: any, ctx: AppContext) => {
     const errors: { message: string }[] = [];
     if (!validator.isEmail(loginData.email))
       errors.push({ message: "Entered Email Address is invalid." });
@@ -27,34 +26,46 @@ export const authQueries = {
     try {
       const user = await User.findOne({ email: loginData.email });
       if (!user) throw newGqlError(`Invalid Email or Password.`, 401);
+
+      // TODO: Should we allow the login or not? Also, check if the responseCode is correct.
+      // Leaving it for now as it's not very straight-forward to implement.
+      if (user.authType !== AuthType.EMAIL) {
+        throw newGqlError(
+          `This email address is registered with a different login method. Please login with ${user.authType}.`,
+          403
+        );
+      }
+
       const isEqual = await bcrypt.compare(
         loginData.password,
         <string>user.password
       );
       if (!isEqual) throw newGqlError("Invalid Email or Password.", 401);
-      const token = jwt.sign(
-        {
-          sub: user.id, // userId
-          aud: user.userName, // userName
-        },
-        privateKey,
-        {
-          algorithm: "RS256",
-          // Change expiresIn to "15m" afterwards
-          expiresIn: 129600, // 36 hours
-        }
-      );
+
+      const accessToken = createAccessToken(user.id, user.userName);
+      const refreshToken = createRefreshToken(user.id, user.userName);
+
+      user.refreshToken = refreshToken;
+      user.lastLoginAt = new Date();
+      await user.save();
+
+      ctx.res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+      ctx.res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: "User logged-in successfully.",
         data: {
-          access_token: token,
-          refresh_token: "REFRESH_TOKEN_PLACEHOLDER",
-          // Change to "!5" afterwards
-          exp: 60,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          userId: user.id,
+          fullName: user.firstName + " " + user.lastName,
+          username: user.userName,
+          pfpPath: user.pfpPath,
         },
       };
+
       return response.data;
     } catch (error) {
       throw error;
@@ -123,26 +134,14 @@ export const authMutations = {
           409
         );
       } else {
-        let generatedUsername: string = " ";
-        let uniqueUsernameGenerated: boolean = false;
-        do {
-          generatedUsername = `${(<string>signupData.firstName)
-            .substring(0, 5)
-            .toLowerCase()}.${(<string>signupData.lastName)
-            .substring(0, 5)
-            .toLowerCase()}_${Math.floor(Math.random() * 10000)}`;
-          const existingUsername = await User.findOne({
-            userName: generatedUsername,
-          });
-          if (existingUsername === null) uniqueUsernameGenerated = true;
-        } while (!uniqueUsernameGenerated);
         const dateOfBirth = new Date(signupData.dob);
         dateOfBirth.setDate(dateOfBirth.getDate() + 1);
         const hashedPassword = await bcrypt.hash(signupData.password, 10);
+
         const newUser = new User<UserType>({
           firstName: signupData.firstName,
           lastName: signupData.lastName,
-          userName: generatedUsername,
+          userName: uuidv4(),
           email: validator.normalizeEmail(signupData.email, {
             gmail_remove_dots: false,
           }) as string,
@@ -150,7 +149,6 @@ export const authMutations = {
           gender: signupData.gender,
           dob: dateOfBirth,
           authType: AuthType.EMAIL,
-          privateAccount: false,
           joinedDate: new Date(),
         });
         const result: Document = await newUser.save();
@@ -161,12 +159,32 @@ export const authMutations = {
           data: {
             _id: result.id,
             ...result._doc,
-            password: "Unretrievable",
+            password: null,
           },
         };
         return response.data;
       }
     } catch (error) {
+      throw error;
+    }
+  },
+  logout: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const user = await User.findById(ctx.loggedInUserId);
+      user!.refreshToken = undefined;
+      await user!.save();
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User logged-out successfully.",
+        data: user!.id,
+      };
+      ctx.res.clearCookie("accessToken");
+      ctx.res.clearCookie("refreshToken");
+      return response.data;
+    } catch (error) {
+      console.log(error);
       throw error;
     }
   },

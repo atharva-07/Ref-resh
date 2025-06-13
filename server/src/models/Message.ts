@@ -1,8 +1,8 @@
 import { model, Schema, Types } from "mongoose";
 
-interface MessageType {
+export interface MessageType {
   chatId: Types.ObjectId;
-  message: string;
+  content: string;
   sender: Types.ObjectId;
 }
 
@@ -12,13 +12,14 @@ const messageSchema: Schema = new Schema<MessageType>(
       type: Schema.Types.ObjectId,
       required: true,
     },
-    message: {
+    content: {
       type: Schema.Types.String,
       required: true,
     },
     sender: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
   },
   {

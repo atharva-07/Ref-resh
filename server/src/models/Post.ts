@@ -5,6 +5,7 @@ export interface PostType {
   images?: string[];
   likes?: Types.Array<Types.ObjectId>;
   commentsCount?: number;
+  bookmarks?: Types.Array<Types.ObjectId>;
   edited?: boolean;
   author: Types.ObjectId;
 }
@@ -22,6 +23,10 @@ const postSchema: Schema = new Schema<PostType>(
       ref: "User",
     },
     commentsCount: { type: Schema.Types.Number, default: 0 },
+    bookmarks: {
+      type: [Schema.Types.ObjectId],
+      ref: "User",
+    },
     edited: {
       type: Schema.Types.Boolean,
       required: true,

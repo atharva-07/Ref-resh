@@ -1,0 +1,27 @@
+{
+  "name": "ref-resh-socket",
+  "version": "1.0.0",
+  "description": "Ref-resh Socket Server",
+  "main": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon -w *.ts -e ts -x ts-node --files -H -T src/server.ts"
+  },
+  "author": "Atharva Wankhede (atharva-07)",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.54.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "nodemon": "^3.1.0",
+    "typescript": "^4.9.5"
+  }
+}

@@ -1,15 +1,28 @@
-type Message implements TimeStamps {
-  _id: ID!
+input MessageData {
   chatId: ID!
-  message: String!
-  sender: User!
+  content: String!
+}
+
+type LastMessageData {
+  content: String!
+  sender: BasicUserData!
   createdAt: String!
-  updatedAt: String!
 }
 
 type Chat implements TimeStamps {
   _id: ID!
-  members: [User!]!
+  chatName: String
+  members: [BasicUserData!]!
+  lastMessage: LastMessageData
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Message implements TimeStamps {
+  _id: ID!
+  chat: Chat!
+  content: String!
+  sender: BasicUserData!
   createdAt: String!
   updatedAt: String!
 }

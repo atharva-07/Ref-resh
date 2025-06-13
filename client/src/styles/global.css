@@ -62,6 +62,14 @@
     --comment: #0ea5e9;
     /* Used for post bookmark */
     --bookmark: #22c55e;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -94,24 +102,26 @@
 
     /* Used for post bookmark */
     --bookmark: #22c55e;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
 @layer base {
   * {
-    @apply m-0 p-0 box-border;
+    @apply m-0 p-0 box-border border-border;
   }
   html {
     @apply font-chirp;
   }
   body {
     @apply bg-background text-foreground min-h-[101vh] overflow-x-hidden;
-  }
-  div {
-    [contentEditable="true"]:empty:not(:focus):before {
-      content: attr(data-text);
-      color: #94a3b8;
-    }
   }
   ::-webkit-scrollbar {
     @apply w-2;
@@ -129,7 +139,16 @@
 
 @layer components {
   .active {
-    @apply font-bold tracking-tight rounded-3xl underline underline-offset-8;
+    @apply bg-primary;
+  }
+  .liked {
+    @apply fill-like;
+  }
+  .commented {
+    @apply fill-comment;
+  }
+  .bookmarked {
+    @apply fill-bookmark;
   }
   .transition-linear-bg-primary {
     @apply transition ease-linear hover:bg-primary duration-200;

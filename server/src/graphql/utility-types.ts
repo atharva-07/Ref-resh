@@ -1,11 +1,14 @@
 import { Request } from "express";
-import { Types } from "mongoose";
+import { GraphQLResolveInfo } from "graphql";
+import { HydratedDocument, Types } from "mongoose";
+
+import { AppContext } from "../server";
 
 export interface HttpResponse {
   success: boolean;
   code: number | string | unknown;
   message: string;
-  data?: object;
+  data?: object | number | string | boolean;
 }
 
 export interface AuthUserInfo extends Request {
@@ -15,4 +18,13 @@ export interface AuthUserInfo extends Request {
   fullName: string;
   email: string;
   pfp: string;
+}
+
+export interface ResolverFn<Parent, Args, ReturnType> {
+  (
+    parent: Parent,
+    args: Args,
+    contextValue: AppContext | null,
+    info: GraphQLResolveInfo
+  ): Promise<HydratedDocument<ReturnType>>;
 }

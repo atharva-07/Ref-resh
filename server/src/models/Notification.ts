@@ -9,7 +9,7 @@ export enum NotificationEvents {
   FOLLOW_REQUEST_ACCEPTED = "FRA",
 }
 
-interface NotificationType {
+export interface NotificationType {
   eventType: NotificationEvents;
   publisher: Types.ObjectId;
   subscriber: Types.ObjectId;

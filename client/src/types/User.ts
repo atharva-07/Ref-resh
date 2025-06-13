@@ -7,7 +7,7 @@ export enum Gender {
 export enum AuthType {
   EMAIL = "EMAIL",
   GOOGLE = "GOOGLE",
-  META = "META",
+  FACEBOOK = "FACEBOOK",
 }
 
 export interface UserType {
@@ -28,9 +28,10 @@ export interface UserType {
   following?: string[]; // Types.Array<Types.ObjectId>;
   followingRequests?: string[]; // Types.Array<Types.ObjectId>;
   blockedAccounts?: string[]; // Types.Array<Types.ObjectId>;
-  posts?: string[]; // Types.Array<Types.ObjectId>;
-  savedPosts?: string[]; // Types .Array<Types.ObjectId>;
+  posts?: string[]; // Types.Array<Types.ObjectId>; // Types .Array<Types.ObjectId>;
   activeStories?: string[]; // Types.Array<Types.ObjectId>;
   authType: AuthType;
-  lastLogin?: Date;
+  lastLoginAt?: Date;
+  readNotificationsAt?: Date;
+  readChatsAt?: Date;
 }

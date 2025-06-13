@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-const username: string = "atharva07";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 const Navigation = () => {
+  const loggedInUser = useAppSelector((state) => state.auth.user);
+
   return (
     <nav>
       <NavLink
@@ -26,9 +28,12 @@ const Navigation = () => {
         to="/notifications"
         className={({ isActive }) => `inline-block ${isActive ? "active" : ""}`}
       >
-        <div className="p-2.5 flex transition-linear-bg-secondary w-fit rounded-3xl">
+        <div className="p-2.5 flex transition-linear-bg-secondary w-fit rounded-3xl relative">
           <BellIcon className="inline-block h-fit w-[2rem]" />
           <span className="mx-3 text-2xl tracking-wide">Notifications</span>
+          <span className="absolute top-1 left-0 rounded-full py-[0.5] px-2 bg-primary">
+            4
+          </span>
         </div>
       </NavLink>
       <NavLink
@@ -50,7 +55,7 @@ const Navigation = () => {
         </div>
       </NavLink>
       <NavLink
-        to={`@${username}`}
+        to={`@${loggedInUser?.username}`}
         className={({ isActive }) => `inline-block ${isActive ? "active" : ""}`}
       >
         <div className="p-2.5 flex transition-linear-bg-secondary w-fit rounded-3xl">

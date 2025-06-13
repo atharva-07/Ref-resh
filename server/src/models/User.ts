@@ -1,4 +1,4 @@
-import { Schema, Types, model } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 export enum Gender {
   MALE = "MALE",
@@ -9,7 +9,7 @@ export enum Gender {
 export enum AuthType {
   EMAIL = "EMAIL",
   GOOGLE = "GOOGLE",
-  META = "META",
+  FACEBOOK = "FACEBOOK",
 }
 
 export interface UserType {
@@ -18,9 +18,9 @@ export interface UserType {
   userName: string;
   email: string;
   password?: string;
-  gender: Gender;
-  dob: Date;
-  privateAccount: boolean;
+  gender?: Gender;
+  dob?: Date;
+  privateAccount?: boolean;
   joinedDate: Date;
   pfpPath?: string;
   bannerPath?: string;
@@ -30,32 +30,34 @@ export interface UserType {
   followingRequests?: Types.Array<Types.ObjectId>;
   blockedAccounts?: Types.Array<Types.ObjectId>;
   posts?: Types.Array<Types.ObjectId>;
-  savedPosts?: Types.Array<Types.ObjectId>;
   activeStories?: Types.Array<Types.ObjectId>;
   authType: AuthType;
-  lastLogin?: Date;
+  refreshToken?: string;
+  lastLoginAt?: Date;
+  readNotificationsAt?: Date;
+  readChatsAt?: Date;
 }
 
 const userSchema: Schema = new Schema<UserType>(
   {
-    firstName: { type: Schema.Types.String, require: true, maxlength: 26 },
-    lastName: { type: Schema.Types.String, require: true, maxlength: 26 },
+    firstName: { type: Schema.Types.String, required: true, maxlength: 26 },
+    lastName: { type: Schema.Types.String, required: true, maxlength: 26 },
     userName: {
       type: Schema.Types.String,
-      require: true,
+      required: true,
       minlength: 6,
-      maxlength: 30,
+      maxlength: 36,
       lowercase: true,
       /*
-        Minimum 6 and maximum 30 characters
+        Minimum 6 and maximum 36 characters
         can have lowercase characters, numbers, underscore [_] and dot [.] only
         can only start with lowercase characters or underscore
       */
-      match: RegExp("^[a-z_][a-z0-9_.]{6,30}$"),
+      // match: RegExp("^[a-z_][a-z0-9_.]{6,30}$"),
     },
     email: {
       type: Schema.Types.String,
-      require: true,
+      required: true,
       /*
         Using Regular Expressions for email validation is generally conisdered a bad idea.
         Just for simplicity's sake, a simple expression is being used.
@@ -75,14 +77,17 @@ const userSchema: Schema = new Schema<UserType>(
       // match:
       //   /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
     },
-    gender: { type: Schema.Types.String, enum: Gender, require: true },
-    dob: { type: Schema.Types.Date, required: true },
+    gender: { type: Schema.Types.String, enum: Gender },
+    dob: Schema.Types.Date,
     privateAccount: {
       type: Schema.Types.Boolean,
       default: false,
-      require: true,
     },
-    joinedDate: { type: Schema.Types.Date, default: new Date(), require: true },
+    joinedDate: {
+      type: Schema.Types.Date,
+      default: new Date(),
+      required: true,
+    },
     pfpPath: {
       type: Schema.Types.String,
       default: "",
@@ -97,10 +102,12 @@ const userSchema: Schema = new Schema<UserType>(
     followingRequests: { type: [Schema.Types.ObjectId], ref: "User" },
     blockedAccounts: [Schema.Types.ObjectId],
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
-    savedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     activeStories: [{ type: Schema.Types.ObjectId, ref: "Story" }],
-    authType: { type: Schema.Types.String, enum: AuthType, require: true },
-    lastLogin: Schema.Types.Date,
+    authType: { type: Schema.Types.String, enum: AuthType, required: true },
+    refreshToken: Schema.Types.String,
+    lastLoginAt: Schema.Types.Date,
+    readNotificationsAt: Schema.Types.Date,
+    readChatsAt: Schema.Types.Date,
   },
   {
     timestamps: true,
