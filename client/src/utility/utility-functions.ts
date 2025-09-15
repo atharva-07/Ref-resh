@@ -1,6 +1,6 @@
 import moment from "moment";
 
-import { AvatarBgColors } from "./utility-types";
+import { ACCEPTED_IMAGE_TYPES, AvatarBgColors } from "./utility-types";
 
 export const ISO_STRING_FORMAT = "YYYY-MM-DDTHH:mm:ss.sssZ";
 
@@ -23,12 +23,59 @@ export const getRelativeTime = (
   return moment(timestamp, format).fromNow();
 };
 
+export const getMonthAndYear = (timestamp: string) => {
+  return moment(timestamp).format("MMMM YYYY");
+};
+
 export const getAbsoluteTime = (timestamp: string) => {
   return new Date(parseInt(timestamp)).toLocaleString();
 };
 
-export const getRandomAvatarBgColor = (max: number = 15) => {
+export const formatDateForChat = (isoString: string) => {
+  const date = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    // Customize date format as needed
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  }
+};
+
+export const getRandomAvatarBgColor = (mode: string, max: number = 15) => {
   const randomColorIndex = Math.floor(Math.random() * max);
   const randomAvatarBgColor = AvatarBgColors[randomColorIndex];
-  return randomAvatarBgColor;
+  return randomAvatarBgColor.concat(mode === "dark" ? "800" : "300");
+};
+
+export const validateImageFile = (
+  file: File | undefined,
+  maxSizeBytes: number
+): string[] => {
+  const errors: string[] = [];
+
+  if (!file) {
+    return errors;
+  }
+
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    errors.push(
+      "Invalid file type. Only .jpg, .jpeg, .png, and .webp formats are supported."
+    );
+  }
+
+  if (file.size > maxSizeBytes) {
+    errors.push(`File size must be less than ${maxSizeBytes / 1024 / 1024}MB.`);
+  }
+
+  return errors;
 };

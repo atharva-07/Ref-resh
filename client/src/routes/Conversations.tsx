@@ -1,237 +1,508 @@
+// import { useMutation, useQuery } from "@apollo/client";
+// import { Check, Search } from "lucide-react";
+// import { useCallback, useEffect, useRef, useState } from "react";
+// import { NavLink, Outlet } from "react-router-dom";
+
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Button } from "@/components/ui/button";
+// import { Card } from "@/components/ui/card";
+// import {
+//   Command,
+//   CommandEmpty,
+//   CommandGroup,
+//   CommandInput,
+//   CommandItem,
+//   CommandList,
+// } from "@/components/ui/command";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+// import { ScrollArea } from "@/components/ui/scroll-area";
+// import { CREATE_NEW_CHAT } from "@/gql-calls/mutation";
+// import { GET_CHATS, GET_USER_FOLLOWERS } from "@/gql-calls/queries";
+// import { useAppDispatch } from "@/hooks/useAppDispatch";
+// import { useAppSelector } from "@/hooks/useAppSelector";
+// import { cn } from "@/lib/utils";
+// import {
+//   chatActions,
+//   getLastMessages,
+//   Message,
+//   User,
+// } from "@/store/chat-slice";
+// import {
+//   getISOStringFromTimestamp,
+//   getRelativeTime,
+// } from "@/utility/utility-functions";
+
+// // TODO: Check if bio and bannerPath are needed in the User interface.
+
+// const Conversations = () => {
+//   const { user } = useAppSelector((state) => state.auth);
+//   const { chats } = useAppSelector((state) => state.chat);
+
+//   const [sidebarWidth, setSidebarWidth] = useState(320);
+//   const [isDragging, setIsDragging] = useState(false);
+//   const containerRef = useRef<HTMLDivElement>(null);
+
+//   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+//     e.preventDefault();
+//     setIsDragging(true);
+//   }, []);
+
+//   const handleMouseMove = useCallback(
+//     (e: MouseEvent) => {
+//       if (!isDragging || !containerRef.current) return;
+
+//       const containerRect = containerRef.current.getBoundingClientRect();
+//       const newWidth = e.clientX - containerRect.left;
+
+//       // Constrain width between 250px and 500px
+//       const constrainedWidth = Math.max(250, Math.min(500, newWidth));
+//       setSidebarWidth(constrainedWidth);
+//     },
+//     [isDragging]
+//   );
+
+//   const handleMouseUp = useCallback(() => {
+//     setIsDragging(false);
+//   }, []);
+
+//   useEffect(() => {
+//     if (isDragging) {
+//       document.addEventListener("mousemove", handleMouseMove);
+//       document.addEventListener("mouseup", handleMouseUp);
+//       document.body.style.cursor = "col-resize";
+//       document.body.style.userSelect = "none";
+//     } else {
+//       document.removeEventListener("mousemove", handleMouseMove);
+//       document.removeEventListener("mouseup", handleMouseUp);
+//       document.body.style.cursor = "";
+//       document.body.style.userSelect = "";
+//     }
+
+//     return () => {
+//       document.removeEventListener("mousemove", handleMouseMove);
+//       document.removeEventListener("mouseup", handleMouseUp);
+//       document.body.style.cursor = "";
+//       document.body.style.userSelect = "";
+//     };
+//   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+//   const lastMessages = useAppSelector(getLastMessages);
+
+//   // TODO: Is this required for syncing whenever we return the conversations page?
+//   // useEffect(() => {
+//   //   if (chats && chats.fetchChats) {
+//   //     const lastMessagesMap = new Map<
+//   //       string,
+//   //       { senderName: string; content: string }
+//   //     >();
+//   //     chats.fetchChats.forEach((chat: Chat) => {
+//   //       if (chat.lastMessage) {
+//   //         const lastMessageSender =
+//   //           chat.lastMessage?.sender._id === user?.userId
+//   //             ? "You"
+//   //             : chat.lastMessage?.sender.firstName;
+//   //         lastMessagesMap.set(chat._id, {
+//   //           senderName: lastMessageSender,
+//   //           content: chat.lastMessage.content,
+//   //         });
+//   //       }
+//   //     });
+//   //     // setLastMessages(lastMessagesMap);
+//   //   }
+//   // }, [chats, user?.userId]);
+
+//   return (
+//     <div
+//       ref={containerRef}
+//       className="flex h-screen max-h-screen bg-background overflow-hidden"
+//     >
+//       <div
+//         className="border-r border-border flex flex-col bg-background flex-shrink-0"
+//         style={{ width: `${sidebarWidth}px` }}
+//       >
+//         {/* Header */}
+//         <div className="p-4 border-b border-border flex-shrink-0">
+//           <div className="relative">
+//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+//             <Input placeholder="Search conversations..." className="pl-10" />
+//           </div>
+//         </div>
+
+//         {/* Chat List */}
+//         <div className="flex-1 min-h-0">
+//           <ScrollArea className="h-full">
+//             <div className="p-2">
+//               {chats && chats.length <= 0 && (
+//                 <p>So fucking empty. You gotta start talking to people gang.</p>
+//               )}
+//               {chats &&
+//                 chats.length > 0 &&
+//                 chats.map((chat) => {
+//                   const chatMembers = chat.chatMembers?.filter(
+//                     (m) => m._id !== user?.userId
+//                   );
+//                   const groupChat: boolean = (chatMembers?.length ?? 0) > 1;
+//                   const recipient = groupChat
+//                     ? chat.chatName
+//                     : chatMembers && chatMembers.length > 0
+//                       ? chatMembers[0].firstName + " " + chatMembers[0].lastName
+//                       : "Unknown Recipient";
+//                   const lastMessage = lastMessages[chat.chatId];
+//                   const chatAvatar = groupChat
+//                     ? lastMessage?.sender.pfpPath
+//                     : chatMembers![0].pfpPath;
+//                   const lastMessageContent = lastMessage?.content;
+//                   const lastMessageSender =
+//                     lastMessage?.sender._id === user?.userId
+//                       ? "You"
+//                       : lastMessage?.sender.firstName;
+
+//                   return (
+//                     <NavLink
+//                       to={chat.chatId}
+//                       className={({ isActive }) => `${isActive && "bg-accent"}`}
+//                     >
+//                       <Card
+//                         key={chat.chatId}
+//                         className={cn(
+//                           "p-3 mb-2 cursor-pointer transition-colors bg-inherit hover:bg-accent"
+//                         )}
+//                       >
+//                         <div className="flex items-start gap-3">
+//                           <Avatar className="h-12 w-12 flex-shrink-0">
+//                             <AvatarImage
+//                               src={chatAvatar || "/placeholder.svg"}
+//                               alt={chat.chatName}
+//                             />
+//                             <AvatarFallback>
+//                               {chat.chatName
+//                                 .split(" ")
+//                                 .map((n) => n[0])
+//                                 .join("")}
+//                             </AvatarFallback>
+//                           </Avatar>
+//                           <div className="flex-1 min-w-0">
+//                             <div className="flex items-center justify-between mb-1">
+//                               <h3 className="font-medium text-sm truncate">
+//                                 {recipient}
+//                               </h3>
+//                               {!lastMessage && (
+//                                 <p>No messages in this chat yet.</p>
+//                               )}
+//                               {lastMessage && (
+//                                 <span className="text-xs text-muted-foreground flex-shrink-0">
+//                                   {getRelativeTime(
+//                                     getISOStringFromTimestamp(
+//                                       lastMessage!.createdAt
+//                                     )
+//                                   )}
+//                                 </span>
+//                               )}
+//                             </div>
+//                             <div className="flex items-center justify-between">
+//                               {lastMessage && (
+//                                 <p className="text-sm text-muted-foreground truncate">
+//                                   {lastMessageSender}
+//                                   {": "}
+//                                   {lastMessageContent}
+//                                 </p>
+//                               )}
+//                               {chat.unreadCount > 0 && (
+//                                 <div className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
+//                                   {chat.unreadCount}
+//                                 </div>
+//                               )}
+//                             </div>
+//                           </div>
+//                         </div>
+//                       </Card>
+//                     </NavLink>
+//                   );
+//                 })}
+//             </div>
+//           </ScrollArea>
+//         </div>
+//       </div>
+
+//       {/* Resizable Divider */}
+//       <div
+//         className={cn(
+//           "w-1 bg-border hover:bg-border/80 cursor-col-resize transition-colors flex-shrink-0",
+//           isDragging && "bg-primary"
+//         )}
+//         onMouseDown={handleMouseDown}
+//       />
+//       <div className="flex-1 min-w-0 flex flex-col bg-background">
+//         <Outlet />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Conversations;
+
 import { useMutation, useQuery } from "@apollo/client";
-import { get } from "http";
-import moment from "moment";
-import { useState } from "react";
+import { Check, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 
-import ChatWindow from "@/components/main/chat/chat-window";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SearchBar from "@/components/ui/search-bar";
 import { CREATE_NEW_CHAT } from "@/gql-calls/mutation";
 import { GET_CHATS, GET_USER_FOLLOWERS } from "@/gql-calls/queries";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { cn } from "@/lib/utils";
+import {
+  chatActions,
+  getLastMessages,
+  Message,
+  User,
+} from "@/store/chat-slice";
 import {
   getISOStringFromTimestamp,
   getRelativeTime,
-  ISO_STRING_FORMAT,
 } from "@/utility/utility-functions";
 
 const Conversations = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const [selectedRecipients, setSelectedRecipients] = useState<
-    { userId: string; firstName: string }[]
-  >([]);
+  const { chats } = useAppSelector((state) => state.chat);
 
-  const {
-    data: chats,
-    error: chatsError,
-    loading: chatsLoading,
-  } = useQuery(GET_CHATS, {
-    fetchPolicy: "network-only", // TODO: Assess this
-  });
-  const {
-    data: followers,
-    error: flwError,
-    loading: flwLoading,
-  } = useQuery(GET_USER_FOLLOWERS, {
-    variables: {
-      userName: user?.username,
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = e.clientX - containerRect.left;
+      const constrainedWidth = Math.max(250, Math.min(500, newWidth));
+      setSidebarWidth(constrainedWidth);
     },
-    fetchPolicy: "network-only", // TODO: Assess this
-  });
+    [isDragging]
+  );
 
-  const [createNewChat, { error: newChatError, loading: newChatLoading }] =
-    useMutation(CREATE_NEW_CHAT);
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
-  const handleSelectRecipient = (selectedRecipient: {
-    userId: string;
-    firstName: string;
-  }) => {
-    const exists = selectedRecipients.find(
-      (recipient) => recipient.userId === selectedRecipient.userId
-    );
-    setSelectedRecipients((prev) => {
-      return exists
-        ? selectedRecipients.filter(
-            (recipient) => recipient.userId !== selectedRecipient.userId
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    } else {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  const lastMessages = useAppSelector(getLastMessages);
+
+  // Memoized and sorted list of chats
+  const sortedChats = useMemo(() => {
+    // Return an empty array if chats is not defined or is empty
+    if (!chats || chats.length === 0) {
+      return [];
+    }
+
+    // Create a new array to avoid mutating the original Redux state
+    return [...chats].sort((a, b) => {
+      // Find the last message for chat 'a' and 'b' from the 'lastMessages' map
+      const lastMessageA = lastMessages[a.chatId];
+      const lastMessageB = lastMessages[b.chatId];
+
+      // If both chats have a last message, compare their timestamps
+      if (lastMessageA && lastMessageB) {
+        // We use 'updatedAt' for the most accurate sorting (e.g., edited messages)
+        const dateA = new Date(
+          getISOStringFromTimestamp(
+            lastMessageA.updatedAt || lastMessageA.createdAt
           )
-        : [...prev, selectedRecipient];
+        );
+        const dateB = new Date(
+          getISOStringFromTimestamp(
+            lastMessageB.updatedAt || lastMessageB.createdAt
+          )
+        );
+        return dateB.getTime() - dateA.getTime(); // Sort in descending order
+      }
+
+      // If only one chat has a last message, it should come first
+      if (lastMessageA) {
+        return -1; // 'a' comes before 'b'
+      }
+      if (lastMessageB) {
+        return 1; // 'b' comes before 'a'
+      }
+
+      // If neither chat has a last message, maintain their original order
+      return 0;
     });
-  };
-
-  const handleCreateNewChat = () => {
-    // If it's a group chat, set ChatName as 'People, People & People'
-    const firstNames = selectedRecipients.map(
-      (recipient) => recipient.firstName
-    );
-    firstNames.push(user?.fullName.split(" ")[0] as string);
-    firstNames.sort((a, b) => a.localeCompare(b));
-    const firstNamesString = firstNames.join();
-    const defaultChatName = firstNamesString.replace(/,/g, ", ");
-
-    const chatMembers = selectedRecipients.map((recipents) => recipents.userId);
-    chatMembers.push(user?.userId as string);
-
-    createNewChat({
-      variables: {
-        chatMembers: chatMembers,
-        chatName: defaultChatName,
-      },
-    });
-
-    setSelectedRecipients((prev) => []);
-  };
+  }, [chats, lastMessages]);
 
   return (
-    <div className="flex w-full gap-20 border">
-      <div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline">Start New Chat</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Create New Chat</AlertDialogTitle>
-              <AlertDialogDescription>
-                Please select the person you want to chat with.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            {followers && followers.fetchUserFollowers.length <= 0 && (
-              <span className="text-destructive text-sm font-bold">
-                You've got no followers yet. Please follow somebody to chat with
-                them.
-              </span>
-            )}
-            {followers && followers.fetchUserFollowers.length > 0 && (
-              <ScrollArea className="h-72 rounded-md border">
-                <div className="p-4">
-                  <ol className="grid grid-cols-3 gap-4">
-                    {followers.fetchUserFollowers.map(
-                      (user: {
-                        _id: string;
-                        firstName: string;
-                        lastName: string;
-                        userName: string;
-                        pfpPath: string;
-                      }) => (
-                        <li
-                          key={user._id}
-                          className={`
-                            hover:cursor-pointer ${
-                              selectedRecipients.find(
-                                (recipient) => recipient.userId === user._id
-                              )
-                                ? "border border-primary"
-                                : undefined
-                            }`}
-                          onClick={() =>
-                            handleSelectRecipient({
-                              userId: user._id,
-                              firstName: user.firstName,
-                            })
-                          }
-                        >
-                          <div>
-                            <Avatar className="h-8 w-8 rounded-lg">
-                              <AvatarImage
-                                src={user?.pfpPath}
-                                alt={`${user?.firstName} ${user.lastName}`}
-                              />
-                              <AvatarFallback className="rounded-lg">
-                                {user.firstName[0] + user.lastName[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs">
-                              {user.firstName + " " + user.lastName}
-                            </span>
-                          </div>
-                        </li>
-                      )
-                    )}
-                  </ol>
-                </div>
-              </ScrollArea>
-            )}
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleCreateNewChat}>
-                Start Chatting.
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        <div>
-          <span className="font-bold text-lg">Chats</span>
-          {chats && chats.fetchChats.length <= 0 && (
-            <p>So fucking empty. You gotta start talking to people gang.</p>
-          )}
-          <ol className="child:m-2 child:p-1">
-            {chats &&
-              chats.fetchChats.length > 0 &&
-              chats.fetchChats.map(
-                (chat: {
-                  _id: string;
-                  members: {
-                    _id: string;
-                    firstName: string;
-                    lastName: string;
-                    pfpPath: string;
-                  }[];
-                  chatName: string;
-                  lastMessage: {
-                    content: string;
-                    sender: { firstName: string; lastName: string };
-                    createdAt: string;
-                  };
-                }) => {
-                  const chatMembers = chat.members.filter(
+    <div
+      ref={containerRef}
+      className="flex h-screen max-h-screen bg-background overflow-hidden"
+    >
+      <div
+        className="border-r border-border flex flex-col bg-background flex-shrink-0"
+        style={{ width: `${sidebarWidth}px` }}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-border flex-shrink-0">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input placeholder="Search conversations..." className="pl-10" />
+          </div>
+        </div>
+        {/* Chat List */}
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full">
+            <div className="p-2">
+              {sortedChats.length === 0 && (
+                <p>So fucking empty. You gotta start talking to people gang.</p>
+              )}
+              {sortedChats.length > 0 &&
+                sortedChats.map((chat) => {
+                  const chatMembers = chat.chatMembers?.filter(
                     (m) => m._id !== user?.userId
                   );
-                  const groupChat: boolean = chatMembers.length > 1;
+                  const groupChat: boolean = (chatMembers?.length ?? 0) > 1;
                   const recipient = groupChat
                     ? chat.chatName
-                    : chatMembers[0].firstName + " " + chatMembers[0].lastName;
+                    : chatMembers && chatMembers.length > 0
+                      ? chatMembers[0].firstName + " " + chatMembers[0].lastName
+                      : "Unknown Recipient";
+                  const lastMessage = lastMessages[chat.chatId];
+                  const chatAvatar = groupChat
+                    ? lastMessage?.sender.pfpPath
+                    : chatMembers![0].pfpPath;
+                  const lastMessageContent = lastMessage?.content;
+                  const lastMessageSender =
+                    lastMessage?.sender._id === user?.userId
+                      ? "You"
+                      : lastMessage?.sender.firstName;
 
                   return (
-                    <li key={chat._id} className="border border-accent">
-                      <NavLink to={chat._id}>
-                        <div>
-                          <p className="font-bold">{recipient}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {chat.lastMessage.sender.firstName}:&nbsp;{" "}
-                            {chat.lastMessage.content}
-                            <span>
-                              {getRelativeTime(
-                                getISOStringFromTimestamp(
-                                  chat.lastMessage.createdAt
-                                )
+                    <NavLink
+                      to={chat.chatId}
+                      className={({ isActive }) =>
+                        `${isActive ? "bg-accent" : ""}`
+                      }
+                    >
+                      <Card
+                        key={chat.chatId}
+                        className={cn(
+                          "p-3 mb-2 cursor-pointer transition-colors bg-inherit hover:bg-accent"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-12 w-12 flex-shrink-0">
+                            <AvatarImage src={chatAvatar} alt={chat.chatName} />
+                            <AvatarFallback>
+                              {chat.chatName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-medium text-sm truncate">
+                                {recipient}
+                              </h3>
+                              {!lastMessage && (
+                                <p>No messages in this chat yet.</p>
                               )}
-                            </span>
-                          </p>
+                              {lastMessage && (
+                                <span className="text-xs text-muted-foreground flex-shrink-0">
+                                  {getRelativeTime(
+                                    getISOStringFromTimestamp(
+                                      lastMessage!.createdAt
+                                    )
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              {lastMessage && (
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {lastMessageSender}
+                                  {": "}
+                                  {lastMessageContent}
+                                </p>
+                              )}
+                              {chat.unreadCount > 0 && (
+                                <div className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
+                                  {chat.unreadCount}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </NavLink>
-                    </li>
+                      </Card>
+                    </NavLink>
                   );
-                }
-              )}
-          </ol>
+                })}
+            </div>
+          </ScrollArea>
         </div>
-        {/* <SearchBar /> */}
       </div>
-      <div className="grow">
+      {/* Resizable Divider */}
+      <div
+        className={cn(
+          "w-1 bg-border hover:bg-border/80 cursor-col-resize transition-colors flex-shrink-0",
+          isDragging && "bg-primary"
+        )}
+        onMouseDown={handleMouseDown}
+      />
+      <div className="flex-1 min-w-0 flex flex-col bg-background">
         <Outlet />
       </div>
     </div>

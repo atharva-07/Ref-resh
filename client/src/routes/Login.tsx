@@ -1,81 +1,18 @@
-import { Link } from "react-router-dom";
+import { Command } from "lucide-react";
 
-import LoginForm from "@/components/forms/LoginForm";
-import { Button } from "@/components/ui/button";
-
-const GOOGLE_OAUTH_URI = import.meta.env.VITE_OAUTH_SERVER_URI + "/google";
-const FACEBOOK_OAUTH_URI = import.meta.env.VITE_OAUTH_SERVER_URI + "/facebook";
+import LoginForm from "@/components/forms/login-form";
 
 const Login = () => {
   return (
-    <div className="border border-border rounded-3xl m-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Log in to Ref-resh</h1>
-      <LoginForm />
-      <div className="text-muted-foreground text-[12px] text-center uppercase">
-        Or Continue With
-      </div>
-      <div>
-        <Button
-          variant={"outline"}
-          className="w-full my-4 font-semibold"
-          onClick={() => (window.location.href = GOOGLE_OAUTH_URI)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 48 48"
-            width="24px"
-            height="24px"
-          >
-            <path
-              fill="#FFC107"
-              d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-            />
-            <path
-              fill="#FF3D00"
-              d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-            />
-            <path
-              fill="#4CAF50"
-              d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-            />
-            <path
-              fill="#1976D2"
-              d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-            />
-          </svg>
-          &nbsp;&nbsp;Google
-        </Button>
-        <Button
-          variant={"outline"}
-          className="w-full font-semibold"
-          onClick={() => (window.location.href = FACEBOOK_OAUTH_URI)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 48 48"
-            width="24px"
-            height="24px"
-          >
-            <path
-              fill="#039be5"
-              d="M24 5A19 19 0 1 0 24 43A19 19 0 1 0 24 5Z"
-            />
-            <path
-              fill="#ffffff"
-              d="M26.572,29.036h4.917l0.772-4.995h-5.69v-2.73c0-2.075,0.678-3.915,2.619-3.915h3.119v-4.359c-0.548-0.074-1.707-0.236-3.897-0.236c-4.573,0-7.254,2.415-7.254,7.917v3.323h-4.701v4.995h4.701v13.729C22.089,42.905,23.032,43,24,43c0.875,0,1.729-0.08,2.572-0.194V29.036z"
-            />
-          </svg>
-          &nbsp;&nbsp;Facebook
-        </Button>
-      </div>
-      <div className="text-sm text-muted-foreground font-thin pt-6">
-        Don't have an account?&nbsp;
-        <Link
-          to="/signup"
-          className="text-foreground hover:text-purple-400 hover:underline"
-        >
-          Create one.
-        </Link>
+    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <div className="flex items-center gap-2 self-center font-medium cursor-pointer">
+          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+            <Command className="size-4" />
+          </div>
+          Ref-resh
+        </div>
+        <LoginForm />
       </div>
     </div>
   );

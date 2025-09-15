@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef, useState } from "react";
 
-import PostForm from "@/components/forms/PostForm";
+import PostForm from "@/components/forms/post-form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,10 +25,28 @@ import {
 } from "@/components/ui/dialog";
 
 const PostWriterModal = ({ children }: { children: ReactNode }) => {
+  const postFormRef = useRef<{ submitForm: () => Promise<void> }>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleSavePost = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (postFormRef.current && !isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        await postFormRef.current.submitForm();
+      } catch (error) {
+        console.error("Error submitting new post form: ", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        {/* <Button className="font-semibold">Compose New Post</Button> */}
+    <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+      <AlertDialogTrigger asChild onClick={() => setIsAlertOpen(true)}>
         {children}
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -37,12 +55,21 @@ const PostWriterModal = ({ children }: { children: ReactNode }) => {
           <AlertDialogDescription>
             Here's your turn to channel your inner poet or a shitposter...
           </AlertDialogDescription>
-          <PostForm />
+          <PostForm
+            ref={postFormRef}
+            onSubmissionComplete={() => {
+              setIsAlertOpen(false);
+              setIsDialogOpen(false);
+              setIsSubmitting(false);
+            }}
+          />
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                Cancel
+              </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -58,12 +85,16 @@ const PostWriterModal = ({ children }: { children: ReactNode }) => {
                   </Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <AlertDialogCancel>Discard Post</AlertDialogCancel>
+                  <AlertDialogCancel onClick={() => setIsAlertOpen(false)}>
+                    Discard Post
+                  </AlertDialogCancel>
                 </DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <AlertDialogAction>Save Post</AlertDialogAction>
+          <Button onClick={handleSavePost}>
+            {isSubmitting ? "Saving..." : "Save Post"}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

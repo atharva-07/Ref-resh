@@ -2,12 +2,6 @@ import { useMutation } from "@apollo/client";
 import { ChevronsUpDown, Edit, LogOut } from "lucide-react";
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,

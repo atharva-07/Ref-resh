@@ -4,16 +4,26 @@ input MessageData {
 }
 
 type LastMessageData {
+  _id: ID!
   content: String!
   sender: BasicUserData!
   createdAt: String!
+  updatedAt: String!
+}
+
+type LastSeenData {
+  userId: String!
+  messageId: ID!
+  timestamp: String!
 }
 
 type Chat implements TimeStamps {
   _id: ID!
-  chatName: String
+  chatName: String!
   members: [BasicUserData!]!
   lastMessage: LastMessageData
+  lastSeen: [LastSeenData!]
+  unreadCount: Int
   createdAt: String!
   updatedAt: String!
 }
@@ -25,4 +35,15 @@ type Message implements TimeStamps {
   sender: BasicUserData!
   createdAt: String!
   updatedAt: String!
+}
+
+type MessageEdge {
+  node: Message!
+  cursor: String!
+}
+
+type ChatMessages {
+  chatName: String
+  edges: [MessageEdge!]!
+  pageInfo: PageInfo!
 }

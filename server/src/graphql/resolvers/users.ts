@@ -292,16 +292,23 @@ export const userMutations = {
       throw error;
     }
   },
-  updateUserProfile: async (
-    _: any,
-    { userProfileData }: any,
-    ctx: AppContext
-  ) => {
+  updateUserInfo: async (_: any, { userProfileData }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
+      if (userProfileData.userName) {
+        const userId = await User.exists({
+          userName: userProfileData.userName,
+        });
+        if (userId)
+          throw newGqlError("Username not available (already taken).", 404);
+      }
+
       const user = await User.findByIdAndUpdate(
         ctx.loggedInUserId,
         {
+          firstName: userProfileData.firstName || undefined,
+          lastName: userProfileData.lastName || undefined,
+          userName: userProfileData.userName || undefined,
           pfpPath: userProfileData.pfpPath || undefined,
           bannerPath: userProfileData.bannerPath || undefined,
           bio: userProfileData.bio || undefined,
@@ -342,14 +349,6 @@ export const userMutations = {
       return response.data;
     } catch (error) {
       console.log(error);
-      throw error;
-    }
-  },
-  setReadChatsAt: async (_: any, __: any, ctx: AppContext) => {
-    checkAuthorization(ctx.loggedInUserId);
-    try {
-      //
-    } catch (error) {
       throw error;
     }
   },

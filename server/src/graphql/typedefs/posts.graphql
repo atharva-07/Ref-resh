@@ -1,11 +1,11 @@
 type Post implements TimeStamps {
   _id: ID!
-  content: String!
+  content: String
   images: [String!]
-  likes: [User!]
+  likes: [BasicUserData!]
   commentsCount: Int!
   bookmarks: [String!]
-  author: User!
+  author: BasicUserData!
   createdAt: String!
   updatedAt: String!
 }
@@ -25,7 +25,7 @@ type PageInfo {
   endCursor: String
 }
 
-type Feed {
+type PostFeed {
   edges: [PostEdge!]!
   pageInfo: PageInfo!
 }

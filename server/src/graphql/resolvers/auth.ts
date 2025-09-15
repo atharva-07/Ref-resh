@@ -156,11 +156,7 @@ export const authMutations = {
           success: true,
           code: 201,
           message: "User successfully created.",
-          data: {
-            _id: result.id,
-            ...result._doc,
-            password: null,
-          },
+          data: result.id,
         };
         return response.data;
       }

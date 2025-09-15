@@ -8,25 +8,125 @@ import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
+interface CommentEdge {
+  node: CommentType;
+  cursor: string;
+}
+
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
+}
+
+interface CommentFeed {
+  edges: CommentEdge[];
+  pageInfo: PageInfo;
+}
+
+const commentProjectionPaths: { [key: string]: 1 } = {};
+Object.keys(Comment.schema.paths).forEach((path) => {
+  if (path !== "author" && path !== "parentComment" && path !== "__v") {
+    commentProjectionPaths[path] = 1;
+  }
+});
+
 export const commentQueries = {
-  fetchTopLevelComments: async (_: any, { postId }: any, ctx: AppContext) => {
+  fetchParentCommentsRecursively: async (
+    _: any,
+    { commentId }: any,
+    ctx: AppContext
+  ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const comments = await Comment.find({
-        post: postId,
-        parentComment: null,
-        topLevelComment: null,
-      }).populate({
-        path: "commenter",
-        select: "_id userName firstName lastName pfpPath",
-      });
-      console.log(comments);
+      const aggreagete = Comment.aggregate()
+        .match({
+          _id: new Types.ObjectId(commentId),
+        })
+        .graphLookup({
+          from: "comments",
+          startWith: "$parentComment",
+          connectFromField: "parentComment",
+          connectToField: "_id",
+          as: "allComments",
+          maxDepth: 10,
+        })
+        .addFields({
+          allComments: {
+            $concatArrays: ["$allComments", ["$$ROOT"]],
+          },
+        })
+        .unwind("$allComments")
+        .lookup({
+          from: "users",
+          localField: "allComments.author",
+          foreignField: "_id",
+          as: "allComments.author",
+        })
+        .unwind("$allComments.author")
+        .lookup({
+          from: "users",
+          localField: "allComments.likes",
+          foreignField: "_id",
+          as: "allComments.likes",
+        })
+        .lookup({
+          from: "comments",
+          localField: "allComments._id",
+          foreignField: "parentComment",
+          as: "allComments.childComments",
+        })
+        .addFields({
+          "allComments.commentsCount": { $size: "$allComments.childComments" },
+        })
+        .project({
+          "allComments.childComments": 0,
+        })
+        .lookup({
+          from: "posts",
+          localField: "allComments.post",
+          foreignField: "_id",
+          as: "post",
+        })
+        .unwind("$post")
+        .lookup({
+          from: "users",
+          localField: "post.author",
+          foreignField: "_id",
+          as: "post.author",
+        })
+        .unwind("$post.author")
+        .group({
+          _id: null,
+          allComments: {
+            $push: "$allComments",
+          },
+          post: { $first: "$post" },
+        })
+        .project({
+          _id: 0,
+          allComments: {
+            $sortArray: {
+              input: "$allComments",
+              sortBy: { createdAt: 1 },
+            },
+          },
+          post: 1,
+        });
+
+      const comments = await aggreagete.exec();
+
+      const commentsWithPost = {
+        post: comments[0].post,
+        comments: comments[0].allComments,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Top-Level comments fetched successfully.",
-        data: comments,
+        message: "Comments fetched successfully.",
+        data: commentsWithPost,
       };
+
       return response.data;
     } catch (error) {
       throw error;
@@ -34,24 +134,114 @@ export const commentQueries = {
   },
   fetchChildComments: async (
     _: any,
-    { postId, commentId }: any,
+    { pageSize, after, postId, commentId }: any,
     ctx: AppContext
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const comments = await Comment.find({
-        post: postId,
-        parentComment: commentId,
-      }).populate({
-        path: "commenter",
-        select: "_id userName firstName lastName pfpPath",
-      });
+      if (!postId && !commentId)
+        throw newGqlError("Post ID or Comment ID is required.", 400);
+
+      if (postId && commentId)
+        throw newGqlError("Provide either Post ID or Comment ID.", 400);
+
+      if (postId) {
+        const post = await Post.exists({ _id: postId });
+        if (!post) throw newGqlError("Post not found.", 404);
+      }
+
+      let comment: Document | null = null;
+      if (commentId) {
+        comment = await Comment.findOne({ _id: commentId });
+        if (!comment) throw newGqlError("Comment not found.", 404);
+      }
+
+      const aggregate = Comment.aggregate();
+
+      let query: any = {};
+      if (postId && !commentId) {
+        query = {
+          post: new Types.ObjectId(postId),
+          parentComment: null,
+        };
+        aggregate.match(query);
+      }
+
+      if (!postId && commentId && comment) {
+        query = {
+          post: comment.post,
+          parentComment: new Types.ObjectId(commentId),
+        };
+        aggregate.match(query);
+      }
+
+      if (after) {
+        aggregate.match({ _id: { $lt: new Types.ObjectId(after) } });
+      }
+
+      aggregate
+        .sort({ _id: -1 })
+        .limit(pageSize)
+        .lookup({
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        })
+        .unwind("$author")
+        .lookup({
+          from: "comments",
+          localField: "_id",
+          foreignField: "parentComment",
+          as: "childComments",
+        })
+        .project({
+          ...commentProjectionPaths,
+          commentsCount: { $size: "$childComments" },
+          "author._id": 1,
+          "author.userName": 1,
+          "author.firstName": 1,
+          "author.lastName": 1,
+          "author.pfpPath": 1,
+        });
+
+      const comments = await aggregate.exec();
+
+      if (after) {
+        query._id = { $lt: new Types.ObjectId(after) };
+      }
+
+      const totalDocumentsAfterCursor = await Comment.countDocuments(
+        query
+      ).exec();
+
+      const hasNextPage = totalDocumentsAfterCursor > comments.length;
+
+      const endCursor =
+        comments.length > 0 ? comments[comments.length - 1]._id : null;
+
+      const edges: CommentEdge[] = comments.map((comment) => ({
+        node: comment,
+        cursor: comment._id,
+      }));
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const feed: CommentFeed = {
+        edges,
+        pageInfo,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: "Child comments fetched successfully.",
-        data: comments,
+        data: feed,
       };
+
       return response.data;
     } catch (error) {
       throw error;
@@ -64,20 +254,29 @@ export const commentQueries = {
 export const commentMutations = {
   postComment: async (
     _: any,
-    { content, postId, parentCommentId = null, topLevelCommentId = null }: any,
+    { commentData: { content, postId, parentCommentId = null } }: any,
     ctx: AppContext
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     if (validator.isEmpty(content))
       throw newGqlError("Comment body cannot be empty.", 422);
     try {
-      const newComment: Document = new Comment<CommentType>({
+      const post = await Post.exists({ _id: postId });
+      if (!post) throw newGqlError("Post not found.", 404);
+
+      if (parentCommentId) {
+        const comment = await Comment.exists({ _id: parentCommentId });
+        if (!comment) throw newGqlError("Parent comment not found.", 404);
+      }
+
+      const comment: Document = new Comment<CommentType>({
         content: content,
         post: postId,
-        commenter: ctx.loggedInUserId,
+        author: ctx.loggedInUserId,
         parentComment: parentCommentId || null,
-        topLevelComment: topLevelCommentId || null,
       });
+      const newComment: Document = await comment.populate("author");
+
       // Implement Notifications later: COMMENTED_ON_POST [OR] REPLIED_TO_COMMENT
       await newComment.save();
       await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
@@ -121,7 +320,7 @@ export const commentMutations = {
         );
         if (alreadyLiked) {
           comment.likes?.pull(ctx.loggedInUserId);
-          if (comment.commenter._id.equals(ctx.loggedInUserId)) {
+          if (comment.author._id.equals(ctx.loggedInUserId)) {
             // Implement Notifications later: LIKED_COMMENT
           }
         } else {
@@ -146,20 +345,16 @@ export const commentMutations = {
   },
   removeComment: async (_: any, { postId, commentId }: any) => {
     try {
-      const deletedTopLevelComment = await Comment.findByIdAndDelete(commentId);
-      const deletedTopLevelCommentId = deletedTopLevelComment?._id;
-      const deletedChildComments = await Comment.deleteMany({
-        topLevelComment: deletedTopLevelCommentId,
-      });
-      const totalCommentsDeleted = 1 + deletedChildComments.deletedCount;
+      const deletedComment = await Comment.findByIdAndDelete(commentId);
+      if (!deletedComment) throw newGqlError("Comment not found.", 404);
       await Post.findByIdAndUpdate(postId, {
-        $inc: { commentsCount: -totalCommentsDeleted },
+        $inc: { commentsCount: -1 },
       });
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Comments including child comments deleted successfully.",
-        data: deletedTopLevelComment!.id,
+        message: "Comment deleted successfully.",
+        data: deletedComment!.id,
       };
       return response.data;
     } catch (error) {

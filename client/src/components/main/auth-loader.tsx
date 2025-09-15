@@ -5,6 +5,9 @@ import React from "react";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { authActions } from "@/store/auth-slice";
+import { socketActions } from "@/store/middlewares/socket-middleware";
+
+import MainSpinner from "./main-spinner";
 
 // TODO: This works but we need proper refactoring and have to set up proper routing now as we don't want this to be executed on every mount.
 // This fails after logging out.
@@ -42,7 +45,7 @@ export const AuthLoader = ({ children }: { children: React.ReactNode }) => {
   }, [dispatch]);
 
   if (isLoading) {
-    return <div>Loading authentication state...</div>;
+    return <MainSpinner message="Attempting authentication with Ref-resh..." />;
   }
 
   return children;

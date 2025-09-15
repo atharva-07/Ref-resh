@@ -1,17 +1,20 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
-import { MessageProps } from "@/components/main/chat/Message";
+import { MessageProps } from "@/components/main/chat/message";
+import { CommentProps } from "@/components/main/comment/comment";
 import { PostProps } from "@/components/main/post/post";
+import { ProfileInfo } from "@/routes/Profile";
+import { Message } from "@/store/chat-slice";
 
-export const GET_USER_PROFILE = gql`
+export const GET_USER_PROFILE: TypedDocumentNode<{
+  fetchUserProfile: ProfileInfo;
+}> = gql`
   query FetchUserProfile($userName: String!) {
     fetchUserProfile(userName: $userName) {
       _id
       firstName
       lastName
       userName
-      email
-      password
       gender
       dob
       privateAccount
@@ -19,15 +22,19 @@ export const GET_USER_PROFILE = gql`
       pfpPath
       bannerPath
       bio
-      authType
-      lastLoginAt
-      readNotificationsAt
-      readChatsAt
       followers {
+        _id
+        firstName
+        lastName
         userName
+        pfpPath
       }
       following {
+        _id
+        firstName
+        lastName
         userName
+        pfpPath
       }
       createdAt
       updatedAt
@@ -38,7 +45,7 @@ export const GET_USER_PROFILE = gql`
 export const GET_FEED: TypedDocumentNode<{
   loadFeed: {
     edges: { node: PostProps; cursor: string }[];
-    pageInfo: { hasNextPage: boolean; endCursor: string };
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
   };
 }> = gql`
   query GetFeed($pageSize: Int!, $after: String) {
@@ -92,12 +99,6 @@ export const GET_UNREAD_NOTIFICATIONS_COUNT = gql`
   }
 `;
 
-export const GET_UNREAD_CHATS_COUNT = gql`
-  query GetUnreadChatsCount {
-    fetchUnreadChatsCount
-  }
-`;
-
 export const GET_UPCOMING_BIRTHDAYS = gql`
   query GetUpcomingBirthdays {
     fetchUpcomingBirthdays {
@@ -141,7 +142,14 @@ export const GET_CHATS = gql`
         bio
         bannerPath
       }
+      lastSeen {
+        userId
+        messageId
+        timestamp
+      }
+      unreadCount
       lastMessage {
+        _id
         content
         sender {
           _id
@@ -150,6 +158,7 @@ export const GET_CHATS = gql`
           pfpPath
         }
         createdAt
+        updatedAt
       }
     }
   }
@@ -170,20 +179,268 @@ export const GET_USER_FOLLOWERS = gql`
 `;
 
 export const GET_CHAT_MESSAGES: TypedDocumentNode<{
-  fetchChatMessages: MessageProps[];
+  fetchChatMessages: {
+    chatName: string | null;
+    edges: { node: Message; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string };
+  };
 }> = gql`
-  query GetChatMessages($chatId: ID!) {
-    fetchChatMessages(chatId: $chatId) {
+  query GetChatMessages($chatId: ID!, $pageSize: Int!, $after: String) {
+    fetchChatMessages(chatId: $chatId, pageSize: $pageSize, after: $after) {
+      chatName
+      edges {
+        node {
+          _id
+          content
+          sender {
+            _id
+            firstName
+            lastName
+            pfpPath
+            userName
+          }
+          createdAt
+          updatedAt
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_USER_POSTS: TypedDocumentNode<{
+  fetchUserPosts: {
+    edges: { node: PostProps; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}> = gql`
+  query GetUserPosts($pageSize: Int!, $after: String, $userName: String!) {
+    fetchUserPosts(pageSize: $pageSize, after: $after, userName: $userName) {
+      edges {
+        node {
+          _id
+          content
+          images
+          commentsCount
+          createdAt
+          updatedAt
+          likes {
+            _id
+          }
+          bookmarks
+          author {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_USER_LIKES: TypedDocumentNode<{
+  fetchUserLikes: {
+    edges: { node: PostProps; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}> = gql`
+  query GetUserPosts($pageSize: Int!, $after: String) {
+    fetchUserLikes(pageSize: $pageSize, after: $after) {
+      edges {
+        node {
+          _id
+          content
+          images
+          commentsCount
+          likes {
+            _id
+          }
+          bookmarks
+          author {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+          createdAt
+          updatedAt
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_USER_BOOKMARKS: TypedDocumentNode<{
+  fetchUserBookmarks: {
+    edges: { node: PostProps; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}> = gql`
+  query GetUserBookmarks($pageSize: Int!, $after: String) {
+    fetchUserBookmarks(pageSize: $pageSize, after: $after) {
+      edges {
+        node {
+          _id
+          content
+          images
+          commentsCount
+          createdAt
+          updatedAt
+          likes {
+            _id
+          }
+          bookmarks
+          author {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_CHILD_COMMENTS: TypedDocumentNode<{
+  fetchChildComments: {
+    edges: { node: CommentProps; cursor: string }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+}> = gql`
+  query GetChildComments(
+    $pageSize: Int!
+    $after: String
+    $postId: ID
+    $commentId: ID
+  ) {
+    fetchChildComments(
+      pageSize: $pageSize
+      after: $after
+      postId: $postId
+      commentId: $commentId
+    ) {
+      edges {
+        node {
+          _id
+          content
+          post
+          commentsCount
+          likes {
+            _id
+          }
+          author {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+          createdAt
+          updatedAt
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_PARENT_COMMENTS: TypedDocumentNode<{
+  fetchParentCommentsRecursively: { post: PostProps; comments: CommentProps[] };
+}> = gql`
+  query GetParentCommentsRecursively($commentId: ID!) {
+    fetchParentCommentsRecursively(commentId: $commentId) {
+      post {
+        _id
+        content
+        images
+        commentsCount
+        createdAt
+        updatedAt
+        likes {
+          _id
+        }
+        bookmarks
+        author {
+          _id
+          firstName
+          lastName
+          userName
+          pfpPath
+        }
+      }
+      comments {
+        _id
+        content
+        post
+        commentsCount
+        likes {
+          _id
+        }
+        author {
+          _id
+          firstName
+          lastName
+          userName
+          pfpPath
+        }
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const GET_POST: TypedDocumentNode<{
+  fetchSinglePost: PostProps;
+}> = gql`
+  query GetSinglePost($postId: ID!) {
+    fetchSinglePost(postId: $postId) {
       _id
       content
-      sender {
+      images
+      commentsCount
+      createdAt
+      updatedAt
+      likes {
+        _id
+      }
+      bookmarks
+      author {
         _id
         firstName
         lastName
+        userName
         pfpPath
       }
-      createdAt
-      updatedAt
     }
   }
 `;

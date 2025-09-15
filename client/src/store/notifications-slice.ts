@@ -34,4 +34,4 @@ const notificationSlice = createAppSlice({
 });
 
 export const todoCringe = notificationSlice.selectors;
-export const authActions = notificationSlice.actions;
+export const notificationActions = notificationSlice.actions;

@@ -13,7 +13,6 @@ const Notifications = () => {
     SET_READ_NOTIFICATIONS_AT
   );
 
-  console.log(data);
   useEffect(() => {
     setReadNotificationsAt();
   }, [setReadNotificationsAt]);
@@ -29,8 +28,10 @@ const Notifications = () => {
         </p>
       )}
       <div>
-        {NOTIFICATIONS.map((element) => (
-          <h3 className="m-4 p-4 border border-emerlad-400">{element}</h3>
+        {NOTIFICATIONS.map((element, idx) => (
+          <h3 key={idx} className="m-4 p-4 border border-emerlad-400">
+            {element}
+          </h3>
         ))}
       </div>
     </>

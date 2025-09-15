@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/hooks/useTheme";
 import {
   getRandomAvatarBgColor,
   getRelativeTime,
@@ -29,6 +30,7 @@ interface PostAuthorProps {
 }
 
 export const PostAuthor = ({ author, createdAt }: PostAuthorProps) => {
+  const { theme } = useTheme();
   const authorInitials = author.firstName[0] + author.lastName[0];
 
   return (
@@ -39,7 +41,9 @@ export const PostAuthor = ({ author, createdAt }: PostAuthorProps) => {
             src={author?.pfpPath}
             alt={author?.firstName + author.lastName}
           />
-          <AvatarFallback className={`rounded-lg ${getRandomAvatarBgColor()}`}>
+          <AvatarFallback
+            className={`rounded-lg ${getRandomAvatarBgColor(theme)}`}
+          >
             {authorInitials}
           </AvatarFallback>
         </Avatar>

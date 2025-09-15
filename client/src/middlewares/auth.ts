@@ -49,17 +49,6 @@ axios.interceptors.response.use(async (response) => {
   return response;
 });
 
-const authMiddleware = new ApolloLink((operation, forward) => {
-  operation.setContext(({ headers = {} }) => ({
-    headers: {
-      ...headers,
-      // TODO: The header will come from cookie.
-      Authorization: `Bearer ${localStorage.getItem("access-token")}` || null,
-    },
-  }));
-  return forward(operation);
-});
-
 const axiosLink = new ApolloLink((operation) => {
   return new Observable((observer) => {
     axios({
@@ -83,7 +72,6 @@ const axiosLink = new ApolloLink((operation) => {
 });
 
 export const client = new ApolloClient({
-  // link: concat(authMiddleware, axiosLink),
   link: axiosLink,
   cache: new InMemoryCache(),
 });

@@ -96,7 +96,7 @@ const userSchema: Schema = new Schema<UserType>(
       type: Schema.Types.String,
       default: "",
     },
-    bio: { type: Schema.Types.String, maxlength: 50 },
+    bio: { type: Schema.Types.String, maxlength: 80 },
     followers: { type: [Schema.Types.ObjectId], ref: "User" },
     following: { type: [Schema.Types.ObjectId], ref: "User" },
     followingRequests: { type: [Schema.Types.ObjectId], ref: "User" },

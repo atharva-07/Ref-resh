@@ -15,13 +15,13 @@ export const PostActions = ({
   bookmarked,
 }: PostActionsProps) => {
   return (
-    <div className="flex gap-2 text-center mt-4 text-[15px]">
+    <div className="flex gap-2 text-center mt-4">
       <div
         className={`flex-grow rounded-3xl child:mx-2 hover:text-like hover:cursor-pointer ${
           liked && "text-like"
         }`}
       >
-        <Heart className={`inline-block ${liked && "liked"}`} />
+        <Heart className={`${liked && "liked"}`} />
         {likesCount}
       </div>
       <div className="flex-grow rounded-3xl child:mx-2 hover:text-comment hover:cursor-pointer">
@@ -33,7 +33,7 @@ export const PostActions = ({
           bookmarked && "text-bookmark"
         }`}
       >
-        <Bookmark className={`inline-block ${bookmarked && "bookmarked"}`} />
+        <Bookmark className={`${bookmarked && "bookmarked"}`} />
       </div>
     </div>
   );

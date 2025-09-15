@@ -1,11 +1,13 @@
 import { Image } from "lucide-react";
 
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { useTheme } from "@/hooks/useTheme";
 import { getRandomAvatarBgColor } from "@/utility/utility-functions";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 const NewPostCard = () => {
+  const { theme } = useTheme();
   const loggedInUser = useAppSelector((state) => state.auth.user);
   const [firstName, lastName] = loggedInUser!.fullName.split(" ");
   const userInitials = firstName[0] + lastName[0];
@@ -14,7 +16,9 @@ const NewPostCard = () => {
     <div className="flex align-center mt-2 child:m-2 child:mt-0 border-accent border-b-4 cursor-pointer">
       <Avatar className="h-8 w-8 rounded-lg">
         <AvatarImage src={loggedInUser?.pfpPath} alt={loggedInUser?.fullName} />
-        <AvatarFallback className={`rounded-lg ${getRandomAvatarBgColor()}`}>
+        <AvatarFallback
+          className={`rounded-lg ${getRandomAvatarBgColor(theme)}`}
+        >
           {userInitials}
         </AvatarFallback>
       </Avatar>

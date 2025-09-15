@@ -1,11 +1,31 @@
 type Comment implements TimeStamps {
   _id: ID!
   content: String!
-  commenter: User!
+  author: BasicUserData!
   post: ID!
-  likes: [User!]
-  parentComment: Comment
-  topLevelComment: Comment
+  commentsCount: Int
+  likes: [BasicUserData!]
   createdAt: String!
   updatedAt: String!
+}
+
+input CommentData {
+  content: String!
+  postId: ID!
+  parentCommentId: ID
+}
+
+type CommentEdge {
+  node: Comment!
+  cursor: String!
+}
+
+type CommentFeed {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentsWithPost {
+  post: Post!
+  comments: [Comment!]
 }

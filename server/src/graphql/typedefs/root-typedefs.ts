@@ -27,39 +27,40 @@ const Queries: string = `
     fetchUserFollowings(userName: String!): [BasicUserData!]
     fetchIncomingFollowRequests: [BasicUserData!]
     fetchUpcomingBirthdays: [BasicUserData!]
-    loadFeed(pageSize: Int!, after: String): Feed!
-    fetchUserPosts(userName: String!): [Post!]
+    loadFeed(pageSize: Int!, after: String): PostFeed!
+    fetchUserPosts(pageSize: Int!, after: String, userName: String!): PostFeed!
     fetchSinglePost(postId: ID!): Post!
-    fetchTopLevelComments(postId: ID!): [Comment!]
-    fetchChildComments(postId: ID, commentId: ID): [Comment!]
+    fetchParentCommentsRecursively(commentId: ID!): CommentsWithPost!
+    fetchChildComments(pageSize: Int!, after: String, postId: ID, commentId: ID): CommentFeed!
+    fetchUserBookmarks(pageSize: Int!, after: String): PostFeed!
+    fetchUserLikes(pageSize: Int!, after: String): PostFeed! 
     fetchUnreadNotificationsCount: Int! 
     fetchChats: [Chat!]
-    fetchChatMessages(chatId: ID!): [Message!]!
-    fetchUnreadChatsCount: Int!
+    fetchChatMessages(chatId: ID!, pageSize: Int!, after: String): ChatMessages!
   }
 `;
 
 const Mutations: string = `
   type Mutation {
-    signup(signupData: SignUpData!): User!
+    signup(signupData: SignUpData!): ID!
     followOrUnfollowUser(userName: String!): ID!
     acceptFollowRequest(userId: ID!): ID!
     rejectFollowRequest(userId: ID!): ID!
     blockOrUnblockUser(userName: String!): ID!
-    updateUserProfile(userProfileData: UserProfileData!): BasicUserData!
-    createPost(postData: PostData): Post!
+    updateUserInfo(userProfileData: UserProfileData!): BasicUserData!
+    createPost(postData: PostData!): Post!
     editPost(postId: ID!, postData: PostData): Post!
     likeOrUnlikePost(postId: ID!): ID!
     removePost(postId: ID!): ID!
-    postComment(content: String!, postId: ID!, parentCommentId: ID, topLevelCommentId: ID): Comment!
+    postComment(commentData: CommentData!): Comment!
     editComment(content: String!, commentId: ID!): Comment!
     likeOrUnlikeComment(commentId: ID!): ID!
     removeComment(postId: ID!, commentId: ID!): ID!
     logout(userId: ID!): ID!
     setReadNotificationsAt: String!
-    setReadChatsAt: String!
-    createNewChat(chatMembers: [ID!]!, chatName: String): ID! 
+    createNewChat(chatMembers: [ID!]!, chatName: String): Chat!
     sendChatMessage(messageData: MessageData!): Message!
+    updateLastSeen(chatId: ID!, messageId: ID!): LastSeenData
   }
 `;
 

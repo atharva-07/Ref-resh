@@ -23,7 +23,7 @@ interface PageInfo {
   endCursor: string | null;
 }
 
-interface Feed {
+interface PostFeed {
   edges: PostEdge[];
   pageInfo: PageInfo;
 }
@@ -31,6 +31,13 @@ interface Feed {
 const RECENCY_WEIGHT = 0.5;
 const POPULARITY_WEIGHT = 0.3;
 const ENGAGEMENT_WEIGHT = 0.2;
+
+const postProjectionPaths: { [key: string]: 1 } = {};
+Object.keys(Post.schema.paths).forEach((path) => {
+  if (path !== "author" && path !== "__v") {
+    postProjectionPaths[path] = 1;
+  }
+});
 
 export const postQueries = {
   loadFeed: async (_: any, { pageSize, after }: any, ctx: AppContext) => {
@@ -40,13 +47,6 @@ export const postQueries = {
         _id: 0,
         following: 1,
       }).lean();
-
-      const postProjectionPaths: { [key: string]: 1 } = {};
-      Object.keys(Post.schema.paths).forEach((path) => {
-        if (path !== "author" && path !== "__v") {
-          postProjectionPaths[path] = 1;
-        }
-      });
 
       // This is a global max. We need this for normalisation of Engagement Score of all posts
       const maxInteractionsResult = await Post.aggregate<{
@@ -151,7 +151,7 @@ export const postQueries = {
         endCursor,
       };
 
-      const feed: Feed = {
+      const feed: PostFeed = {
         edges,
         pageInfo,
       };
@@ -168,22 +168,243 @@ export const postQueries = {
       throw error;
     }
   },
-  fetchUserPosts: async (_: any, { userName }: any, ctx: AppContext) => {
+  fetchUserPosts: async (
+    _: any,
+    { pageSize, after, userName }: any,
+    ctx: AppContext
+  ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const authorId = await User.findOne({ userName: userName }).select("_id");
+      const { _id: authorId } = await User.findOne({ userName: userName })
+        .select("_id")
+        .lean();
       if (!authorId) throw newGqlError("User not found.", 404);
-      const posts = await Post.find({ author: authorId })
-        .sort({ createdAt: -1 })
-        .populate({
-          path: "author",
-          select: "_id userName firstName lastName pfpPath",
+
+      const aggregate = Post.aggregate().match({
+        author: authorId,
+      });
+
+      if (after) {
+        aggregate.match({ _id: { $lt: new ObjectId(after) } });
+      }
+
+      aggregate
+        .sort({ _id: -1 })
+        .limit(pageSize)
+        .lookup({
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        })
+        .unwind("$author")
+        .project({
+          ...postProjectionPaths,
+          "author._id": 1,
+          "author.userName": 1,
+          "author.firstName": 1,
+          "author.lastName": 1,
+          "author.pfpPath": 1,
         });
+
+      const posts = await aggregate.exec();
+
+      const countQuery: any = {
+        author: authorId,
+      };
+      if (after) {
+        countQuery._id = { $lt: new ObjectId(after) };
+      }
+
+      const totalDocumentsAfterCursor = await Post.countDocuments(
+        countQuery
+      ).exec();
+      const hasNextPage = totalDocumentsAfterCursor > posts.length;
+
+      const endCursor =
+        posts.length > 0 ? posts[posts.length - 1]._id.toHexString() : null;
+
+      const edges: PostEdge[] = posts.map((post) => ({
+        node: post,
+        cursor: post._id.toHexString(),
+      }));
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const userPosts: PostFeed = {
+        edges,
+        pageInfo,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: "User's posts fetched successfully.",
-        data: posts,
+        data: userPosts,
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  fetchUserBookmarks: async (
+    _: any,
+    { pageSize, after }: any,
+    ctx: AppContext
+  ) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const { _id: userId } = await User.findById(ctx.loggedInUserId)
+        .select("_id")
+        .lean();
+      if (!userId) throw newGqlError("User not found.", 404);
+
+      const aggregate = Post.aggregate().match({
+        bookmarks: userId,
+      });
+
+      if (after) {
+        aggregate.match({ _id: { $gt: new ObjectId(after) } });
+      }
+
+      aggregate
+        .sort({ createdAt: -1 })
+        .limit(pageSize)
+        .lookup({
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        })
+        .unwind("$author")
+        .project({
+          ...postProjectionPaths,
+          "author._id": 1,
+          "author.userName": 1,
+          "author.firstName": 1,
+          "author.lastName": 1,
+          "author.pfpPath": 1,
+        });
+
+      const posts = await aggregate.exec();
+
+      const countQuery: any = {
+        bookmarks: userId,
+      };
+      if (after) {
+        countQuery._id = { $gt: new ObjectId(after) };
+      }
+
+      const totalDocumentsAfterCursor = await Post.countDocuments(
+        countQuery
+      ).exec();
+      const hasNextPage = totalDocumentsAfterCursor > posts.length;
+
+      const endCursor =
+        posts.length > 0 ? posts[posts.length - 1]._id.toHexString() : null;
+
+      const edges: PostEdge[] = posts.map((post) => ({
+        node: post,
+        cursor: post._id.toHexString(),
+      }));
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const userBookmarks: PostFeed = {
+        edges,
+        pageInfo,
+      };
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User's bookmarked posts fetched successfully.",
+        data: userBookmarks,
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  // Liked Posts
+  fetchUserLikes: async (_: any, { pageSize, after }: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const { _id: userId } = await User.findById(ctx.loggedInUserId)
+        .select("_id")
+        .lean();
+      if (!userId) throw newGqlError("User not found.", 404);
+
+      const aggregate = Post.aggregate().match({
+        likes: userId,
+      });
+
+      if (after) {
+        aggregate.match({ _id: { $gt: new ObjectId(after) } });
+      }
+
+      aggregate
+        .sort({ createdAt: -1 })
+        .limit(pageSize)
+        .lookup({
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        })
+        .unwind("$author")
+        .project({
+          ...postProjectionPaths,
+          "author._id": 1,
+          "author.userName": 1,
+          "author.firstName": 1,
+          "author.lastName": 1,
+          "author.pfpPath": 1,
+        });
+
+      const posts = await aggregate.exec();
+
+      const countQuery: any = {
+        likes: userId,
+      };
+      if (after) {
+        countQuery._id = { $gt: new ObjectId(after) };
+      }
+
+      const totalDocumentsAfterCursor = await Post.countDocuments(
+        countQuery
+      ).exec();
+      const hasNextPage = totalDocumentsAfterCursor > posts.length;
+
+      const endCursor =
+        posts.length > 0 ? posts[posts.length - 1]._id.toHexString() : null;
+
+      const edges: PostEdge[] = posts.map((post) => ({
+        node: post,
+        cursor: post._id.toHexString(),
+      }));
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const userLikes: PostFeed = {
+        edges,
+        pageInfo,
+      };
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User's liked posts fetched successfully.",
+        data: userLikes,
       };
       return response.data;
     } catch (error) {
@@ -194,11 +415,12 @@ export const postQueries = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const post = await Post.findById(postId);
+      if (!post) throw newGqlError("Post not found.", 404);
+      
       await post!.populate({
-        path: "author likes",
+        path: "author",
         select: "_id userName firstName lastName pfpPath",
       });
-      if (!post) throw newGqlError("Post not found.", 404);
       const response: HttpResponse = {
         success: true,
         code: 200,

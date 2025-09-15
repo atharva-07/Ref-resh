@@ -1,12 +1,16 @@
+import { Loader2 } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useParams } from "react-router-dom";
 
-import useSocket from "@/hooks/useSocket";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { chatActions } from "@/store/chat-slice";
+import { socketActions } from "@/store/middlewares/socket-middleware";
 
-import ChatForm from "../../forms/ChatForm";
+import ChatForm from "../../forms/chat-form";
 import { TimeStamps } from "../post/post";
 import { Chat } from "./chat";
+import ChatHeader from "./chat-header";
 
 interface ChatWindowProps extends TimeStamps {
   members: string[];
@@ -14,28 +18,26 @@ interface ChatWindowProps extends TimeStamps {
 
 const ChatWindow = () => {
   const { chatId } = useParams();
-  const recipient = "Clown"; // TODO: FIXME: What if it's a group chat?
 
-  const { socket, isConnected, sendMessage, on, off } = useSocket(
-    `${import.meta.env.VITE_SOCKET_SERVER_URI}`
-  );
+  // const { isConnected, emitEvent, on, off } = useSocket(
+  //   `${import.meta.env.VITE_SOCKET_SERVER_URI}`
+  // );
 
-  if (!isConnected) {
-    return <div>Connecting to chat...</div>;
-  }
+  // if (!isConnected) {
+  //   return <div>Connecting to chat...</div>;
+  // }
 
   return (
     <>
-      {!chatId && <p>Select a converastion to view its mesasges.</p>}
-      <div className="flex flex-col h-screen border justify-between">
-        <div>{recipient}</div>
-        <ErrorBoundary fallback={<p>Error loading messages.</p>}>
-          <Suspense fallback={<p>Loading messages...</p>}>
-            <Chat chatId={chatId as string} on={on} off={off} />
-          </Suspense>
-        </ErrorBoundary>
-        <ChatForm onSendMessage={sendMessage} />
-      </div>
+      {!chatId && <p>Select a converastion to view its messages.</p>}
+      <ChatHeader chatId={chatId as string} />
+      <ErrorBoundary fallback={<h2>Error loading messages.</h2>}>
+        {/* TODO: Check if Suspense can be used here. Right now it causes an issue. The fallback loader takes over and the entire chat window is not displayed. */}
+        {/* <Suspense fallback={<Loader2 className="animate-spin" />}> */}
+        <Chat chatId={chatId as string} />
+        {/* </Suspense> */}
+      </ErrorBoundary>
+      <ChatForm />
     </>
   );
 };

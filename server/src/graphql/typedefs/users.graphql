@@ -21,8 +21,8 @@ type User implements TimeStamps {
   dob: String!
   privateAccount: Boolean!
   joinedDate: String!
-  pfpPath: String
-  bannerPath: String
+  pfpPath: String!
+  bannerPath: String!
   bio: String
   followers: [User!]
   following: [User!]
@@ -43,13 +43,16 @@ type BasicUserData {
   firstName: String!
   lastName: String!
   userName: String!
+  bio: String
   pfpPath: String!
   bannerPath: String!
-  bio: String
 }
 
 input UserProfileData {
+  firstName: String
+  lastName: String
+  userName: String
+  bio: String
   pfpPath: String
   bannerPath: String
-  bio: String
 }

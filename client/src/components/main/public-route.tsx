@@ -1,16 +1,20 @@
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useAppSelector } from "@/hooks/useAppSelector";
 
+import MainSpinner from "./main-spinner";
+
 export const PublicRoute = () => {
   const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
-
-  if (isLoading) {
-    return <div>Loading authentication state...</div>;
-  }
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={from} replace />;
+  }
+
+  if (isLoading) {
+    return <MainSpinner />;
   }
 
   return <Outlet />;

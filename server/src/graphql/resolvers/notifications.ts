@@ -1,7 +1,7 @@
 import Notification from "../../models/Notification";
 import User from "../../models/User";
 import { AppContext } from "../../server";
-import { checkAuthorization } from "../utility-functions";
+import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
 export const notificationQueries = {
@@ -9,8 +9,9 @@ export const notificationQueries = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const user = await User.findById(ctx.loggedInUserId);
+      if (!user) throw newGqlError("User not found", 404);
       let unreadNotficationsCount = 0;
-      if (user?.readNotificationsAt) {
+      if (user.readNotificationsAt) {
         unreadNotficationsCount = await Notification.count({
           $and: [
             { createdAt: { $gt: user?.readNotificationsAt } },
