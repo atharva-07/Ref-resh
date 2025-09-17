@@ -51,7 +51,6 @@ const CommentLoader = () => {
 
   useEffect(() => {
     if (data && data[Object.keys(data)[0]]?.edges) {
-      console.log(data);
       const fieldName = Object.keys(data)[0];
       setAllComments((prevComments) => {
         const existingCommentIds = new Set(prevComments.map((p) => p._id));

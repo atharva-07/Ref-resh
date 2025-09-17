@@ -68,7 +68,7 @@ const Message = ({
             },
           });
 
-          if (data.updateLastSeen) {
+          if (data?.updateLastSeen) {
             console.log(data);
             dispatch(
               chatActions.setSeen({

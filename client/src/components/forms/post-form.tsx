@@ -26,7 +26,6 @@ import { FEED_PAGE_SIZE, POST_MAX_SIZE_IN_BYTES } from "@/utility/constants";
 import { validateImageFile } from "@/utility/utility-functions";
 import { ACCEPTED_IMAGE_TYPES } from "@/utility/utility-types";
 
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 const FormSchema = z.object({
@@ -158,7 +157,7 @@ const PostForm = forwardRef<{ submitForm: () => Promise<void> }, PostFormProps>(
           resolverData = data;
         }
 
-        if (resolverData.createPost) {
+        if (resolverData?.createPost) {
           toast.success("Post created.", {
             description: "Your post was successfully published.",
           });

@@ -1,5 +1,7 @@
 import { model, Schema, Types } from "mongoose";
 
+import Comment from "./Comment";
+
 export interface PostType {
   content: string;
   images?: string[];
@@ -42,6 +44,30 @@ const postSchema: Schema = new Schema<PostType>(
     timestamps: true,
   }
 );
+
+postSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      const postId = this._id;
+      await Comment.deleteMany({ post: postId });
+      next();
+    } catch (error) {
+      next(error as Error);
+    }
+  }
+);
+
+postSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const postId = this.getQuery()._id;
+    await Comment.deleteMany({ post: postId });
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
 
 const Post = model<PostType>("Post", postSchema);
 

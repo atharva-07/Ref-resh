@@ -1,18 +1,25 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
+import { CommentProps } from "@/components/main/comment/comment";
+import { PostProps } from "@/components/main/post/post";
+
 export const SIGNUP = gql`
   mutation Signup($signupData: SignUpData!) {
     signup(signupData: $signupData)
   }
 `;
 
-export const LOGOUT = gql`
+export const LOGOUT: TypedDocumentNode<{
+  logout: string;
+}> = gql`
   mutation Logout($userId: ID!) {
     logout(userId: $userId)
   }
 `;
 
-export const SET_READ_NOTIFICATIONS_AT = gql`
+export const SET_READ_NOTIFICATIONS_AT: TypedDocumentNode<{
+  setReadNotificationsAt: string;
+}> = gql`
   mutation SetReadNotificationsAt {
     setReadNotificationsAt
   }
@@ -58,7 +65,13 @@ export const CREATE_NEW_CHAT = gql`
   }
 `;
 
-export const UPDATE_LAST_SEEN = gql`
+export const UPDATE_LAST_SEEN: TypedDocumentNode<{
+  updateLastSeen: {
+    userId: string;
+    messageId: string;
+    timestamp: string;
+  };
+}> = gql`
   mutation UpdateLastSeen($chatId: ID!, $messageId: ID!) {
     updateLastSeen(chatId: $chatId, messageId: $messageId) {
       messageId
@@ -81,13 +94,16 @@ export const UPDATE_USER_INFO = gql`
   }
 `;
 
-export const CREATE_POST = gql`
+export const CREATE_POST: TypedDocumentNode<{
+  createPost: PostProps;
+}> = gql`
   mutation CreatePost($postData: PostData!) {
     createPost(postData: $postData) {
       _id
       content
       images
       commentsCount
+      edited
       author {
         _id
         userName
@@ -95,5 +111,117 @@ export const CREATE_POST = gql`
       createdAt
       updatedAt
     }
+  }
+`;
+
+export const CREATE_COMMENT: TypedDocumentNode<{
+  postComment: CommentProps;
+}> = gql`
+  mutation PostComment($commentData: CommentData!) {
+    postComment(commentData: $commentData) {
+      _id
+      content
+      commentsCount
+      edited
+      author {
+        _id
+        userName
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const LIKE_UNLIKE_POST: TypedDocumentNode<{
+  likeOrUnlikePost: string;
+}> = gql`
+  mutation LikeOrUnlikePost($postId: ID!) {
+    likeOrUnlikePost(postId: $postId)
+  }
+`;
+
+export const ADD_REMOVE_BOOKMARK: TypedDocumentNode<{
+  addOrRemoveBookmark: string;
+}> = gql`
+  mutation AddOrRemoveBookmark($postId: ID!) {
+    addOrRemoveBookmark(postId: $postId)
+  }
+`;
+
+export const LIKE_UNLIKE_COMMENT: TypedDocumentNode<{
+  likeOrUnlikeComment: string;
+}> = gql`
+  mutation LikeOrUnlikeComment($commentId: ID!) {
+    likeOrUnlikeComment(commentId: $commentId)
+  }
+`;
+
+export const EDIT_POST: TypedDocumentNode<{
+  editPost: PostProps;
+}> = gql`
+  mutation EditPost($postId: ID!, $content: String!) {
+    editPost(postId: $postId, content: $content) {
+      _id
+      content
+      images
+      commentsCount
+      edited
+      likes {
+        _id
+      }
+      bookmarks
+      author {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const EDIT_COMMENT: TypedDocumentNode<{
+  editComment: CommentProps;
+}> = gql`
+  mutation EditComment($commentId: ID!, $content: String!) {
+    editComment(commentId: $commentId, content: $content) {
+      _id
+      content
+      post
+      commentsCount
+      edited
+      likes {
+        _id
+      }
+      author {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const DELETE_POST: TypedDocumentNode<{
+  removePost: string;
+}> = gql`
+  mutation RemovePost($postId: ID!) {
+    removePost(postId: $postId)
+  }
+`;
+
+export const DELETE_COMMENT: TypedDocumentNode<{
+  removeComment: string;
+}> = gql`
+  mutation RemoveComment($postId: ID!, $commentId: ID!) {
+    removeComment(postId: $postId, commentId: $commentId)
   }
 `;

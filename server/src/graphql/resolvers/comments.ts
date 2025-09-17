@@ -3,6 +3,10 @@ import { Types } from "mongoose";
 import validator from "validator";
 
 import Comment, { CommentType } from "../../models/Comment";
+import Notification, {
+  NotificationEvents,
+  NotificationType,
+} from "../../models/Notification";
 import Post from "../../models/Post";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
@@ -38,7 +42,7 @@ export const commentQueries = {
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const aggreagete = Comment.aggregate()
+      const aggreagate = Comment.aggregate()
         .match({
           _id: new Types.ObjectId(commentId),
         })
@@ -106,14 +110,52 @@ export const commentQueries = {
           _id: 0,
           allComments: {
             $sortArray: {
-              input: "$allComments",
+              input: {
+                $map: {
+                  input: "$allComments",
+                  as: "comment",
+                  in: {
+                    _id: "$$comment._id",
+                    content: "$$comment.content",
+                    post: "$$comment.post",
+                    edited: "$$comment.edited",
+                    likes: "$$comment.likes",
+                    commentsCount: "$$comment.commentsCount",
+                    author: {
+                      _id: "$$comment.author._id",
+                      userName: "$$comment.author.userName",
+                      firstName: "$$comment.author.firstName",
+                      lastName: "$$comment.author.lastName",
+                      pfpPath: "$$comment.author.pfpPath",
+                    },
+                    createdAt: "$$comment.createdAt",
+                    updatedAt: "$$comment.updatedAt",
+                  },
+                },
+              },
               sortBy: { createdAt: 1 },
             },
           },
-          post: 1,
+          post: {
+            _id: "$post._id",
+            content: "$post.content",
+            images: "$post.images",
+            likes: "$post.likes",
+            edited: "$post.edited",
+            commentsCount: "$post.commentsCount",
+            author: {
+              _id: "$post.author._id",
+              userName: "$post.author.userName",
+              firstName: "$post.author.firstName",
+              lastName: "$post.author.lastName",
+              pfpPath: "$post.author.pfpPath",
+            },
+            createdAt: "$post.createdAt",
+            updatedAt: "$post.updatedAt",
+          },
         });
 
-      const comments = await aggreagete.exec();
+      const comments = await aggreagate.exec();
 
       const commentsWithPost = {
         post: comments[0].post,
@@ -299,12 +341,13 @@ export const commentMutations = {
       const editableComment = await Comment.findById(commentId);
       editableComment!.content = content;
       editableComment!.edited = true;
-      await editableComment!.save();
+      const result = await editableComment!.save();
+      await result.populate("likes author");
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: "Comment edited successfully.",
-        data: <Document>editableComment,
+        data: result,
       };
       return response.data;
     } catch (error) {
@@ -312,6 +355,7 @@ export const commentMutations = {
     }
   },
   likeOrUnlikeComment: async (_: any, { commentId }: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
     try {
       const comment = await Comment.findById(commentId);
       if (comment) {
@@ -320,11 +364,18 @@ export const commentMutations = {
         );
         if (alreadyLiked) {
           comment.likes?.pull(ctx.loggedInUserId);
-          if (comment.author._id.equals(ctx.loggedInUserId)) {
-            // Implement Notifications later: LIKED_COMMENT
-          }
         } else {
           comment.likes?.push(ctx.loggedInUserId);
+          if (!comment.author._id.equals(ctx.loggedInUserId)) {
+            // Implement Notifications later: LIKED_COMMENT
+            const newNotification = new Notification<NotificationType>({
+              eventType: NotificationEvents.LIKED_COMMENT,
+              publisher: ctx.loggedInUserId,
+              subscriber: comment.author._id,
+              redirectionURL: `/comment/${commentId}`,
+            });
+            await newNotification.save();
+          }
         }
         await comment.save();
         const response: HttpResponse = {
@@ -337,7 +388,7 @@ export const commentMutations = {
         };
         return response.data;
       } else {
-        throw newGqlError("Post not found.", 404);
+        throw newGqlError("Comment not found.", 404);
       }
     } catch (error) {
       throw error;

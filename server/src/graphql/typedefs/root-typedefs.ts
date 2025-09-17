@@ -49,11 +49,12 @@ const Mutations: string = `
     blockOrUnblockUser(userName: String!): ID!
     updateUserInfo(userProfileData: UserProfileData!): BasicUserData!
     createPost(postData: PostData!): Post!
-    editPost(postId: ID!, postData: PostData): Post!
+    editPost(postId: ID!, content: String!): Post!
     likeOrUnlikePost(postId: ID!): ID!
+    addOrRemoveBookmark(postId: ID!): ID!
     removePost(postId: ID!): ID!
     postComment(commentData: CommentData!): Comment!
-    editComment(content: String!, commentId: ID!): Comment!
+    editComment(commentId: ID!, content: String!): Comment!
     likeOrUnlikeComment(commentId: ID!): ID!
     removeComment(postId: ID!, commentId: ID!): ID!
     logout(userId: ID!): ID!

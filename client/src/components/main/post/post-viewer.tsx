@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import CommentForm from "@/components/forms/comment-form";
+import CommentComposer from "@/components/forms/composer/comment-composer";
 
 import CommentLoader from "../comment/comment-loader";
 import MainSpinner from "../main-spinner";
@@ -13,7 +13,7 @@ const PostViewer = () => {
       <Suspense fallback={<MainSpinner message="Loading post..." />}>
         <main className="w-4/5 *:w-4/5 *:mx-auto *:border border-t-0">
           <PostHero />
-          <CommentForm />
+          <CommentComposer />
           <CommentLoader />
         </main>
       </Suspense>

@@ -4,6 +4,7 @@ type Comment implements TimeStamps {
   author: BasicUserData!
   post: ID!
   commentsCount: Int
+  edited: Boolean!
   likes: [BasicUserData!]
   createdAt: String!
   updatedAt: String!

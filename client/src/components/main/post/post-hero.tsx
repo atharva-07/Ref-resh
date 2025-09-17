@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@apollo/client";
+import { useMutation, useSuspenseQuery } from "@apollo/client";
 import {
   Bookmark,
   Edit,
@@ -12,6 +12,8 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 
+import EditPostFormSheet from "@/components/forms/edit-post";
+import CommentWriterModal from "@/components/modal/comment-writer-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ADD_REMOVE_BOOKMARK, LIKE_UNLIKE_POST } from "@/gql-calls/mutation";
 import { GET_POST } from "@/gql-calls/queries";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { cn } from "@/lib/utils";
@@ -34,12 +37,15 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../../ui/carousel";
-import { BasicUserData } from "./post";
+import { BasicUserData, PostDeleteDialog } from "./post";
 
 const PostHero = () => {
   const loggedInUser = useAppSelector((state) => state.auth.user);
   const params = useParams();
   const postId = params.postId;
+
+  const [isEditPostFormOpen, setIsEditPostFormOpen] = useState<boolean>(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
   const { data } = useSuspenseQuery(GET_POST, {
     variables: { postId },
@@ -49,6 +55,9 @@ const PostHero = () => {
   const post = data.fetchSinglePost;
   const author = post.author;
   const authorInitials: string = author.firstName[0] + author.lastName[0];
+
+  const [likeOrUnlikePost] = useMutation(LIKE_UNLIKE_POST);
+  const [addOrRemoveBookmark] = useMutation(ADD_REMOVE_BOOKMARK);
 
   const [likeCount, setLikeCount] = useState<number>(post.likes.length);
   const [liked, setLiked] = useState<boolean>(
@@ -62,13 +71,29 @@ const PostHero = () => {
     post.bookmarks?.includes(loggedInUser!.userId)
   );
 
-  const handleLike = () => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+  const handleLike = async () => {
+    const { data } = await likeOrUnlikePost({
+      variables: {
+        postId: post._id,
+      },
+    });
+
+    if (data?.likeOrUnlikePost) {
+      setLiked((prev) => !prev);
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    }
   };
 
-  const handleBookmark = () => {
-    setBookmarked((prev) => !prev);
+  const handleBookmark = async () => {
+    const { data } = await addOrRemoveBookmark({
+      variables: {
+        postId: post._id,
+      },
+    });
+
+    if (data?.addOrRemoveBookmark) {
+      setBookmarked((prev) => !prev);
+    }
   };
 
   const formatCount = (count: number) => {
@@ -84,149 +109,175 @@ const PostHero = () => {
   const { createdAt } = transformTimestamps(post.createdAt, post.updatedAt);
 
   return (
-    <Card className="p-4">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={author.pfpPath} alt={authorInitials} />
-            <AvatarFallback>{authorInitials}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-semibold">
-              {author.firstName + " " + author.lastName}
-            </span>
-            <span className="text-muted-foreground text-sm hover:underline cursor-pointer">
-              <Link
-                to={
-                  params.username
-                    ? `/${author.userName}`
-                    : `/${author.userName}`
-                }
-              >
-                @{author.userName}
-              </Link>
-            </span>
+    <>
+      <Card className="p-4">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={author.pfpPath} alt={authorInitials} />
+              <AvatarFallback>{authorInitials}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-semibold">
+                {author.firstName + " " + author.lastName}
+              </span>
+              <span className="text-muted-foreground text-sm hover:underline cursor-pointer">
+                <Link
+                  to={
+                    params.username
+                      ? `/${author.userName}`
+                      : `/${author.userName}`
+                  }
+                >
+                  @{author.userName}
+                </Link>
+              </span>
+            </div>
           </div>
+          {author._id === loggedInUser?.userId && (
+            <div className="ml-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-muted"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setIsEditPostFormOpen(true);
+                    }}
+                  >
+                    Edit Post
+                    <Edit className="ml-2 h-[1rem] w-[1rem]" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => {
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
+                    Delete Post
+                    <Trash2 className="ml-2 h-[1rem] w-[1rem]" />
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
-        {author._id === loggedInUser?.userId && (
-          <div className="ml-auto">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-muted"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => console.log("Post Updated.")}>
-                  Edit Post
-                  <Edit className="ml-2 h-[1rem] w-[1rem]" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => console.log("Post Deleted.")}
-                >
-                  Delete Post
-                  <Trash2 className="ml-2 h-[1rem] w-[1rem]" />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+        {/* Content */}
+        <div className="mb-3">
+          <p className="leading-relaxed">{post.content}</p>
+        </div>
+
+        {/* Conditional Image Carousel */}
+        {post.images && post.images.length > 0 && (
+          <div className="mb-4">
+            <Carousel className="w-full">
+              <CarouselContent>
+                {post.images.map((image, index) => (
+                  <CarouselItem key={index}>
+                    <Link to={`/post/${post._id}/photos`} key={index}>
+                      <AspectRatio ratio={16 / 9}>
+                        <img
+                          src={image}
+                          alt={`Post image ${index + 1}`}
+                          className="w-full h-auto rounded-lg border border-secondary"
+                        />
+                      </AspectRatio>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {post.images.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-2 bg-accent/60 text-accent-foreground border-muted hover:bg-accent" />
+                  <CarouselNext className="right-2 bg-accent/60 text-accent-foreground border-muted hover:bg-accent" />
+                </>
+              )}
+            </Carousel>
           </div>
         )}
-      </div>
 
-      {/* Content */}
-      <div className="mb-3">
-        <p className="leading-relaxed">{post.content}</p>
-      </div>
-
-      {/* Conditional Image Carousel */}
-      {post.images && post.images.length > 0 && (
-        <div className="mb-4">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {post.images.map((image, index) => (
-                <CarouselItem key={index}>
-                  <Link to={`/post/${post._id}/photos`} key={index}>
-                    <AspectRatio ratio={16 / 9}>
-                      <img
-                        src={image}
-                        alt={`Post image ${index + 1}`}
-                        className="w-full h-auto rounded-lg border border-secondary"
-                      />
-                    </AspectRatio>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {post.images.length > 1 && (
-              <>
-                <CarouselPrevious className="left-2 bg-accent/60 text-accent-foreground border-muted hover:bg-accent" />
-                <CarouselNext className="right-2 bg-accent/60 text-accent-foreground border-muted hover:bg-accent" />
-              </>
-            )}
-          </Carousel>
+        {/* Timestamps */}
+        <div className="mb-4 flex justify-between">
+          <span className="text-muted-foreground text-sm">
+            {moment(createdAt).format("LT")}
+            &nbsp;&middot;&nbsp;
+            {moment(createdAt).format("ll")}
+          </span>
+          {data.fetchSinglePost.edited && (
+            <span className="text-muted-foreground text-sm">- edited</span>
+          )}
         </div>
-      )}
 
-      {/* Timestamps */}
-      <div className="mb-4">
-        <span className="text-muted-foreground text-sm">
-          {moment(createdAt).format("LT")}
-          &nbsp;&middot;&nbsp;
-          {moment(createdAt).format("ll")}
-        </span>
-      </div>
+        {/* Engagement Buttons */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLike}
+            className={cn(
+              "h-8 px-2 hover:bg-red-500/10 group",
+              liked ? "text-like" : "text-muted-foreground hover:text-red-500"
+            )}
+          >
+            <Heart className={cn("h-4 w-4 mr-1", liked && "fill-current")} />
+            <span className="text-sm">
+              {likeCount > 0 ? formatCount(likeCount) : ""}
+            </span>
+          </Button>
 
-      {/* Engagement Buttons */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLike}
-          className={cn(
-            "h-8 px-2 hover:bg-red-500/10 group",
-            liked ? "text-like" : "text-muted-foreground hover:text-red-500"
-          )}
-        >
-          <Heart className={cn("h-4 w-4 mr-1", liked && "fill-current")} />
-          <span className="text-sm">
-            {likeCount > 0 ? formatCount(likeCount) : ""}
-          </span>
-        </Button>
+          {/* Comment */}
+          <CommentWriterModal postId={post._id} parentCommentId={null}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 group"
+            >
+              <MessageCircle className="h-4 w-4 mr-1 group-hover:fill-current" />
+              <span className="text-sm">
+                {post.commentsCount > 0 ? formatCount(post.commentsCount) : ""}
+              </span>
+            </Button>
+          </CommentWriterModal>
 
-        {/* Reply */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 group"
-        >
-          <MessageCircle className="h-4 w-4 mr-1 group-hover:fill-current" />
-          <span className="text-sm">
-            {post.commentsCount > 0 ? formatCount(post.commentsCount) : ""}
-          </span>
-        </Button>
+          {/* Bookmark */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBookmark}
+            className={cn(
+              "h-8 px-2 hover:bg-green-500/10 group",
+              bookmarked
+                ? "text-bookmark"
+                : "text-muted-foreground hover:text-green-500"
+            )}
+          >
+            <Bookmark className={cn("h-4 w-4", bookmarked && "fill-current")} />
+          </Button>
+        </div>
+      </Card>
 
-        {/* Bookmark */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleBookmark}
-          className={cn(
-            "h-8 px-2 hover:bg-green-500/10 group",
-            bookmarked
-              ? "text-bookmark"
-              : "text-muted-foreground hover:text-green-500"
-          )}
-        >
-          <Bookmark className={cn("h-4 w-4", bookmarked && "fill-current")} />
-        </Button>
-      </div>
-    </Card>
+      <EditPostFormSheet
+        open={isEditPostFormOpen}
+        onOpenChange={setIsEditPostFormOpen}
+        postId={post._id}
+        content={post.content}
+      />
+
+      <PostDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        postId={post._id}
+      />
+    </>
   );
 };
 

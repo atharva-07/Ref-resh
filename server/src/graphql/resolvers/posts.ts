@@ -416,7 +416,7 @@ export const postQueries = {
     try {
       const post = await Post.findById(postId);
       if (!post) throw newGqlError("Post not found.", 404);
-      
+
       await post!.populate({
         path: "author",
         select: "_id userName firstName lastName pfpPath",
@@ -458,28 +458,25 @@ export const postMutations = {
       throw error;
     }
   },
-  editPost: async (_: any, { postId, postData }: any, ctx: AppContext) => {
+  editPost: async (_: any, { postId, content }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
-    if (validator.isEmpty(postData.content))
+    if (validator.isEmpty(content))
       throw newGqlError("Post caption cannot be empty", 422);
     try {
       const editablePost = await Post.findById(postId);
       if (editablePost) {
-        editablePost.content = postData.content;
+        editablePost.content = content;
         editablePost.edited = true;
-        if (postData.images)
-          postData.images.forEach((val: string) => {
-            editablePost.images?.push(val);
-          });
       } else {
         throw newGqlError("Post not found.", 404);
       }
-      await editablePost.save();
+      const result = await editablePost.save();
+      await result.populate("likes author");
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: "Post edited successfully.",
-        data: editablePost,
+        data: result,
       };
       return response.data;
     } catch (error) {
@@ -515,6 +512,36 @@ export const postMutations = {
           message: alreadyLiked
             ? "Post unliked successfully."
             : "Post liked successfully.",
+          data: post.id,
+        };
+        return response.data;
+      } else {
+        throw newGqlError("Post not found.", 404);
+      }
+    } catch (error) {
+      throw error;
+    }
+  },
+  addOrRemoveBookmark: async (_: any, { postId }: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const post = await Post.findById(postId);
+      if (post) {
+        const alreadyBookmarked = post.bookmarks?.find((val: Types.ObjectId) =>
+          val.equals(ctx.loggedInUserId)
+        );
+        if (alreadyBookmarked) {
+          post.bookmarks?.pull(ctx.loggedInUserId);
+        } else {
+          post.bookmarks?.push(ctx.loggedInUserId);
+        }
+        await post.save();
+        const response: HttpResponse = {
+          success: true,
+          code: 200,
+          message: alreadyBookmarked
+            ? "Bookmark added successfully."
+            : "Bookmark removed successfully.",
           data: post.id,
         };
         return response.data;

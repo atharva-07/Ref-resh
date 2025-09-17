@@ -1,5 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { ChevronsUpDown, Edit, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   SidebarMenu,
@@ -70,20 +71,22 @@ const NavUser = ({ user }: NavUserProps) => {
             sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user?.pfpPath} alt={user?.fullName} />
-                  <AvatarFallback className="rounded-lg">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {user?.fullName}
-                  </span>
-                  <span className="truncate text-xs">{user?.username}</span>
+              <Link to={`${user.username}`}>
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src={user?.pfpPath} alt={user?.fullName} />
+                    <AvatarFallback className="rounded-lg">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">
+                      {user?.fullName}
+                    </span>
+                    <span className="truncate text-xs">{user?.username}</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

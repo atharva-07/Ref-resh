@@ -4,6 +4,7 @@ type Post implements TimeStamps {
   images: [String!]
   likes: [BasicUserData!]
   commentsCount: Int!
+  edited: Boolean!
   bookmarks: [String!]
   author: BasicUserData!
   createdAt: String!

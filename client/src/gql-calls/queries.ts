@@ -56,8 +56,7 @@ export const GET_FEED: TypedDocumentNode<{
           content
           images
           commentsCount
-          createdAt
-          updatedAt
+          edited
           likes {
             _id
           }
@@ -69,6 +68,8 @@ export const GET_FEED: TypedDocumentNode<{
             userName
             pfpPath
           }
+          createdAt
+          updatedAt
         }
         cursor
       }
@@ -226,8 +227,7 @@ export const GET_USER_POSTS: TypedDocumentNode<{
           content
           images
           commentsCount
-          createdAt
-          updatedAt
+          edited
           likes {
             _id
           }
@@ -239,6 +239,8 @@ export const GET_USER_POSTS: TypedDocumentNode<{
             userName
             pfpPath
           }
+          createdAt
+          updatedAt
         }
         cursor
       }
@@ -264,6 +266,7 @@ export const GET_USER_LIKES: TypedDocumentNode<{
           content
           images
           commentsCount
+          edited
           likes {
             _id
           }
@@ -302,8 +305,7 @@ export const GET_USER_BOOKMARKS: TypedDocumentNode<{
           content
           images
           commentsCount
-          createdAt
-          updatedAt
+          edited
           likes {
             _id
           }
@@ -315,6 +317,8 @@ export const GET_USER_BOOKMARKS: TypedDocumentNode<{
             userName
             pfpPath
           }
+          createdAt
+          updatedAt
         }
         cursor
       }
@@ -350,6 +354,7 @@ export const GET_CHILD_COMMENTS: TypedDocumentNode<{
           content
           post
           commentsCount
+          edited
           likes {
             _id
           }
@@ -383,8 +388,7 @@ export const GET_PARENT_COMMENTS: TypedDocumentNode<{
         content
         images
         commentsCount
-        createdAt
-        updatedAt
+        edited
         likes {
           _id
         }
@@ -396,12 +400,15 @@ export const GET_PARENT_COMMENTS: TypedDocumentNode<{
           userName
           pfpPath
         }
+        createdAt
+        updatedAt
       }
       comments {
         _id
         content
         post
         commentsCount
+        edited
         likes {
           _id
         }
@@ -428,8 +435,7 @@ export const GET_POST: TypedDocumentNode<{
       content
       images
       commentsCount
-      createdAt
-      updatedAt
+      edited
       likes {
         _id
       }
@@ -441,6 +447,8 @@ export const GET_POST: TypedDocumentNode<{
         userName
         pfpPath
       }
+      createdAt
+      updatedAt
     }
   }
 `;

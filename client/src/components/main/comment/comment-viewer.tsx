@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useParams } from "react-router-dom";
 
-import CommentForm from "@/components/forms/comment-form";
+import CommentComposer from "@/components/forms/composer/comment-composer";
 
 import MainSpinner from "../main-spinner";
 import CommentLoader from "./comment-loader";
@@ -14,7 +14,7 @@ const CommentViewer = ({ key: _ }: { key: string }) => {
       <Suspense fallback={<MainSpinner message="Loading comments..." />}>
         <main className="w-4/5 *:w-4/5 *:mx-auto *:border border-t-0">
           <CommentsChain />
-          <CommentForm />
+          <CommentComposer />
           <CommentLoader />
         </main>
       </Suspense>
