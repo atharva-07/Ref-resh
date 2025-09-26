@@ -1,11 +1,9 @@
 import {
   Bell,
   Bookmark,
-  ChevronsUpDown,
   Command,
-  Edit3,
+  Heart,
   Home,
-  LogOut,
   MessageSquarePlus,
   User2,
 } from "lucide-react";
@@ -55,6 +53,11 @@ const LeftSidebar = () => {
       title: "Bookmarks",
       url: "/bookmarks",
       icon: Bookmark,
+    },
+    {
+      title: "Requests",
+      url: "requests",
+      icon: Heart,
     },
     {
       title: "Profile",

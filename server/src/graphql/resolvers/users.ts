@@ -1,14 +1,35 @@
+import { ObjectId } from "mongodb";
 import { Types } from "mongoose";
 
+import Notification, {
+  NotificationEvents,
+  NotificationType,
+} from "../../models/Notification";
 import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
+import {
+  BasicUserData,
+  BasicUserDataEdge,
+  PageInfo,
+  PaginatedBasicUserData,
+} from "./posts";
+
+enum FollowRequestStatus {
+  FOLLOWED = "FOLLOWED",
+  UNFOLLOWED = "UNFOLLOWED",
+  REQUESTED = "REQUESTED",
+  REMOVED = "REMOVED",
+}
 
 export const userQueries = {
   fetchUserProfile: async (_: any, { userName }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
+      const loggedInUser = await User.findById(ctx.loggedInUserId, {
+        blockedAccounts: 1,
+      }).lean();
       const user = await User.findOne(
         { userName: userName },
         {
@@ -17,11 +38,17 @@ export const userQueries = {
           followingRequests: 0,
         }
       );
-      const isLoggedInUserBlocked = user?.blockedAccounts?.find(
-        (x) => ctx.loggedInUserId
-      );
-      if (isLoggedInUserBlocked) throw newGqlError("Forbidden", 403);
       if (!user) throw newGqlError("User not found.", 404);
+      const hasLoggedInUserBlocked = loggedInUser.blockedAccounts?.find(
+        (x) => x.toString() === user._id.toString()
+      );
+
+      const isLoggedInUserBlocked = user?.blockedAccounts?.find(
+        (x) => x.toString() === ctx.loggedInUserId.toString()
+      );
+
+      if (isLoggedInUserBlocked || hasLoggedInUserBlocked)
+        throw newGqlError("Blocked/Forbidden", 403);
       await user.populate({
         path: "followers following",
         select: "_id userName firstName lastName pfpPath",
@@ -39,42 +66,162 @@ export const userQueries = {
       throw error;
     }
   },
-  fetchUserFollowers: async (_: any, { userName }: any, ctx: AppContext) => {
+  fetchUserFollowers: async (
+    _: any,
+    { pageSize, after, userId }: any,
+    ctx: AppContext
+  ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const user = await User.findOne({ userName: userName }, { followers: 1 });
-      if (!user) throw newGqlError("User not found.", 404);
-      const userFollowers = await user.populate({
-        path: "followers",
-        select: "_id userName firstName lastName pfpPath bannerPath bio",
-      });
+      const user = await User.findById(userId, { followers: 1 }).lean();
+
+      if (!user || !user.followers || user.followers.length === 0) {
+        return {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null,
+          },
+        };
+      }
+
+      const followers = user.followers as Types.ObjectId[];
+      let startFromIndex = 0;
+
+      if (after) {
+        startFromIndex = followers.findIndex((id) => id.toString() === after);
+        if (startFromIndex !== -1) {
+          startFromIndex += 1;
+        } else {
+          return {
+            edges: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+            },
+          };
+        }
+      }
+
+      const userIdsToFetch = followers.slice(
+        startFromIndex,
+        startFromIndex + pageSize
+      );
+
+      const users = (await User.find({
+        _id: { $in: userIdsToFetch },
+      })
+        .select("_id firstName lastName userName pfpPath bannerPath bio")
+        .lean()) as BasicUserData[];
+
+      const edges: BasicUserDataEdge[] = users.map((user) => ({
+        node: user,
+        cursor: user._id.toString(),
+      }));
+
+      const hasNextPage = startFromIndex + pageSize < followers.length;
+      const endCursor = hasNextPage
+        ? edges[edges.length - 1]?.cursor || null
+        : null;
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const paginatedFollowers: PaginatedBasicUserData = {
+        edges,
+        pageInfo,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User Followers fetched successfully.",
-        data: userFollowers.followers || [],
+        data: paginatedFollowers,
+        message: `Fetched ${pageSize} followers for user: ${userId}. Followers cursor: ${after}`,
       };
+
       return response.data;
     } catch (error) {
       console.log(error);
       throw error;
     }
   },
-  fetchUserFollowings: async (_: any, { userName }: any, ctx: AppContext) => {
+  fetchUserFollowing: async (
+    _: any,
+    { pageSize, after, userId }: any,
+    ctx: AppContext
+  ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const user = await User.findOne({ userName: userName }, { following: 1 });
-      if (!user) throw newGqlError("User not found.", 404);
-      const userFollowing = await user.populate({
-        path: "following",
-        select: "_id userName firstName lastName pfpPath bannerPath bio",
-      });
+      const user = await User.findById(userId, { following: 1 }).lean();
+
+      if (!user || !user.following || user.following.length === 0) {
+        return {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null,
+          },
+        };
+      }
+
+      const following = user.following as Types.ObjectId[];
+      let startFromIndex = 0;
+
+      if (after) {
+        startFromIndex = following.findIndex((id) => id.toString() === after);
+        if (startFromIndex !== -1) {
+          startFromIndex += 1;
+        } else {
+          return {
+            edges: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+            },
+          };
+        }
+      }
+
+      const userIdsToFetch = following.slice(
+        startFromIndex,
+        startFromIndex + pageSize
+      );
+
+      const users = (await User.find({
+        _id: { $in: userIdsToFetch },
+      })
+        .select("_id firstName lastName userName pfpPath bannerPath bio")
+        .lean()) as BasicUserData[];
+
+      const edges: BasicUserDataEdge[] = users.map((user) => ({
+        node: user,
+        cursor: user._id.toString(),
+      }));
+
+      const hasNextPage = startFromIndex + pageSize < following.length;
+      const endCursor = hasNextPage
+        ? edges[edges.length - 1]?.cursor || null
+        : null;
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const paginatedFollowing: PaginatedBasicUserData = {
+        edges,
+        pageInfo,
+      };
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User Following fetched successfully.",
-        data: userFollowing.following || [],
+        data: paginatedFollowing,
+        message: `Fetched ${pageSize} following for user: ${userId}. Following cursor: ${after}`,
       };
+
       return response.data;
     } catch (error) {
       throw error;
@@ -93,8 +240,57 @@ export const userQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User Following Requests fetched successfully.",
+        message: "User's incoming following requests fetched successfully.",
         data: userFollowingRequests.followingRequests || [],
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  fetchSentFollowRequests: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const userSentFollowingRequests = await User.find(
+        {
+          followingRequests: ctx.loggedInUserId,
+        },
+        {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+          userName: 1,
+          pfpPath: 1,
+          bannerPath: 1,
+          bio: 1,
+        }
+      );
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User-sent following requests fetched successfully.",
+        data: userSentFollowingRequests,
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  fetchBlockedAccounts: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const user = await User.findById(ctx.loggedInUserId, {
+        blockedAccounts: 1,
+      });
+      const userblockedAccounts = await user!.populate({
+        path: "blockedAccounts",
+        select: "_id userName firstName lastName pfpPath bannerPath bio",
+      });
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User blocked accounts fetched successfully.",
+        data: userblockedAccounts.followingRequests || [],
       };
       return response.data;
     } catch (error) {
@@ -143,6 +339,7 @@ export const userMutations = {
       const targetUser = await User.findOne(
         { userName: userName },
         {
+          _id: 1,
           privateAccount: 1,
           followers: 1,
           following: 1,
@@ -154,8 +351,8 @@ export const userMutations = {
       if (targetUser._id.equals(ctx.loggedInUserId))
         throw newGqlError("Not Allowed.", 405);
       if (targetUser.blockedAccounts?.includes(ctx.loggedInUserId))
-        throw newGqlError("Forbidden", 403);
-      let action: string = "";
+        throw newGqlError("Blocked/Forbidden", 403);
+      let action: FollowRequestStatus;
       if (targetUser.privateAccount) {
         const alreadyRequested = targetUser.followingRequests?.includes(
           ctx.loggedInUserId
@@ -163,12 +360,19 @@ export const userMutations = {
         // If follow request is already sent, then remove the request
         if (alreadyRequested) {
           targetUser.followingRequests!.pull(ctx.loggedInUserId);
-          action = "Request Removed.";
+          action = FollowRequestStatus.REMOVED;
         }
         // If request is not already sent, send it.
         else {
           targetUser.followingRequests!.push(ctx.loggedInUserId);
-          action = "Request Sent.";
+          action = FollowRequestStatus.REQUESTED;
+
+          const newNotification = new Notification<NotificationType>({
+            eventType: NotificationEvents.FOLLOW_REQUEST_RECEIVED,
+            publisher: ctx.loggedInUserId,
+            subscriber: targetUser._id,
+          });
+          await newNotification.save();
         }
       } else {
         const alreadyFollowing = targetUser.followers?.includes(
@@ -181,24 +385,36 @@ export const userMutations = {
         if (alreadyFollowing) {
           targetUser.followers!.pull(ctx.loggedInUserId);
           loggedInUser?.following!.pull(targetUser._id);
-          action = "Unfollowed.";
+          action = FollowRequestStatus.UNFOLLOWED;
         }
         // If not already following, follow.
         else {
           targetUser.followers!.push(ctx.loggedInUserId);
           loggedInUser?.following!.push(targetUser._id);
-          action = "Started Following.";
+          action = FollowRequestStatus.FOLLOWED;
+
+          const newNotification = new Notification<NotificationType>({
+            eventType: NotificationEvents.FOLLOWED,
+            publisher: ctx.loggedInUserId,
+            subscriber: targetUser._id,
+          });
+          await newNotification.save();
         }
         await loggedInUser?.save();
       }
       // Implement Notifications later: FOLLOW_REQUEST_RECEIVED
+
       await targetUser.save();
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: action,
-        data: targetUser.id,
+        data: {
+          _id: targetUser.id,
+          status: action,
+        },
       };
+      console.log(response);
       return response.data;
     } catch (error) {
       throw error;
@@ -208,16 +424,26 @@ export const userMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const loggedInUser = await User.findById(ctx.loggedInUserId, {
+        _id: 1,
         followers: 1,
         followingRequests: 1,
       });
       const requester = await User.findById(userId, { following: 1 });
+      if (!requester) throw newGqlError("User not found.", 404);
+
       loggedInUser!.followers!.push(requester!._id);
       loggedInUser!.followingRequests?.pull(requester!._id);
       requester!.following!.push(ctx.loggedInUserId);
       await loggedInUser!.save();
       await requester!.save();
-      // Implement Notifications later: FOLLOW_REQUEST_ACCEPTED
+
+      const newNotification = new Notification<NotificationType>({
+        eventType: NotificationEvents.FOLLOW_REQUEST_ACCEPTED,
+        publisher: ctx.loggedInUserId,
+        subscriber: requester._id,
+      });
+      await newNotification.save();
+
       const response: HttpResponse = {
         success: true,
         code: 200,
@@ -249,13 +475,13 @@ export const userMutations = {
       throw error;
     }
   },
-  blockOrUnblockUser: async (_: any, { userName }: any, ctx: AppContext) => {
+  blockOrUnblockUser: async (_: any, { userId }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      const targetUser = await User.findOne(
-        { userName: userName },
-        { followers: 1, following: 1 }
-      );
+      const targetUser = await User.findById(new ObjectId(userId), {
+        followers: 1,
+        following: 1,
+      });
       if (!targetUser) throw newGqlError("User not found.", 404);
       const targetUserId = targetUser._id;
       const loggedInUser = await User.findById(ctx.loggedInUserId, {

@@ -18,13 +18,33 @@ interface PostEdge {
   cursor: string;
 }
 
-interface PageInfo {
+export interface PageInfo {
   hasNextPage: boolean;
   endCursor: string | null;
 }
 
 interface PostFeed {
   edges: PostEdge[];
+  pageInfo: PageInfo;
+}
+
+export interface BasicUserData {
+  _id: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
+  pfpPath: string;
+  bannerPath: string;
+  bio: string;
+}
+
+export interface BasicUserDataEdge {
+  node: BasicUserData;
+  cursor: string;
+}
+
+export interface PaginatedBasicUserData {
+  edges: BasicUserDataEdge[];
   pageInfo: PageInfo;
 }
 
@@ -427,6 +447,86 @@ export const postQueries = {
         message: "Post fetched successfully.",
         data: post,
       };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  fetchLikesFromPost: async (
+    _: any,
+    { pageSize, after, postId }: any,
+    ctx: AppContext
+  ) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const post = await Post.findById(postId, { likes: 1 }).lean();
+
+      if (!post || !post.likes || post.likes.length === 0) {
+        return {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null,
+          },
+        };
+      }
+
+      const likes = post.likes as Types.ObjectId[];
+      let startFromIndex = 0;
+
+      if (after) {
+        startFromIndex = likes.findIndex((id) => id.toString() === after);
+        if (startFromIndex !== -1) {
+          startFromIndex += 1;
+        } else {
+          return {
+            edges: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+            },
+          };
+        }
+      }
+
+      const userIdsToFetch = likes.slice(
+        startFromIndex,
+        startFromIndex + pageSize
+      );
+
+      const users = (await User.find({
+        _id: { $in: userIdsToFetch },
+      })
+        .select("_id firstName lastName userName pfpPath bannerPath bio")
+        .lean()) as BasicUserData[];
+
+      const edges: BasicUserDataEdge[] = users.map((user) => ({
+        node: user,
+        cursor: user._id.toString(),
+      }));
+
+      const hasNextPage = startFromIndex + pageSize < likes.length;
+      const endCursor = hasNextPage
+        ? edges[edges.length - 1]?.cursor || null
+        : null;
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const paginatedLikes: PaginatedBasicUserData = {
+        edges,
+        pageInfo,
+      };
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        data: paginatedLikes,
+        message: `Fetched ${pageSize} likes from post: ${postId}. Likes cursor: ${after}`,
+      };
+
       return response.data;
     } catch (error) {
       throw error;

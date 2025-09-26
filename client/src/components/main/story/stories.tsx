@@ -3,10 +3,9 @@ import { useState } from "react";
 import { cn } from "@/components/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { getRelativeTime } from "@/utility/utility-functions";
 
-import { BasicUserData } from "../post/post-author";
+import { BasicUserData } from "../post/post";
 
 interface Story {
   id: number;

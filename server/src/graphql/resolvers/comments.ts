@@ -1,5 +1,5 @@
 import { Document } from "mongodb";
-import { Types } from "mongoose";
+import { ObjectId, Types } from "mongoose";
 import validator from "validator";
 
 import Comment, { CommentType } from "../../models/Comment";
@@ -8,18 +8,20 @@ import Notification, {
   NotificationType,
 } from "../../models/Notification";
 import Post from "../../models/Post";
+import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
+import {
+  BasicUserData,
+  BasicUserDataEdge,
+  PageInfo,
+  PaginatedBasicUserData,
+} from "./posts";
 
 interface CommentEdge {
   node: CommentType;
   cursor: string;
-}
-
-interface PageInfo {
-  hasNextPage: boolean;
-  endCursor: string | null;
 }
 
 interface CommentFeed {
@@ -289,6 +291,86 @@ export const commentQueries = {
       throw error;
     }
   },
+  fetchLikesFromComment: async (
+    _: any,
+    { pageSize, after, commentId }: any,
+    ctx: AppContext
+  ) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const comment = await Comment.findById(commentId, { likes: 1 }).lean();
+
+      if (!comment || !comment.likes || comment.likes.length === 0) {
+        return {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null,
+          },
+        };
+      }
+
+      const likes = comment.likes as Types.ObjectId[];
+      let startFromIndex = 0;
+
+      if (after) {
+        startFromIndex = likes.findIndex((id) => id.toString() === after);
+        if (startFromIndex !== -1) {
+          startFromIndex += 1;
+        } else {
+          return {
+            edges: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+            },
+          };
+        }
+      }
+
+      const userIdsToFetch = likes.slice(
+        startFromIndex,
+        startFromIndex + pageSize
+      );
+
+      const users = (await User.find({
+        _id: { $in: userIdsToFetch },
+      })
+        .select("_id firstName lastName userName pfpPath bannerPath bio")
+        .lean()) as BasicUserData[];
+
+      const edges: BasicUserDataEdge[] = users.map((user) => ({
+        node: user,
+        cursor: user._id.toString(),
+      }));
+
+      const hasNextPage = startFromIndex + pageSize < likes.length;
+      const endCursor = hasNextPage
+        ? edges[edges.length - 1]?.cursor || null
+        : null;
+
+      const pageInfo: PageInfo = {
+        hasNextPage,
+        endCursor,
+      };
+
+      const paginatedLikes: PaginatedBasicUserData = {
+        edges,
+        pageInfo,
+      };
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        data: paginatedLikes,
+        message: `Fetched ${pageSize} likes from comment: ${comment}. Likes cursor: ${after}`,
+      };
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // Can use Mongoose 'post save' middleware for notifications
@@ -303,12 +385,15 @@ export const commentMutations = {
     if (validator.isEmpty(content))
       throw newGqlError("Comment body cannot be empty.", 422);
     try {
-      const post = await Post.exists({ _id: postId });
+      const post = await Post.findOne({ _id: postId });
       if (!post) throw newGqlError("Post not found.", 404);
+      const postAuthor = post.author;
 
+      let parentCommentAuthor: Types.ObjectId | null = null;
       if (parentCommentId) {
-        const comment = await Comment.exists({ _id: parentCommentId });
+        const comment = await Comment.findOne({ _id: parentCommentId });
         if (!comment) throw newGqlError("Parent comment not found.", 404);
+        parentCommentAuthor = comment.author;
       }
 
       const comment: Document = new Comment<CommentType>({
@@ -319,7 +404,32 @@ export const commentMutations = {
       });
       const newComment: Document = await comment.populate("author");
 
-      // Implement Notifications later: COMMENTED_ON_POST [OR] REPLIED_TO_COMMENT
+      // Notification for the author of the post
+      if (!postAuthor.equals(ctx.loggedInUserId)) {
+        const newNotification = new Notification<NotificationType>({
+          eventType: NotificationEvents.COMMENTED_ON_POST,
+          publisher: ctx.loggedInUserId,
+          subscriber: postAuthor,
+          redirectionURL: `/post/${postId}`,
+        });
+        await newNotification.save();
+      }
+
+      // Notification for the author of the parent comment
+      if (
+        parentCommentId &&
+        parentCommentAuthor &&
+        !newComment.author._id.equals(ctx.loggedInUserId)
+      ) {
+        const newNotification = new Notification<NotificationType>({
+          eventType: NotificationEvents.REPLIED_TO_COMMENT,
+          publisher: ctx.loggedInUserId,
+          subscriber: parentCommentAuthor,
+          redirectionURL: `/comment/${parentCommentId}`,
+        });
+        await newNotification.save();
+      }
+
       await newComment.save();
       await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
       const response: HttpResponse = {

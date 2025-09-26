@@ -10,6 +10,28 @@ enum AuthType {
   FACEBOOK
 }
 
+enum FollowRequestStatus {
+  FOLLOWED
+  UNFOLLOWED
+  REQUESTED
+  REMOVED
+}
+
+enum BlockStatus {
+  BLOCKED
+  UNBLOCKED
+}
+
+type FollowRequestResult {
+  _id: ID!
+  status: FollowRequestStatus!
+}
+
+type BlockResult {
+  user: BasicUserData!
+  status: FollowRequestStatus!
+}
+
 type User implements TimeStamps {
   _id: ID!
   firstName: String!
@@ -55,4 +77,14 @@ input UserProfileData {
   bio: String
   pfpPath: String
   bannerPath: String
+}
+
+type BasicUserDataEdge {
+  node: BasicUserData!
+  cursor: String!
+}
+
+type PaginatedBasicUserData {
+  edges: [BasicUserDataEdge!]!
+  pageInfo: PageInfo!
 }

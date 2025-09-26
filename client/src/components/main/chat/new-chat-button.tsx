@@ -26,6 +26,7 @@ import { GET_USER_FOLLOWERS } from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { chatActions } from "@/store/chat-slice";
+import { USERS_PAGE_SIZE } from "@/utility/constants";
 
 const NewChatButton = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -48,7 +49,8 @@ const NewChatButton = () => {
     loading: flwLoading,
   } = useQuery(GET_USER_FOLLOWERS, {
     variables: {
-      userName: user?.username,
+      userId: user?.userId,
+      pageSize: USERS_PAGE_SIZE,
     },
     fetchPolicy: "network-only", // TODO: Assess this
   });
@@ -133,74 +135,50 @@ const NewChatButton = () => {
           <CommandList>
             <CommandEmpty>No users found.</CommandEmpty>
             <CommandGroup className="p-2">
-              {followers && followers.fetchUserFollowers.length <= 0 && (
+              {followers && followers.fetchUserFollowers.edges.length <= 0 && (
                 <div className="text-sm text-center text-destructive font-bold">
                   You've got no followers yet. Please follow somebody to chat
                   with them.
                 </div>
               )}
               {followers &&
-                followers.fetchUserFollowers.length >= 0 &&
-                followers.fetchUserFollowers.map(
-                  (user: {
-                    _id: string;
-                    firstName: string;
-                    lastName: string;
-                    userName: string;
-                    pfpPath: string;
-                  }) => (
-                    <CommandItem
-                      key={user._id}
-                      className="flex items-center px-2"
-                      // onSelect={() => {
-                      //   if (selectedUsers.includes(user)) {
-                      //     return setSelectedUsers(
-                      //       selectedUsers.filter(
-                      //         (selectedUser) => selectedUser !== user
-                      //       )
-                      //     )
-                      //
-                      //   return setSelectedUsers(
-                      //     [...users].filter((u) =>
-                      //       [...selectedUsers, user].includes(u)
-                      //     )
-                      //   )
-                      // }}
-                      onSelect={() =>
-                        handleSelectRecipient({
-                          _id: user._id,
-                          firstName: user.firstName,
-                          lastName: user.lastName,
-                          userName: user.userName,
-                          pfpPath: user.pfpPath,
-                        })
-                      }
-                    >
-                      <Avatar>
-                        <AvatarImage
-                          src={user?.pfpPath}
-                          alt={`${user?.firstName} ${user.lastName}`}
-                        />
-                        <AvatarFallback>
-                          {user.firstName[0] + user.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="ml-2">
-                        <p className="text-sm font-medium leading-none">
-                          {user.firstName + " " + user.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          @{user.userName}
-                        </p>
-                      </div>
-                      {selectedRecipients.find(
-                        (rec) => rec._id === user._id
-                      ) ? (
-                        <Check className="ml-auto flex h-5 w-5 text-primary" />
-                      ) : null}
-                    </CommandItem>
-                  )
-                )}
+                followers.fetchUserFollowers.edges.length >= 0 &&
+                followers.fetchUserFollowers.edges.map(({ node: user }) => (
+                  <CommandItem
+                    key={user._id}
+                    className="flex items-center px-2"
+                    onSelect={() =>
+                      handleSelectRecipient({
+                        _id: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        userName: user.userName,
+                        pfpPath: user.pfpPath,
+                      })
+                    }
+                  >
+                    <Avatar>
+                      <AvatarImage
+                        src={user?.pfpPath}
+                        alt={`${user?.firstName} ${user.lastName}`}
+                      />
+                      <AvatarFallback>
+                        {user.firstName[0] + user.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="ml-2">
+                      <p className="text-sm font-medium leading-none">
+                        {user.firstName + " " + user.lastName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        @{user.userName}
+                      </p>
+                    </div>
+                    {selectedRecipients.find((rec) => rec._id === user._id) ? (
+                      <Check className="ml-auto flex h-5 w-5 text-primary" />
+                    ) : null}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>

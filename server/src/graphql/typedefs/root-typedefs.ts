@@ -23,9 +23,11 @@ const Queries: string = `
   type Query {
     credentialsLogin(loginData: LoginData!): AuthData!
     fetchUserProfile(userName: String!): User!
-    fetchUserFollowers(userName: String!): [BasicUserData!]
-    fetchUserFollowings(userName: String!): [BasicUserData!]
+    fetchUserFollowers(pageSize: Int!, after: String, userId: ID!): PaginatedBasicUserData!
+    fetchUserFollowing(pageSize: Int!, after: String, userId: ID!): PaginatedBasicUserData!
     fetchIncomingFollowRequests: [BasicUserData!]
+    fetchSentFollowRequests: [BasicUserData!]
+    fetchBlockedAccounts: [BasicUserData!]
     fetchUpcomingBirthdays: [BasicUserData!]
     loadFeed(pageSize: Int!, after: String): PostFeed!
     fetchUserPosts(pageSize: Int!, after: String, userName: String!): PostFeed!
@@ -33,20 +35,28 @@ const Queries: string = `
     fetchParentCommentsRecursively(commentId: ID!): CommentsWithPost!
     fetchChildComments(pageSize: Int!, after: String, postId: ID, commentId: ID): CommentFeed!
     fetchUserBookmarks(pageSize: Int!, after: String): PostFeed!
-    fetchUserLikes(pageSize: Int!, after: String): PostFeed! 
+    fetchUserLikes(pageSize: Int!, after: String): PostFeed!
+    fetchLikesFromPost(pageSize: Int!, after: String, postId: ID!): PaginatedBasicUserData!
+    fetchLikesFromComment(pageSize: Int!, after: String, commentId: ID!): PaginatedBasicUserData!
     fetchUnreadNotificationsCount: Int! 
     fetchChats: [Chat!]
     fetchChatMessages(chatId: ID!, pageSize: Int!, after: String): ChatMessages!
+    searchLikesOnPost(searchQuery: String!, postId: ID!): [BasicUserData!]
+    searchLikesOnComment(searchQuery: String!, commentId: ID!): [BasicUserData!]
+    searchUserFollowers(searchQuery: String!, userId: ID!): [BasicUserData!]
+    searchUserFollowing(searchQuery: String!, userId: ID!): [BasicUserData!]
+    searchUsers(searchQuery: String!): [BasicUserData!]
+    searchPosts(searchQuery: String!): [BasicPostData!]    
   }
 `;
 
 const Mutations: string = `
   type Mutation {
     signup(signupData: SignUpData!): ID!
-    followOrUnfollowUser(userName: String!): ID!
+    followOrUnfollowUser(userName: String!): FollowRequestResult!
     acceptFollowRequest(userId: ID!): ID!
     rejectFollowRequest(userId: ID!): ID!
-    blockOrUnblockUser(userName: String!): ID!
+    blockOrUnblockUser(userId: ID!): BlockResult!
     updateUserInfo(userProfileData: UserProfileData!): BasicUserData!
     createPost(postData: PostData!): Post!
     editPost(postId: ID!, content: String!): Post!

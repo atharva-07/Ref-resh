@@ -1,15 +1,10 @@
 "use client";
 
-import { useSuspenseQuery } from "@apollo/client";
-import {
-  BadgeCheck,
-  Calendar,
-  LinkIcon,
-  MapPin,
-  MoreHorizontal,
-} from "lucide-react";
+import { useMutation, useSuspenseQuery } from "@apollo/client";
+import { Calendar, MoreHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import UpdateProfileForm from "@/components/forms/update-profile-form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,26 +23,140 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import { GET_USER_PROFILE } from "@/gql-calls/queries";
+import { FOLLOW_UNFOLLOW_USER } from "@/gql-calls/mutation";
+import {
+  GET_SENT_FOLLOW_REQUESTS,
+  GET_USER_FOLLOWERS,
+  GET_USER_FOLLOWING,
+  GET_USER_PROFILE,
+  PaginatedData,
+  SEARCH_USER_FOLLOWERS,
+  SEARCH_USER_FOLLOWING,
+} from "@/gql-calls/queries";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { ProfileInfo } from "@/routes/Profile";
 import {
   getISOStringFromTimestamp,
   getMonthAndYear,
 } from "@/utility/utility-functions";
 
-const ProfileHeader = () => {
-  const params = useParams();
-  const username = params.username as string;
+import { BasicUserData } from "../post/post";
+import SearchList, { Query } from "../search-list";
+
+const ProfileHeader = (user: ProfileInfo) => {
+  const location = useLocation();
+  const { user: loggedInUser } = useAppSelector((state) => state.auth);
 
   const updateProfileFormRef = useRef<{ submitForm: () => void }>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
-  const { data } = useSuspenseQuery(GET_USER_PROFILE, {
+  const fetchFollowers: Query<{
+    fetchUserFollowers: PaginatedData<BasicUserData>;
+  }> = {
+    query: GET_USER_FOLLOWERS,
     variables: {
-      userName: username,
+      userId: loggedInUser!.userId,
     },
-  });
-  const user = data.fetchUserProfile;
+  };
+
+  const fetchFollowing: Query<{
+    fetchUserFollowing: PaginatedData<BasicUserData>;
+  }> = {
+    query: GET_USER_FOLLOWING,
+    variables: {
+      userId: loggedInUser!.userId,
+    },
+  };
+
+  const searchFollowers: Query<{ searchUserFollowers: BasicUserData[] }> = {
+    query: SEARCH_USER_FOLLOWERS,
+    variables: {
+      userId: loggedInUser!.userId,
+    },
+  };
+
+  const searchFollowing: Query<{ searchUserFollowing: BasicUserData[] }> = {
+    query: SEARCH_USER_FOLLOWING,
+    variables: {
+      userId: loggedInUser!.userId,
+    },
+  };
+
+  const [followUnfollowUser] = useMutation(FOLLOW_UNFOLLOW_USER);
+
+  const alreadyFollowing = user.followers.find(
+    (user) => user._id === loggedInUser?.userId
+  );
+
+  const ownAccount = loggedInUser?.userId === user._id;
+
+  const { data: sentRequests } = useSuspenseQuery(GET_SENT_FOLLOW_REQUESTS);
+  const alreadyRequested = sentRequests.fetchSentFollowRequests.find(
+    (reqUser) => reqUser._id === user._id
+  );
+
+  const [followStatus, setFollowStatus] = useState<string>(
+    alreadyFollowing ? "Following" : alreadyRequested ? "Requested" : "Follow"
+  );
+
+  const handleProfileShare = async () => {
+    try {
+      // TODO: FIXME: domain name has to manually pre-pended here.
+      await navigator.clipboard.writeText(`${location.pathname}`);
+      toast.success("Copied to Clipboard.", {
+        description: "Profile URL has been copied.",
+      });
+    } catch (error) {
+      toast.error("Failed to copy.");
+    }
+  };
+
+  // const handleAccountBlock = async () => {
+  //   try {
+
+  //   } catch(error) {
+
+  //   }
+  // }
+
+  const handleFollowUnfollow = async () => {
+    try {
+      const { data } = await followUnfollowUser({
+        variables: {
+          userName: user.userName,
+        },
+        refetchQueries: [GET_USER_PROFILE],
+      });
+
+      if (data?.followOrUnfollowUser) {
+        if (data.followOrUnfollowUser.status === "UNFOLLOWED") {
+          toast.success(`Unfollowed ${user.userName}.`, {
+            description: `You have unfollowed ${user.userName}.`,
+          });
+          setFollowStatus("Follow");
+        } else if (data.followOrUnfollowUser.status === "REMOVED") {
+          setFollowStatus("Follow");
+        } else if (data.followOrUnfollowUser.status === "REQUESTED") {
+          toast.success(`Requested ${user.userName}.`, {
+            description: `You have requested to follow ${user.userName}.`,
+          });
+          setFollowStatus("Requested");
+        } else {
+          toast.success(`Followed ${user.userName}.`, {
+            description: `You are now following ${user.userName}.`,
+          });
+          setFollowStatus("Following");
+        }
+      }
+    } catch (error) {
+      toast.error(
+        `Could not ${alreadyFollowing ? "unfollow" : "follow"} @${user.userName}.`,
+        {
+          description: "Please try again later.",
+        }
+      );
+    }
+  };
 
   return (
     <section className="w-full">
@@ -86,42 +195,58 @@ const ProfileHeader = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Share profile</DropdownMenuItem>
-            <DropdownMenuItem>Copy link</DropdownMenuItem>
-            <DropdownMenuItem>Block</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleProfileShare}>
+              Share profile
+            </DropdownMenuItem>
+            {!ownAccount && (
+              <DropdownMenuItem
+                className="text-destructive"
+                // onClick={handleAccountBlock}
+              >
+                Block Account
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger
-            asChild
-            onClick={() => {
-              setIsDialogOpen(true);
-            }}
-          >
-            <Button className="rounded-full">Edit profile</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Edit profile</DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              Please update the profile information as you like...
-            </DialogDescription>
-            <UpdateProfileForm
-              ref={updateProfileFormRef}
-              user={{
-                firstname: user.firstName,
-                lastname: user.lastName,
-                username: user.userName,
-                bio: user.bio,
+        {!ownAccount && (
+          <Button className="rounded-full" onClick={handleFollowUnfollow}>
+            {followStatus}
+          </Button>
+        )}
+
+        {ownAccount && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger
+              asChild
+              onClick={() => {
+                setIsDialogOpen(true);
               }}
-              onSubmissionComplete={() => {
-                setIsDialogOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+            >
+              <Button className="rounded-full">Edit profile</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Edit profile</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                Please update the profile information as you like...
+              </DialogDescription>
+              <UpdateProfileForm
+                ref={updateProfileFormRef}
+                user={{
+                  firstname: user.firstName,
+                  lastname: user.lastName,
+                  username: user.userName,
+                  bio: user.bio,
+                }}
+                onSubmissionComplete={() => {
+                  setIsDialogOpen(false);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Identity and meta */}
@@ -142,24 +267,6 @@ const ProfileHeader = () => {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          {/* {user.location ? (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" /> {user.location}
-            </span>
-          ) : null}
-          {user.website ? (
-            <span className="inline-flex items-center gap-1.5">
-              <LinkIcon className="h-4 w-4" />
-              <a
-                href={user.website}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                {user.website.replace(/^https?:\/\//, "")}
-              </a>
-            </span>
-          ) : null} */}
           {user.joinedDate ? (
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-4 w-4" /> Joined{" "}
@@ -169,22 +276,20 @@ const ProfileHeader = () => {
         </div>
 
         <div className="flex items-center gap-4 text-sm">
-          <span>
-            <b className="font-semibold">{user.following.length}</b>{" "}
-            <span className="text-muted-foreground">Following</span>
-          </span>
-          <span>
-            <b className="font-semibold">{user.followers.length}</b>{" "}
-            <span className="text-muted-foreground">Followers</span>
-          </span>
-          {/* <span className="text-muted-foreground">•</span>
-          <span className="text-muted-foreground">
-            {user.postsCount.toLocaleString()} posts
-          </span> */}
+          <SearchList searchQuery={searchFollowers} fetchQuery={fetchFollowers}>
+            <span>
+              <b className="font-semibold">{user.followers.length}</b>{" "}
+              <span className="text-muted-foreground">Followers</span>
+            </span>
+          </SearchList>
+          <SearchList searchQuery={searchFollowing} fetchQuery={fetchFollowing}>
+            <span>
+              <b className="font-semibold">{user.following.length}</b>{" "}
+              <span className="text-muted-foreground">Following</span>
+            </span>
+          </SearchList>
         </div>
       </div>
-
-      <Separator />
     </section>
   );
 };

@@ -36,8 +36,3 @@ export const notificationQueries = {
     }
   },
 };
-
-// TODO: FIXME: What can we even here? This may NOT be needed at all.
-export const notificationMutations = {
-  addNotification: async () => {},
-};

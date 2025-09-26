@@ -74,7 +74,7 @@ const formSchema = z
   })
   .refine((data) => data.password === data.confirmpassword, {
     message: "Passwords don't match",
-    path: ["confirmPassword"], // path of error
+    path: ["confirmpassword"], // path of error
   });
 
 const SignupForm = () => {

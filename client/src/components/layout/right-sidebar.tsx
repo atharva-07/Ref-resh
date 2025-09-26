@@ -7,15 +7,12 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 
-import SearchForm from "../forms/search-form";
 import ChatOpener from "../main/chat/chat-opener";
 import NewChatButton from "../main/chat/new-chat-button";
+import SearchBar from "../main/search-bar";
 import Stories from "../main/story/stories";
 import ModeToggle from "./theme-toggle";
 
@@ -26,7 +23,7 @@ const RightSidebar = () => {
       className="sticky top-0 hidden h-svh border-l lg:flex"
     >
       <SidebarHeader className="border-sidebar-border border-b">
-        <SearchForm />
+        <SearchBar />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

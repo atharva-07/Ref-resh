@@ -1,6 +1,6 @@
 type Post implements TimeStamps {
   _id: ID!
-  content: String
+  content: String!
   images: [String!]
   likes: [BasicUserData!]
   commentsCount: Int!
@@ -9,6 +9,12 @@ type Post implements TimeStamps {
   author: BasicUserData!
   createdAt: String!
   updatedAt: String!
+}
+
+type BasicPostData {
+  _id: ID!
+  content: String
+  author: BasicUserData!
 }
 
 input PostData {

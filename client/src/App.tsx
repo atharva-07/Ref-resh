@@ -26,6 +26,7 @@ import HomePage from "./routes/Home";
 import Login from "./routes/Login";
 import Notifications from "./routes/Notifications";
 import Profile from "./routes/Profile";
+import Requests from "./routes/Requests";
 import Signup from "./routes/Signup";
 
 const router = createBrowserRouter([
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
             ],
           },
           { path: "bookmarks", element: <Bookmarks /> },
+          { path: "requests", element: <Requests /> },
           {
             path: ":username",
             element: <Profile />,

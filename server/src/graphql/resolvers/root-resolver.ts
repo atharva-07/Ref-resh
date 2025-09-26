@@ -9,6 +9,7 @@ import { commentMutations } from "./comments";
 import { notificationQueries } from "./notifications";
 import { postQueries } from "./posts";
 import { postMutations } from "./posts";
+import { searchQueries } from "./search";
 import { userQueries } from "./users";
 import { userMutations } from "./users";
 
@@ -21,6 +22,7 @@ export const resolvers = {
     ...commentQueries,
     ...notificationQueries,
     ...chatQueries,
+    ...searchQueries,
   },
   Mutation: {
     ...authMutations,

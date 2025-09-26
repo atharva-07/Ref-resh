@@ -1,7 +1,7 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
 import { CommentProps } from "@/components/main/comment/comment";
-import { PostProps } from "@/components/main/post/post";
+import { BasicUserData, PostProps } from "@/components/main/post/post";
 
 export const SIGNUP = gql`
   mutation Signup($signupData: SignUpData!) {
@@ -223,5 +223,52 @@ export const DELETE_COMMENT: TypedDocumentNode<{
 }> = gql`
   mutation RemoveComment($postId: ID!, $commentId: ID!) {
     removeComment(postId: $postId, commentId: $commentId)
+  }
+`;
+
+export const ACCEPT_REQUEST: TypedDocumentNode<{
+  acceptFollowRequest: string;
+}> = gql`
+  mutation AcceptFollowRequest($userId: ID!) {
+    acceptFollowRequest(userId: $userId)
+  }
+`;
+
+export const REJECT_REQUEST: TypedDocumentNode<{
+  rejectFollowRequest: string;
+}> = gql`
+  mutation RejectFollowRequest($userId: ID!) {
+    rejectFollowRequest(userId: $userId)
+  }
+`;
+
+export const FOLLOW_UNFOLLOW_USER: TypedDocumentNode<{
+  followOrUnfollowUser: {
+    _id: string;
+    status: "REMOVED" | "REQUESTED" | "UNFOLLOWED" | "FOLLOWED";
+  };
+}> = gql`
+  mutation FollowOrUnfollowUser($userName: String!) {
+    followOrUnfollowUser(userName: $userName) {
+      _id
+      status
+    }
+  }
+`;
+
+export const BLOCK_UNBLOCK_USER: TypedDocumentNode<{
+  blockOrUnblockUser: {
+    user: BasicUserData;
+    status: "BLOCKED" | "UNBLOCKED";
+  };
+}> = gql`
+  mutation BlockOrUnblockUser($userId: String!) {
+    blockOrUnblockUser(userId: $userId) {
+      user {
+        _id
+        userName
+      }
+      status
+    }
   }
 `;

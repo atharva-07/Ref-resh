@@ -4,7 +4,13 @@ import { NavLink } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const ProfileTabs = () => {
+const ProfileTabs = ({
+  isPrivate,
+  following,
+}: {
+  isPrivate: boolean;
+  following: boolean;
+}) => {
   const params = useParams();
   const username = params.username as string;
 
@@ -30,7 +36,7 @@ const ProfileTabs = () => {
         </TabsList>
       </div>
       <Separator className="mb-1" />
-      <Outlet />
+      {isPrivate && !following ? <h3>This account is private.</h3> : <Outlet />}
     </Tabs>
   );
 };

@@ -33,6 +33,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DELETE_COMMENT, LIKE_UNLIKE_COMMENT } from "@/gql-calls/mutation";
+import {
+  GET_COMMENT_LIKES,
+  PaginatedData,
+  SEARCH_LIKES_ON_COMMENT,
+} from "@/gql-calls/queries";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
@@ -42,6 +47,7 @@ import {
 } from "@/utility/utility-functions";
 
 import { BasicUserData, PostProps } from "../post/post";
+import SearchList, { Query } from "../search-list";
 
 interface DeleteDialogInterface {
   open: boolean;
@@ -142,6 +148,22 @@ const Comment = ({
           (like) => like._id === loggedInUser!.userId
         )
   );
+
+  const fetchLikes: Query<{
+    fetchLikesFromComment: PaginatedData<BasicUserData>;
+  }> = {
+    query: GET_COMMENT_LIKES,
+    variables: {
+      commentId: _id,
+    },
+  };
+
+  const searchLikes: Query<{ searchLikesOnComment: BasicUserData[] }> = {
+    query: SEARCH_LIKES_ON_COMMENT,
+    variables: {
+      commentId: _id,
+    },
+  };
 
   const handleLike = async () => {
     const { data } = await likeOrUnlikeComment({
@@ -287,7 +309,9 @@ const Comment = ({
               </div>
             )}
             {/* Actions */}
-            <div className="flex items-center justify-between max-w-md mt-2">
+            <div
+              className={`flex items-center justify-between ${hero ? "w-full" : "max-w-md"} mt-2`}
+            >
               {/* Like */}
               <Button
                 variant="ghost"
@@ -321,6 +345,13 @@ const Comment = ({
                   </span>
                 </Button>
               </CommentWriterModal>
+              {hero && (
+                <SearchList fetchQuery={fetchLikes} searchQuery={searchLikes}>
+                  <span className="text-sm text-muted-foreground">
+                    View Likes
+                  </span>
+                </SearchList>
+              )}
             </div>
           </div>
         </div>

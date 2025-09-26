@@ -125,6 +125,12 @@ export interface BasicUserData {
   pfpPath: string;
 }
 
+export interface BasicPostData {
+  _id: string;
+  content: string;
+  author: BasicUserData;
+}
+
 export interface PostProps extends TimeStamps {
   _id: string;
   content: string;

@@ -3,8 +3,9 @@ import { model, Schema, Types } from "mongoose";
 export enum NotificationEvents {
   LIKED_POST = "LP",
   LIKED_COMMENT = "LC",
-  COMMENTED_ON_POST = "COP",
-  REPLIED_TO_COMMENT = "RTC",
+  COMMENTED_ON_POST = "CP",
+  REPLIED_TO_COMMENT = "RC",
+  FOLLOWED = "FLW",
   FOLLOW_REQUEST_RECEIVED = "FRR",
   FOLLOW_REQUEST_ACCEPTED = "FRA",
 }
@@ -13,7 +14,7 @@ export interface NotificationType {
   eventType: NotificationEvents;
   publisher: Types.ObjectId;
   subscriber: Types.ObjectId;
-  redirectionURL: string;
+  redirectionURL?: string;
 }
 
 const notificationSchema: Schema = new Schema<NotificationType>(
@@ -25,7 +26,7 @@ const notificationSchema: Schema = new Schema<NotificationType>(
     },
     publisher: { type: Schema.Types.ObjectId, required: true },
     subscriber: { type: Schema.Types.ObjectId, required: true },
-    redirectionURL: { type: Schema.Types.String, required: true },
+    redirectionURL: { type: Schema.Types.String },
   },
   {
     timestamps: true,

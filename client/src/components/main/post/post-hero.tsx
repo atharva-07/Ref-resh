@@ -24,7 +24,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ADD_REMOVE_BOOKMARK, LIKE_UNLIKE_POST } from "@/gql-calls/mutation";
-import { GET_POST } from "@/gql-calls/queries";
+import {
+  GET_POST,
+  GET_POST_LIKES,
+  PaginatedData,
+  SEARCH_LIKES_ON_POST,
+} from "@/gql-calls/queries";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { cn } from "@/lib/utils";
 import { transformTimestamps } from "@/utility/utility-functions";
@@ -37,6 +42,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../../ui/carousel";
+import SearchList, { Query } from "../search-list";
 import { BasicUserData, PostDeleteDialog } from "./post";
 
 const PostHero = () => {
@@ -46,6 +52,22 @@ const PostHero = () => {
 
   const [isEditPostFormOpen, setIsEditPostFormOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+
+  const fetchLikes: Query<{
+    fetchLikesFromPost: PaginatedData<BasicUserData>;
+  }> = {
+    query: GET_POST_LIKES,
+    variables: {
+      postId: postId!,
+    },
+  };
+
+  const searchLikes: Query<{ searchLikesOnPost: BasicUserData[] }> = {
+    query: SEARCH_LIKES_ON_POST,
+    variables: {
+      postId: postId!,
+    },
+  };
 
   const { data } = useSuspenseQuery(GET_POST, {
     variables: { postId },
@@ -219,49 +241,58 @@ const PostHero = () => {
 
         {/* Engagement Buttons */}
         <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            className={cn(
-              "h-8 px-2 hover:bg-red-500/10 group",
-              liked ? "text-like" : "text-muted-foreground hover:text-red-500"
-            )}
-          >
-            <Heart className={cn("h-4 w-4 mr-1", liked && "fill-current")} />
-            <span className="text-sm">
-              {likeCount > 0 ? formatCount(likeCount) : ""}
-            </span>
-          </Button>
-
-          {/* Comment */}
-          <CommentWriterModal postId={post._id} parentCommentId={null}>
+          <div className="*:mx-1">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 group"
+              onClick={handleLike}
+              className={cn(
+                "h-8 px-2 hover:bg-red-500/10 group",
+                liked ? "text-like" : "text-muted-foreground hover:text-red-500"
+              )}
             >
-              <MessageCircle className="h-4 w-4 mr-1 group-hover:fill-current" />
+              <Heart className={cn("h-4 w-4 mr-1", liked && "fill-current")} />
               <span className="text-sm">
-                {post.commentsCount > 0 ? formatCount(post.commentsCount) : ""}
+                {likeCount > 0 ? formatCount(likeCount) : ""}
               </span>
             </Button>
-          </CommentWriterModal>
 
-          {/* Bookmark */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBookmark}
-            className={cn(
-              "h-8 px-2 hover:bg-green-500/10 group",
-              bookmarked
-                ? "text-bookmark"
-                : "text-muted-foreground hover:text-green-500"
-            )}
-          >
-            <Bookmark className={cn("h-4 w-4", bookmarked && "fill-current")} />
-          </Button>
+            {/* Comment */}
+            <CommentWriterModal postId={post._id} parentCommentId={null}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 group"
+              >
+                <MessageCircle className="h-4 w-4 mr-1 group-hover:fill-current" />
+                <span className="text-sm">
+                  {post.commentsCount > 0
+                    ? formatCount(post.commentsCount)
+                    : ""}
+                </span>
+              </Button>
+            </CommentWriterModal>
+
+            {/* Bookmark */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBookmark}
+              className={cn(
+                "h-8 px-2 hover:bg-green-500/10 group",
+                bookmarked
+                  ? "text-bookmark"
+                  : "text-muted-foreground hover:text-green-500"
+              )}
+            >
+              <Bookmark
+                className={cn("h-4 w-4", bookmarked && "fill-current")}
+              />
+            </Button>
+          </div>
+          <SearchList fetchQuery={fetchLikes} searchQuery={searchLikes}>
+            <span className="text-sm text-muted-foreground">View Likes</span>
+          </SearchList>
         </div>
       </Card>
 

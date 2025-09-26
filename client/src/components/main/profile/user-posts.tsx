@@ -6,7 +6,7 @@ import { FEED_PAGE_SIZE } from "@/utility/constants";
 import PostLoader from "../post/post-loader";
 
 const fallbackHeading: string = "Mysterious? Non-chalant? or Batman?";
-const fallbackContent: string = "You have not posted anything yet.";
+const fallbackContent: string = "There are no posts to see here.";
 
 const UserPosts = () => {
   const params = useParams();
