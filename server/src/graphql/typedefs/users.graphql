@@ -55,7 +55,6 @@ type User implements TimeStamps {
   authType: AuthType!
   lastLoginAt: String
   readNotificationsAt: String
-  readChatsAt: String
   createdAt: String!
   updatedAt: String!
 }

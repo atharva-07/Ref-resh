@@ -1,6 +1,7 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
 import { CommentProps } from "@/components/main/comment/comment";
+import { NotificationProps } from "@/components/main/notification/notification";
 import {
   BasicPostData,
   BasicUserData,
@@ -96,12 +97,6 @@ export const LOGIN = gql`
       username
       pfpPath
     }
-  }
-`;
-
-export const GET_UNREAD_NOTIFICATIONS_COUNT = gql`
-  query GetUnreadNotificationsCount {
-    fetchUnreadNotificationsCount
   }
 `;
 
@@ -639,6 +634,37 @@ export const GET_COMMENT_LIKES: TypedDocumentNode<{
           lastName
           userName
           pfpPath
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_NOTIFICATIONS: TypedDocumentNode<{
+  fetchNotifications: PaginatedData<NotificationProps>;
+}> = gql`
+  query FetchUnreadNotifications($pageSize: Int!, $after: String) {
+    fetchNotifications(pageSize: $pageSize, after: $after) {
+      edges {
+        node {
+          _id
+          eventType
+          redirectionURL
+          publisher {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+          unread
+          createdAt
+          updatedAt
         }
         cursor
       }

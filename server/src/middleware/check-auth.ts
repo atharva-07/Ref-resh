@@ -6,7 +6,7 @@ import { verifyJwt } from "../utils/jwt";
 
 export const authMiddleware = async (
   req: AuthUserInfo,
-  res: Response,
+  _: Response,
   next: NextFunction
 ) => {
   const cookie = req.get("cookie") || "";

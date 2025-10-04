@@ -1,5 +1,5 @@
 import { Document } from "mongodb";
-import { ObjectId, Types } from "mongoose";
+import { Types } from "mongoose";
 import validator from "validator";
 
 import Comment, { CommentType } from "../../models/Comment";
@@ -9,7 +9,8 @@ import Notification, {
 } from "../../models/Notification";
 import Post from "../../models/Post";
 import User from "../../models/User";
-import { AppContext } from "../../server";
+import { AppContext, sseClients } from "../../server";
+import { sendNotification } from "../../utils/sse";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import {
@@ -412,14 +413,26 @@ export const commentMutations = {
           subscriber: postAuthor,
           redirectionURL: `/post/${postId}`,
         });
-        await newNotification.save();
+        const result = await newNotification.save();
+        await result.populate({
+          path: "publisher",
+          select: "_id firstName lastName userName pfpPath",
+        });
+        sendNotification(
+          result._id.toString(),
+          result.eventType,
+          result.publisher as unknown as BasicUserData,
+          result.subscriber.toString(),
+          sseClients
+        );
       }
 
       // Notification for the author of the parent comment
       if (
         parentCommentId &&
         parentCommentAuthor &&
-        !newComment.author._id.equals(ctx.loggedInUserId)
+        !parentCommentAuthor.equals(ctx.loggedInUserId)
+        // && !newComment.author._id.equals(ctx.loggedInUserId)
       ) {
         const newNotification = new Notification<NotificationType>({
           eventType: NotificationEvents.REPLIED_TO_COMMENT,
@@ -427,7 +440,18 @@ export const commentMutations = {
           subscriber: parentCommentAuthor,
           redirectionURL: `/comment/${parentCommentId}`,
         });
-        await newNotification.save();
+        const result = await newNotification.save();
+        await result.populate({
+          path: "publisher",
+          select: "_id firstName lastName userName pfpPath",
+        });
+        sendNotification(
+          result._id.toString(),
+          result.eventType,
+          result.publisher as unknown as BasicUserData,
+          result.subscriber.toString(),
+          sseClients
+        );
       }
 
       await newComment.save();
@@ -484,7 +508,18 @@ export const commentMutations = {
               subscriber: comment.author._id,
               redirectionURL: `/comment/${commentId}`,
             });
-            await newNotification.save();
+            const result = await newNotification.save();
+            await result.populate({
+              path: "publisher",
+              select: "_id firstName lastName userName pfpPath",
+            });
+            sendNotification(
+              result._id.toString(),
+              result.eventType,
+              result.publisher as unknown as BasicUserData,
+              result.subscriber.toString(),
+              sseClients
+            );
           }
         }
         await comment.save();

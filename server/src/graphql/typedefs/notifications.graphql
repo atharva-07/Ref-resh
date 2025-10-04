@@ -1,19 +1,41 @@
 enum NotificationEvents {
-  LIKED_POST
-  LIKED_COMMENT
-  COMMENTED_ON_POST
-  REPLIED_TO_COMMENT
-  FOLLOWED
-  FOLLOW_REQUEST_RECEIVED
-  FOLLOW_REQUEST_ACCEPTED
+  "LIKED_POST"
+  LP
+  "LIKED_COMMENT"
+  LC
+  "COMMENTED_ON_POST"
+  CP
+  "REPLIED_TO_COMMENT"
+  RC
+  "FOLLOWED"
+  FLW
+  "FOLLOW_REQUEST_RECEIVED"
+  FRR
+  "FOLLOW_REQUEST_ACCEPTED"
+  FRA
 }
 
 type Notification implements TimeStamps {
   _id: ID!
   eventType: NotificationEvents!
-  publisher: User!
-  subscriber: User!
-  redirectionURL: String!
+  publisher: BasicUserData!
+  redirectionURL: String
+  unread: Boolean!
   createdAt: String!
   updatedAt: String!
+}
+
+type NotificationEdge {
+  node: Notification!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type NotificationFeed {
+  edges: [NotificationEdge!]!
+  pageInfo: PageInfo!
 }

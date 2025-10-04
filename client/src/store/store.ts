@@ -3,15 +3,18 @@ import { combineSlices, configureStore } from "@reduxjs/toolkit";
 import { authSlice } from "./auth-slice";
 import { chatSlice } from "./chat-slice";
 import createSocketMiddleware from "./middlewares/socket-middleware";
+import createSseMiddleware from "./middlewares/sse-middleware";
+import { notificationSlice } from "./notifications-slice";
 
 // `combineSlices` automatically combines the reducers using
 // their `reducerPath`s, therefore we no longer need to call `combineReducers`.
-const rootReducer = combineSlices(authSlice, chatSlice);
+const rootReducer = combineSlices(authSlice, chatSlice, notificationSlice);
 
 // Infer the `RootState` type from the root reducer
 export type RootState = ReturnType<typeof rootReducer>;
 
 const socketMiddleware = createSocketMiddleware();
+const sseMiddleware = createSseMiddleware();
 
 export const makeStore = (preloadedState?: Partial<RootState>) => {
   const store = configureStore({
@@ -25,7 +28,7 @@ export const makeStore = (preloadedState?: Partial<RootState>) => {
           ignoredActions: ["socket/connect", "socket/disconnect"],
           ignoredPaths: [],
         },
-      }).concat(socketMiddleware);
+      }).concat(socketMiddleware, sseMiddleware);
     },
     preloadedState,
   });

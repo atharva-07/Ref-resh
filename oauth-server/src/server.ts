@@ -46,15 +46,15 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    // store: new RedisStore({ client: redisClient }),
-    secret: process.env.SESSION_SECRET as string,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
-  })
-);
+// app.use(
+//   session({
+//     // store: new RedisStore({ client: redisClient }),
+//     secret: process.env.SESSION_SECRET as string,
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false },
+//   })
+// );
 
 app.use(googleRoutes);
 

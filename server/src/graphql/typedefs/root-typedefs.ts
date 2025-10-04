@@ -38,7 +38,7 @@ const Queries: string = `
     fetchUserLikes(pageSize: Int!, after: String): PostFeed!
     fetchLikesFromPost(pageSize: Int!, after: String, postId: ID!): PaginatedBasicUserData!
     fetchLikesFromComment(pageSize: Int!, after: String, commentId: ID!): PaginatedBasicUserData!
-    fetchUnreadNotificationsCount: Int! 
+    fetchNotifications(pageSize: Int!, after: String): NotificationFeed! 
     fetchChats: [Chat!]
     fetchChatMessages(chatId: ID!, pageSize: Int!, after: String): ChatMessages!
     searchLikesOnPost(searchQuery: String!, postId: ID!): [BasicUserData!]

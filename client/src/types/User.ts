@@ -33,5 +33,4 @@ export interface UserType {
   authType: AuthType;
   lastLoginAt?: Date;
   readNotificationsAt?: Date;
-  readChatsAt?: Date;
 }

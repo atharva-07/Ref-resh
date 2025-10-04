@@ -51,10 +51,6 @@ interface ChatState {
     chatMessages: Message[];
   }[];
   lastMessages: Record<string, Message | null>;
-  // typing: {
-  //   chatId: string;
-  //   userId: ;
-  // }[];
   error: string | null;
 }
 
@@ -96,40 +92,7 @@ const messageSent: CaseReducer<
   ChatState,
   PayloadAction<{ message: SocketMessage }>
 > = (state, action) => {
-  // TODO: Is this necessary?
-  // const { chatId, message } = action.payload;
-  // const chat = state.chats.find((chat) => chat.chatId === chatId);
-  // console.log("Reached messageSent reducer");
-  // if (chat) {
-  //   chat.chatMessages.push(message);
-  // } else {
-  //   state.chats.push({
-  //     chatId,
-  //     chatMessages: [message],
-  //   });
-  // }
-};
-
-const incrementUnreadCount: CaseReducer<
-  ChatState,
-  PayloadAction<{ chatId: string }>
-> = (state, action) => {
-  const { chatId } = action.payload;
-  const chat = state.chats.find((chat) => chat.chatId === chatId);
-  if (chat) {
-    chat.unreadCount++;
-  }
-};
-
-const clearUnreadCount: CaseReducer<
-  ChatState,
-  PayloadAction<{ chatId: string }>
-> = (state, action) => {
-  const { chatId } = action.payload;
-  const chat = state.chats.find((chat) => chat.chatId === chatId);
-  if (chat) {
-    chat.unreadCount = 0;
-  }
+  // This is not required.
 };
 
 const setSeen: CaseReducer<
@@ -141,18 +104,7 @@ const setSeen: CaseReducer<
     timestamp: string;
   }>
 > = (state, action) => {
-  // TODO: Is this necessary?
-  // const { chatId, message } = action.payload;
-  // const chat = state.chats.find((chat) => chat.chatId === chatId);
-  // console.log("Reached messageSent reducer");
-  // if (chat) {
-  //   chat.chatMessages.push(message);
-  // } else {
-  //   state.chats.push({
-  //     chatId,
-  //     chatMessages: [message],
-  //   });
-  // }
+  // This is not required.
 };
 
 const setLastSeen: CaseReducer<
@@ -177,28 +129,6 @@ const setLastSeen: CaseReducer<
     }
   }
 };
-
-const readChat: CaseReducer<ChatState, PayloadAction<string>> = (
-  state,
-  action
-) => {
-  const chatId = action.payload;
-  const chat = state.chats.find((chat) => chat.chatId === chatId);
-
-  // if (chat) {
-  //   chat.read = true;
-  // }
-};
-
-// const setTyping: CaseReducer<
-//   ChatState,
-//   PayloadAction<{ chatId: string; firstName: string }>
-// > = (state, action) => {
-//   state.typing.push({
-//     chatId: action.payload.chatId,
-//     firstName: action.payload.firstName,
-//   });
-// };
 
 const joinChatRooms: CaseReducer<ChatState, PayloadAction<Chat[]>> = (
   state,
@@ -272,16 +202,6 @@ const addNewChat: CaseReducer<
   }
 };
 
-const setInitialUnreadState: CaseReducer<
-  ChatState,
-  PayloadAction<ChatState>
-> = (state, action) => {
-  const { chats } = action.payload;
-  // TODO: Shape the received chats to match the state structure
-  // TODO: Dipatch this on Login/Refresh.
-  state.chats = chats;
-};
-
 const setError: CaseReducer<ChatState, PayloadAction<string | null>> = (
   state,
   action
@@ -296,27 +216,17 @@ export const chatSlice = createAppSlice({
     addNewChat,
     messageReceived,
     messageSent,
-    readChat,
     setSeen,
     setLastSeen,
-    clearUnreadCount,
     joinChatRooms,
-    setInitialUnreadState,
     setConversationMessages,
     setError,
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchUserConversations.fulfilled, (state, action) => {
-      // This is where you would handle the fulfilled state of the async thunk
-      // For now, we just log the action
-    });
+    builder.addCase(fetchUserConversations.fulfilled, (state, action) => {});
     // TODO: Handle other async thunk states (pending, rejected) if needed
   },
   selectors: {
-    getUnreadMessagesCount: (chat, chatId: string) => {
-      const chatData = chat.chats.find((c) => c.chatId === chatId);
-      return chatData ? chatData.chatMessages.length : 0;
-    },
     getLastMessages: (chat) => {
       return chat.lastMessages;
     },
@@ -345,7 +255,6 @@ export const chatSlice = createAppSlice({
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
-  getUnreadMessagesCount,
   getLastMessages,
   getAllUsersLastSeenInChat,
   getUsersLastSeenInChat,
@@ -363,11 +272,10 @@ export const fetchUserConversations = createAsyncThunk(
       });
 
       const fetchedChats = data.fetchChats;
-      console.log("Fetched chats:", fetchedChats);
       dispatch(chatActions.joinChatRooms(fetchedChats));
     } catch (error) {
-      console.error("Error fetching user conversations through Thunk:", error);
-      return rejectWithValue("Failed to fetch conversations");
+      console.error("Error fetching user conversations through Thunk: ", error);
+      return rejectWithValue("Failed to fetch conversations.");
     }
   }
 );

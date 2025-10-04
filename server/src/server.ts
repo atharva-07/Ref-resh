@@ -8,12 +8,13 @@ import bodyParser from "body-parser";
 import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
 import * as dotenv from "dotenv";
-import express, { Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { GraphQLError } from "graphql";
 import http from "http";
 import mongoose, { Types } from "mongoose";
 
 import { resolvers, typeDefs } from "./graphql/schema";
+import { checkAuthorization } from "./graphql/utility-functions";
 import { HttpResponse } from "./graphql/utility-types";
 import { authMiddleware } from "./middleware/check-auth";
 import imageUploadMiddleware from "./middleware/image-upload";
@@ -24,6 +25,7 @@ import {
   uploadMultipleFiles,
   uploadSingleFile,
 } from "./utils/cloudinary";
+import { sendHeartbeat, SSE_PING_INTERVAL, SseClientsMap } from "./utils/sse";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -111,6 +113,62 @@ app.use(
 );
 
 app.use(authMiddleware);
+
+export const sseClients: SseClientsMap = new Map();
+
+app.get(
+  "/api/notifications/stream",
+  (req: Request, res: Response, next: NextFunction) => {
+    checkAuthorization(req.userId);
+    try {
+      const userId = req.userId.toString();
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const connectionId = Date.now();
+
+      const newConnection: { connectionId: number; res: Response } = {
+        connectionId,
+        res,
+      };
+
+      if (!sseClients.has(userId)) {
+        sseClients.set(userId, new Set());
+      }
+
+      sseClients.get(userId)?.add(newConnection);
+      console.log(
+        `User ${userId} now has ${
+          sseClients.get(userId)?.size
+        } active connections.`
+      );
+
+      res.write(
+        `data: ${JSON.stringify({
+          message: "Connected to notifications.",
+        })}\n\n`
+      );
+
+      req.on("close", () => {
+        if (sseClients.has(userId)) {
+          sseClients.get(userId)?.forEach((conn) => {
+            if (conn.connectionId === connectionId) {
+              sseClients.get(userId)?.delete(conn);
+            }
+          });
+
+          if (sseClients.get(userId)?.size === 0) {
+            sseClients.delete(userId);
+          }
+        }
+        console.log("Client Disconnected.");
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 app.post(
   "/api/upload/post",
@@ -204,6 +262,15 @@ app.use(
     },
   })
 );
+
+const pingIntervalId = setInterval(
+  sendHeartbeat.bind(null, sseClients),
+  SSE_PING_INTERVAL
+);
+
+process.on("SIGTERM", () => {
+  clearInterval(pingIntervalId);
+});
 
 mongoose
   .connect(MONGODB_URI)

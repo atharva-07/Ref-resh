@@ -24,8 +24,8 @@ const notificationSchema: Schema = new Schema<NotificationType>(
       enum: NotificationEvents,
       required: true,
     },
-    publisher: { type: Schema.Types.ObjectId, required: true },
-    subscriber: { type: Schema.Types.ObjectId, required: true },
+    publisher: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    subscriber: { type: Schema.Types.ObjectId, ref: "User", required: true },
     redirectionURL: { type: Schema.Types.String },
   },
   {

@@ -8,7 +8,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { socketActions } from "@/store/middlewares/socket-middleware";
 
 const HomePage = () => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
 
   // useEffect(() => {
   //   dispatch({ type: socketActions.connect });

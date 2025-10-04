@@ -6,7 +6,8 @@ import Notification, {
   NotificationType,
 } from "../../models/Notification";
 import User from "../../models/User";
-import { AppContext } from "../../server";
+import { AppContext, sseClients } from "../../server";
+import { sendNotification } from "../../utils/sse";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import {
@@ -372,7 +373,18 @@ export const userMutations = {
             publisher: ctx.loggedInUserId,
             subscriber: targetUser._id,
           });
-          await newNotification.save();
+          const result = await newNotification.save();
+          await result.populate({
+            path: "publisher",
+            select: "_id firstName lastName userName pfpPath",
+          });
+          sendNotification(
+            result._id.toString(),
+            result.eventType,
+            result.publisher as unknown as BasicUserData,
+            result.subscriber.toString(),
+            sseClients
+          );
         }
       } else {
         const alreadyFollowing = targetUser.followers?.includes(
@@ -398,11 +410,21 @@ export const userMutations = {
             publisher: ctx.loggedInUserId,
             subscriber: targetUser._id,
           });
-          await newNotification.save();
+          const result = await newNotification.save();
+          await result.populate({
+            path: "publisher",
+            select: "_id firstName lastName userName pfpPath",
+          });
+          sendNotification(
+            result._id.toString(),
+            result.eventType,
+            result.publisher as unknown as BasicUserData,
+            result.subscriber.toString(),
+            sseClients
+          );
         }
         await loggedInUser?.save();
       }
-      // Implement Notifications later: FOLLOW_REQUEST_RECEIVED
 
       await targetUser.save();
       const response: HttpResponse = {
@@ -442,7 +464,18 @@ export const userMutations = {
         publisher: ctx.loggedInUserId,
         subscriber: requester._id,
       });
-      await newNotification.save();
+      const result = await newNotification.save();
+      await result.populate({
+        path: "publisher",
+        select: "_id firstName lastName userName pfpPath",
+      });
+      sendNotification(
+        result._id.toString(),
+        result.eventType,
+        result.publisher as unknown as BasicUserData,
+        result.subscriber.toString(),
+        sseClients
+      );
 
       const response: HttpResponse = {
         success: true,

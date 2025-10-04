@@ -35,7 +35,6 @@ export interface UserType {
   refreshToken?: string;
   lastLoginAt?: Date;
   readNotificationsAt?: Date;
-  readChatsAt?: Date;
 }
 
 const userSchema: Schema = new Schema<UserType>(
@@ -108,7 +107,6 @@ const userSchema: Schema = new Schema<UserType>(
     refreshToken: Schema.Types.String,
     lastLoginAt: Schema.Types.Date,
     readNotificationsAt: Schema.Types.Date,
-    readChatsAt: Schema.Types.Date,
   },
   {
     timestamps: true,

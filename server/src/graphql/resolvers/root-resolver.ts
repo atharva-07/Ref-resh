@@ -1,5 +1,4 @@
 // Query Imports
-import { NotificationEvents } from "../../models/Notification";
 import { authQueries } from "./auth";
 // Mutation Imports
 import { authMutations } from "./auth";
@@ -14,7 +13,6 @@ import { userQueries } from "./users";
 import { userMutations } from "./users";
 
 export const resolvers = {
-  NotificationEvents,
   Query: {
     ...authQueries,
     ...userQueries,

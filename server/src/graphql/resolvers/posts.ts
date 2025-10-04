@@ -9,7 +9,8 @@ import Notification, {
 } from "../../models/Notification";
 import Post, { PostType } from "../../models/Post";
 import User from "../../models/User";
-import { AppContext } from "../../server";
+import { AppContext, sseClients } from "../../server";
+import { sendNotification } from "../../utils/sse";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -602,7 +603,18 @@ export const postMutations = {
               subscriber: post.author._id,
               redirectionURL: `/post/${postId}`,
             });
-            await newNotification.save();
+            const result = await newNotification.save();
+            await result.populate({
+              path: "publisher",
+              select: "_id firstName lastName userName pfpPath",
+            });
+            sendNotification(
+              result._id.toString(),
+              result.eventType,
+              result.publisher as unknown as BasicUserData,
+              result.subscriber.toString(),
+              sseClients
+            );
           }
         }
         await post.save();

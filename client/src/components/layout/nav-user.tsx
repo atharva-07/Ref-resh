@@ -11,6 +11,8 @@ import {
 import { LOGOUT } from "@/gql-calls/mutation";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { authActions } from "@/store/auth-slice";
+import { socketActions } from "@/store/middlewares/socket-middleware";
+import { sseActions } from "@/store/middlewares/sse-middleware";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -102,6 +104,8 @@ const NavUser = ({ user }: NavUserProps) => {
               onClick={() => {
                 logout();
                 dispatch(authActions.logout());
+                dispatch({ type: socketActions.disconnect });
+                dispatch({ type: sseActions.disconnect });
               }}
             >
               <LogOut />

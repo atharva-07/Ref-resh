@@ -15,7 +15,6 @@ interface ChatProps {
 }
 
 export const DateSeparator = ({ date }: { date: string }) => {
-  // ... (DateSeparator component remains the same)
   return (
     <div
       style={{

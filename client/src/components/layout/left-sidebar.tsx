@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { getUnreadChatCount } from "@/store/chat-slice";
+import { getUnreadNotificationsCount } from "@/store/notifications-slice";
 
 import PostWriterModal from "../modal/post-writer-modal";
 import { Button } from "../ui/button";
@@ -31,6 +32,7 @@ import NavUser from "./nav-user";
 const LeftSidebar = () => {
   const { user } = useAppSelector((state) => state.auth);
   const unreadChatsCount = useAppSelector(getUnreadChatCount);
+  const unreadNotificationsCount = useAppSelector(getUnreadNotificationsCount);
 
   const items = [
     {
@@ -42,6 +44,7 @@ const LeftSidebar = () => {
       title: "Notifications",
       url: "/notifications",
       icon: Bell,
+      data: unreadNotificationsCount,
     },
     {
       title: "Conversations",
@@ -102,11 +105,17 @@ const LeftSidebar = () => {
                     >
                       <item.icon />
                       <span>{item.title}</span>
-                      {!!item.data && item.data > 0 && (
-                        <span className="bg-background text-foreground font-medium outline outline-1 rounded-full h-4 w-4 flex items-center justify-center flex-shrink-0">
-                          {item.data}
-                        </span>
-                      )}
+                      {!!item.data &&
+                        item.data > 0 &&
+                        (item.data > 9 ? (
+                          <span className="bg-background text-foreground outline outline-1 font-thin text-xs h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0">
+                            {"9+"}
+                          </span>
+                        ) : (
+                          <span className="bg-background text-foreground outline outline-1 font-thin text-xs h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0">
+                            {item.data}
+                          </span>
+                        ))}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -23,6 +23,7 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { cn } from "@/lib/utils";
 import { authActions, user } from "@/store/auth-slice";
 import { socketActions } from "@/store/middlewares/socket-middleware";
+import { sseActions } from "@/store/middlewares/sse-middleware";
 
 import {
   Card,
@@ -91,7 +92,7 @@ const LoginForm = () => {
         dispatch(authActions.setUser(payload));
         dispatch(authActions.setIsAuthenticated(true));
         dispatch({ type: socketActions.connect });
-        // TODO: Notfications connect here.
+        dispatch({ type: sseActions.connect, payload: payload.userId });
         navigate("/");
       }
     } catch (error) {
