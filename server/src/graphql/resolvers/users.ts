@@ -348,18 +348,37 @@ export const userMutations = {
           blockedAccounts: 1,
         }
       );
+
       if (!targetUser) throw newGqlError("User not found", 404);
+
       if (targetUser._id.equals(ctx.loggedInUserId))
         throw newGqlError("Not Allowed.", 405);
+
       if (targetUser.blockedAccounts?.includes(ctx.loggedInUserId))
         throw newGqlError("Blocked/Forbidden", 403);
+
+      const alreadyRequested = targetUser.followingRequests?.includes(
+        ctx.loggedInUserId
+      );
+
+      const alreadyFollowing = targetUser.followers?.includes(
+        ctx.loggedInUserId
+      );
+
+      const loggedInUser = await User.findById(ctx.loggedInUserId, {
+        following: 1,
+      });
+
       let action: FollowRequestStatus;
       if (targetUser.privateAccount) {
-        const alreadyRequested = targetUser.followingRequests?.includes(
-          ctx.loggedInUserId
-        );
+        // If already following, unfollow.
+        if (alreadyFollowing) {
+          targetUser.followers!.pull(ctx.loggedInUserId);
+          loggedInUser?.following!.pull(targetUser._id);
+          action = FollowRequestStatus.UNFOLLOWED;
+        }
         // If follow request is already sent, then remove the request
-        if (alreadyRequested) {
+        else if (alreadyRequested) {
           targetUser.followingRequests!.pull(ctx.loggedInUserId);
           action = FollowRequestStatus.REMOVED;
         }
@@ -387,12 +406,6 @@ export const userMutations = {
           );
         }
       } else {
-        const alreadyFollowing = targetUser.followers?.includes(
-          ctx.loggedInUserId
-        );
-        const loggedInUser = await User.findById(ctx.loggedInUserId, {
-          following: 1,
-        });
         // If already following, unfollow.
         if (alreadyFollowing) {
           targetUser.followers!.pull(ctx.loggedInUserId);

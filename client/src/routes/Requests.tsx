@@ -36,7 +36,7 @@ const Requests = () => {
       });
       if (data?.acceptFollowRequest) {
         toast.success("Request Accepted.", {
-          description: `You are now following ${firstname}.`,
+          description: `${firstname} is now following you.`,
         });
       }
     } catch (error) {

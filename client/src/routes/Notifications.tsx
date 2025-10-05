@@ -105,12 +105,13 @@ const Notifications = () => {
   }, [inView, hasNextPage, endCursor, fetchMore, loadingMore]);
 
   useEffect(() => {
-    // If the notifications page is left before 5 seconds,
+    // If the notifications page is left before 3 seconds,
     // do not update the timestamp.
+    // Otherwise, mark all notifications as read after 3 seconds.
     const timer = setTimeout(() => {
       setReadNotificationsAt();
       dispatch(notificationActions.readNotifications());
-    }, 5000);
+    }, 3000);
 
     return () => {
       clearTimeout(timer);
@@ -140,14 +141,14 @@ const Notifications = () => {
             (!notif.unread && notifications[idx - 1].unread);
 
           return (
-            <div>
+            <>
               {showSeparator && (
                 <NotificationsSeparator
                   readStatus={notif.unread ? "Unread" : "Read"}
                 />
               )}
               <Notification key={notif._id} {...notif} {...timestamps} />
-            </div>
+            </>
           );
         })}
       {hasNextPage && <div ref={ref} className="h-1"></div>}

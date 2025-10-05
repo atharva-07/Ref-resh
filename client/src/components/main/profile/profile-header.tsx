@@ -43,7 +43,13 @@ import {
 import { BasicUserData } from "../post/post";
 import SearchList, { Query } from "../search-list";
 
-const ProfileHeader = (user: ProfileInfo) => {
+const ProfileHeader = ({
+  user,
+  isPrivate,
+}: {
+  user: ProfileInfo;
+  isPrivate: boolean;
+}) => {
   const location = useLocation();
   const { user: loggedInUser } = useAppSelector((state) => state.auth);
 
@@ -55,7 +61,7 @@ const ProfileHeader = (user: ProfileInfo) => {
   }> = {
     query: GET_USER_FOLLOWERS,
     variables: {
-      userId: loggedInUser!.userId,
+      userId: user._id,
     },
   };
 
@@ -64,21 +70,21 @@ const ProfileHeader = (user: ProfileInfo) => {
   }> = {
     query: GET_USER_FOLLOWING,
     variables: {
-      userId: loggedInUser!.userId,
+      userId: user._id,
     },
   };
 
   const searchFollowers: Query<{ searchUserFollowers: BasicUserData[] }> = {
     query: SEARCH_USER_FOLLOWERS,
     variables: {
-      userId: loggedInUser!.userId,
+      userId: user._id,
     },
   };
 
   const searchFollowing: Query<{ searchUserFollowing: BasicUserData[] }> = {
     query: SEARCH_USER_FOLLOWING,
     variables: {
-      userId: loggedInUser!.userId,
+      userId: user._id,
     },
   };
 
@@ -275,20 +281,39 @@ const ProfileHeader = (user: ProfileInfo) => {
           ) : null}
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
-          <SearchList searchQuery={searchFollowers} fetchQuery={fetchFollowers}>
+        {isPrivate ? (
+          <div className="flex items-center gap-4 text-sm">
             <span>
               <b className="font-semibold">{user.followers.length}</b>{" "}
               <span className="text-muted-foreground">Followers</span>
             </span>
-          </SearchList>
-          <SearchList searchQuery={searchFollowing} fetchQuery={fetchFollowing}>
             <span>
               <b className="font-semibold">{user.following.length}</b>{" "}
               <span className="text-muted-foreground">Following</span>
             </span>
-          </SearchList>
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 text-sm">
+            <SearchList
+              searchQuery={searchFollowers}
+              fetchQuery={fetchFollowers}
+            >
+              <span>
+                <b className="font-semibold">{user.followers.length}</b>{" "}
+                <span className="text-muted-foreground">Followers</span>
+              </span>
+            </SearchList>
+            <SearchList
+              searchQuery={searchFollowing}
+              fetchQuery={fetchFollowing}
+            >
+              <span>
+                <b className="font-semibold">{user.following.length}</b>{" "}
+                <span className="text-muted-foreground">Following</span>
+              </span>
+            </SearchList>
+          </div>
+        )}
       </div>
     </section>
   );

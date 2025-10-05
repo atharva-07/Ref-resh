@@ -36,7 +36,11 @@ const ProfileTabs = ({
         </TabsList>
       </div>
       <Separator className="mb-1" />
-      {isPrivate && !following ? <h3>This account is private.</h3> : <Outlet />}
+      {isPrivate && !following ? (
+        <h3 className="text-center">This account is private.</h3>
+      ) : (
+        <Outlet />
+      )}
     </Tabs>
   );
 };

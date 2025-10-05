@@ -23,6 +23,7 @@ const ProfileLoader = () => {
 
   const blocked =
     error && error.cause && error.cause.message === "Blocked/Forbidden";
+
   const user = data && data.fetchUserProfile;
 
   const alreadyFollowing =
@@ -37,9 +38,12 @@ const ProfileLoader = () => {
       )}
       {data && (
         <>
-          <ProfileHeader {...user!} />
+          <ProfileHeader
+            isPrivate={user!.privateAccount && !alreadyFollowing}
+            user={user!}
+          />
           <ProfileTabs
-            isPrivate={user!.privateAccount}
+            isPrivate={user!.privateAccount && !alreadyFollowing}
             following={!!alreadyFollowing}
           />
         </>

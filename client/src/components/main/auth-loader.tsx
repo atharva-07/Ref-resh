@@ -6,6 +6,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { authActions } from "@/store/auth-slice";
 import { socketActions } from "@/store/middlewares/socket-middleware";
+import { sseActions } from "@/store/middlewares/sse-middleware";
 
 import MainSpinner from "./main-spinner";
 
@@ -34,10 +35,14 @@ export const AuthLoader = ({ children }: { children: React.ReactNode }) => {
         } else {
           // Handle cases where the user is not authenticated (no valid token)
           dispatch(authActions.logout());
+          dispatch({ type: socketActions.disconnect });
+          dispatch({ type: sseActions.disconnect });
         }
       } catch (error) {
         console.log(error);
         dispatch(authActions.logout());
+        dispatch({ type: socketActions.disconnect });
+        dispatch({ type: sseActions.disconnect });
       }
     }
 

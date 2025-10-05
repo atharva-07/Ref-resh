@@ -34,10 +34,12 @@ const Notification = ({
   const { theme } = useTheme();
   const authorInitials: string = publisher.firstName[0] + publisher.lastName[0];
 
+  const backgroundColor = `bg-${eventColorMap.get(eventType)}`;
+
   return (
     <div
       key={_id}
-      className={`flex gap-4 p-4 ${"hover:"}${eventColorMap.get(eventType)}`}
+      className={`flex gap-4 p-4 ${backgroundColor} bg-opacity-5 hover:bg-opacity-10`}
     >
       <Avatar className="h-10 w-10 border-2">
         <AvatarImage src={publisher.pfpPath} alt={authorInitials} />

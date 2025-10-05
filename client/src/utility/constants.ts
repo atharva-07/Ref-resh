@@ -23,13 +23,13 @@ export enum NotificationEvents {
 }
 
 export const eventColorMap: Map<NotificationEvents, string> = new Map([
-  [NotificationEvents.LIKED_POST, "bg-red-500/90"],
-  [NotificationEvents.LIKED_COMMENT, "bg-yellow-500"],
-  [NotificationEvents.FOLLOW_REQUEST_ACCEPTED, "bg-green-500"],
-  [NotificationEvents.FOLLOW_REQUEST_RECEIVED, "bg-violet-500"],
-  [NotificationEvents.COMMENTED_ON_POST, "bg-blue-500"],
-  [NotificationEvents.REPLIED_TO_COMMENT, "bg-blue-500"],
-  [NotificationEvents.FOLLOWED, "bg-green-500/20"],
+  [NotificationEvents.LIKED_POST, "red-500"],
+  [NotificationEvents.LIKED_COMMENT, "yellow-500"],
+  [NotificationEvents.FOLLOW_REQUEST_ACCEPTED, "green-500"],
+  [NotificationEvents.FOLLOW_REQUEST_RECEIVED, "violet-500"],
+  [NotificationEvents.COMMENTED_ON_POST, "blue-500"],
+  [NotificationEvents.REPLIED_TO_COMMENT, "blue-500"],
+  [NotificationEvents.FOLLOWED, "green-500"],
 ]);
 
 export const eventMessageMap: Map<NotificationEvents, string> = new Map([
