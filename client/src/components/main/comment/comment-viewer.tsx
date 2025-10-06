@@ -8,13 +8,12 @@ import MainSpinner from "../main-spinner";
 import CommentLoader from "./comment-loader";
 import CommentsChain from "./comments-chain";
 
-const CommentViewer = ({ key: _ }: { key: string }) => {
+const CommentViewer = ({ key }: { key: string }) => {
   return (
     <ErrorBoundary fallback={<h2>Failed to load the comments.</h2>}>
       <Suspense fallback={<MainSpinner message="Loading comments..." />}>
         <main className="w-4/5 *:w-4/5 *:mx-auto *:border border-t-0">
           <CommentsChain />
-          <CommentComposer />
           <CommentLoader />
         </main>
       </Suspense>

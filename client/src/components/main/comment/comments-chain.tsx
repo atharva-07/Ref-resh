@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@apollo/client";
 import { useParams } from "react-router-dom";
 
+import CommentComposer from "@/components/forms/composer/comment-composer";
 import { GET_PARENT_COMMENTS } from "@/gql-calls/queries";
 import { transformTimestamps } from "@/utility/utility-functions";
 
@@ -20,25 +21,32 @@ const CommentsChain = () => {
   const comments = data.fetchParentCommentsRecursively.comments;
 
   return (
-    <div>
-      <Post key={post._id} {...post} {...postTimestamps} />
-      {comments.length > 0 &&
-        comments.map((comment, idx) => {
-          const timestamps = transformTimestamps(
-            comment.createdAt,
-            comment.updatedAt
-          );
-          return (
-            <Comment
-              key={comment._id}
-              {...comment}
-              {...timestamps}
-              hero={idx === comments.length - 1}
-              className="border-0"
-            />
-          );
-        })}
-    </div>
+    <>
+      <div>
+        <Post key={post._id} {...post} {...postTimestamps} />
+        {comments.length > 0 &&
+          comments.map((comment, idx) => {
+            const timestamps = transformTimestamps(
+              comment.createdAt,
+              comment.updatedAt
+            );
+            return (
+              <Comment
+                key={comment._id}
+                {...comment}
+                {...timestamps}
+                hero={idx === comments.length - 1}
+                className="border-0"
+              />
+            );
+          })}
+      </div>
+      <CommentComposer
+        mode="comment"
+        parentCommentId={commentId!}
+        postId={post._id}
+      />
+    </>
   );
 };
 

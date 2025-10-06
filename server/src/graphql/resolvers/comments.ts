@@ -374,8 +374,6 @@ export const commentQueries = {
   },
 };
 
-// Can use Mongoose 'post save' middleware for notifications
-
 export const commentMutations = {
   postComment: async (
     _: any,

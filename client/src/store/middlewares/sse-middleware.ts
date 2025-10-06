@@ -17,7 +17,6 @@ const createSseMiddleware = (): Middleware<object, RootState> => {
 
       switch (action.type) {
         case sseActions.connect: {
-          console.log("Called twice?");
           sseSingleton.connect(store.dispatch, action.payload.userId);
           store.dispatch(fetchUnreadNotifications() as any);
           break;

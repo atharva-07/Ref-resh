@@ -41,7 +41,6 @@ const CommentForm = forwardRef<
   { submitForm: () => Promise<void> },
   CommentFormProps
 >(({ onSubmissionComplete, postId, parentCommentId }, ref) => {
-  const user = useAppSelector((state) => state.auth.user);
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -72,7 +71,7 @@ const CommentForm = forwardRef<
       });
 
       if (data?.postComment) {
-        toast.success("Comment created.", {
+        toast.success("Comment posted.", {
           description: "Your comment was successfully published.",
         });
         form.reset();
@@ -82,7 +81,7 @@ const CommentForm = forwardRef<
         navigate(`/comment/${data.postComment._id}`);
       }
     } catch (error) {
-      toast.error("Error creating comment.", {
+      toast.error("Error posting comment.", {
         description: "Please try again later.",
       });
     }
@@ -111,7 +110,11 @@ const CommentForm = forwardRef<
             </div>
           )}
         />
-        {error && <p className="text-sm text-red-700">{error?.message}</p>}
+        {error && (
+          <p className="text-sm text-destructive-foreground">
+            {error?.message}
+          </p>
+        )}
       </form>
     </Form>
   );

@@ -226,7 +226,12 @@ const PostForm = forwardRef<{ submitForm: () => Promise<void> }, PostFormProps>(
               </div>
             )}
           />
-          {error && <p className="text-sm text-red-700">{error?.message}</p>}
+
+          {error && (
+            <p className="text-sm text-destructive-foreground">
+              {error?.message}
+            </p>
+          )}
         </form>
       </Form>
     );
