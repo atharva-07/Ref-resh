@@ -162,7 +162,7 @@ app.get(
             sseClients.delete(userId);
           }
         }
-        console.log("Client Disconnected.");
+        console.log("SSE Client Disconnected.");
       });
     } catch (error) {
       next(error);

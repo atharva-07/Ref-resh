@@ -12,8 +12,8 @@ export const SIGNUP = gql`
 export const LOGOUT: TypedDocumentNode<{
   logout: string;
 }> = gql`
-  mutation Logout($userId: ID!) {
-    logout(userId: $userId)
+  mutation Logout {
+    logout
   }
 `;
 
@@ -262,7 +262,7 @@ export const BLOCK_UNBLOCK_USER: TypedDocumentNode<{
     status: "BLOCKED" | "UNBLOCKED";
   };
 }> = gql`
-  mutation BlockOrUnblockUser($userId: String!) {
+  mutation BlockOrUnblockUser($userId: ID!) {
     blockOrUnblockUser(userId: $userId) {
       user {
         _id
@@ -270,5 +270,27 @@ export const BLOCK_UNBLOCK_USER: TypedDocumentNode<{
       }
       status
     }
+  }
+`;
+
+export const TOGGLE_ACCOUNT_TYPE: TypedDocumentNode<{
+  toggleAccountType: {
+    _id: string;
+    updatedAccountType: "PRIVATE" | "PUBLIC";
+  };
+}> = gql`
+  mutation ToggleAccountType {
+    toggleAccountType {
+      _id
+      updatedAccountType
+    }
+  }
+`;
+
+export const CHANGE_PASSWORD: TypedDocumentNode<{
+  changePassword: string;
+}> = gql`
+  mutation ChangePassword($passwordResetData: PasswordResetData!) {
+    changePassword(passwordResetData: $passwordResetData)
   }
 `;

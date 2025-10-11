@@ -1,10 +1,6 @@
 import "./styles/global.css";
 
-import {
-  createBrowserRouter,
-  RouterProvider,
-  useParams,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Layout from "./components/layout/layout";
 import { AuthLoader } from "./components/main/auth-loader";
@@ -22,11 +18,14 @@ import { ThemeProvider } from "./context/theme";
 import Bookmarks from "./routes/Bookmarks";
 import Conversations from "./routes/Conversations";
 import Error from "./routes/Error";
+import ForogtPassword from "./routes/ForgotPassword";
 import HomePage from "./routes/Home";
 import Login from "./routes/Login";
 import Notifications from "./routes/Notifications";
 import Profile from "./routes/Profile";
 import Requests from "./routes/Requests";
+import ResetPassword from "./routes/ResetPassword";
+import Settings from "./routes/Settings";
 import Signup from "./routes/Signup";
 
 const router = createBrowserRouter([
@@ -84,6 +83,10 @@ const router = createBrowserRouter([
               },
             ],
           },
+          {
+            path: "settings",
+            element: <Settings />,
+          },
         ],
       },
       {
@@ -91,6 +94,8 @@ const router = createBrowserRouter([
         children: [
           { path: "login", element: <Login /> },
           { path: "signup", element: <Signup /> },
+          { path: "forgot-password", element: <ForogtPassword /> },
+          { path: "reset-password", element: <ResetPassword /> },
         ],
       },
     ],

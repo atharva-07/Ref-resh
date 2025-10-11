@@ -147,22 +147,6 @@ export const GET_SENT_FOLLOW_REQUESTS: TypedDocumentNode<{
   }
 `;
 
-export const GET_BLOCKED_ACCOUNTS: TypedDocumentNode<{
-  fetchBlockedAccounts: BasicUserData[];
-}> = gql`
-  query GetBlockedAccounts {
-    fetchBlockedAccounts {
-      _id
-      userName
-      firstName
-      lastName
-      pfpPath
-      bannerPath
-      bio
-    }
-  }
-`;
-
 export const GET_CHATS = gql`
   query GetChats {
     fetchChats {
@@ -673,5 +657,33 @@ export const GET_NOTIFICATIONS: TypedDocumentNode<{
         endCursor
       }
     }
+  }
+`;
+
+export const GET_ACCOUNT_SETTINGS_DATA: TypedDocumentNode<{
+  fetchAccountSettingsData: {
+    privateAccount: boolean;
+    blockedAccounts: BasicUserData[];
+  };
+}> = gql`
+  query GetAccountSettingsData {
+    fetchAccountSettingsData {
+      privateAccount
+      blockedAccounts {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+      }
+    }
+  }
+`;
+
+export const FORGOT_PASSWORD: TypedDocumentNode<{
+  forgotPassword: string;
+}> = gql`
+  query ForgotPassowrd($email: String!) {
+    forgotPassword(email: $email)
   }
 `;
