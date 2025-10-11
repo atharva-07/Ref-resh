@@ -27,7 +27,6 @@ const Queries: string = `
     fetchUserFollowing(pageSize: Int!, after: String, userId: ID!): PaginatedBasicUserData!
     fetchIncomingFollowRequests: [BasicUserData!]
     fetchSentFollowRequests: [BasicUserData!]
-    fetchBlockedAccounts: [BasicUserData!]
     fetchUpcomingBirthdays: [BasicUserData!]
     loadFeed(pageSize: Int!, after: String): PostFeed!
     fetchUserPosts(pageSize: Int!, after: String, userName: String!): PostFeed!
@@ -46,7 +45,9 @@ const Queries: string = `
     searchUserFollowers(searchQuery: String!, userId: ID!): [BasicUserData!]
     searchUserFollowing(searchQuery: String!, userId: ID!): [BasicUserData!]
     searchUsers(searchQuery: String!): [BasicUserData!]
-    searchPosts(searchQuery: String!): [BasicPostData!]    
+    searchPosts(searchQuery: String!): [BasicPostData!]
+    fetchAccountSettingsData: AccountSettingsData!
+    forgotPassword(email: String!): String!
   }
 `;
 
@@ -67,11 +68,13 @@ const Mutations: string = `
     editComment(commentId: ID!, content: String!): Comment!
     likeOrUnlikeComment(commentId: ID!): ID!
     removeComment(postId: ID!, commentId: ID!): ID!
-    logout(userId: ID!): ID!
+    logout: ID!
     setReadNotificationsAt: String!
     createNewChat(chatMembers: [ID!]!, chatName: String): Chat!
     sendChatMessage(messageData: MessageData!): Message!
     updateLastSeen(chatId: ID!, messageId: ID!): LastSeenData
+    toggleAccountType: AccountToggleResult!
+    changePassword(passwordResetData: PasswordResetData!): ID!
   }
 `;
 

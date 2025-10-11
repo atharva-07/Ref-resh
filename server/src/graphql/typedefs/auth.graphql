@@ -19,4 +19,11 @@ input SignUpData {
   gender: String!
   email: String!
   password: String!
+  confirmPassword: String!
+}
+
+input PasswordResetData {
+  token: String!
+  password: String!
+  confirmPassword: String!
 }

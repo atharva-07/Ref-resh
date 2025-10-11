@@ -22,6 +22,16 @@ enum BlockStatus {
   UNBLOCKED
 }
 
+enum AccountType {
+  PUBLIC
+  PRIVATE
+}
+
+type PasswordReset {
+  token: String
+  expiresAt: String
+}
+
 type FollowRequestResult {
   _id: ID!
   status: FollowRequestStatus!
@@ -29,7 +39,12 @@ type FollowRequestResult {
 
 type BlockResult {
   user: BasicUserData!
-  status: FollowRequestStatus!
+  status: BlockStatus!
+}
+
+type AccountToggleResult {
+  _id: ID!
+  updatedAccountType: AccountType!
 }
 
 type User implements TimeStamps {
@@ -55,6 +70,7 @@ type User implements TimeStamps {
   authType: AuthType!
   lastLoginAt: String
   readNotificationsAt: String
+  passwordReset: PasswordReset
   createdAt: String!
   updatedAt: String!
 }
@@ -86,4 +102,9 @@ type BasicUserDataEdge {
 type PaginatedBasicUserData {
   edges: [BasicUserDataEdge!]!
   pageInfo: PageInfo!
+}
+
+type AccountSettingsData {
+  privateAccount: Boolean!
+  blockedAccounts: [BasicUserData!]
 }

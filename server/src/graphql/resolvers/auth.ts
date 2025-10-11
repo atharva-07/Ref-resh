@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
-import { Document } from "mongodb";
+import { randomBytes } from "crypto";
+import { JwtPayload } from "jsonwebtoken";
+import { Document, ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 
@@ -9,7 +11,13 @@ import {
   accessTokenCookieOptions,
   refreshTokenCookieOptions,
 } from "../../utils/common";
-import { createAccessToken, createRefreshToken } from "../../utils/jwt";
+import {
+  createAccessToken,
+  createRefreshToken,
+  signJwt,
+  verifyJwt,
+} from "../../utils/jwt";
+import { sendEmail } from "../../utils/mail";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -71,6 +79,72 @@ export const authQueries = {
       throw error;
     }
   },
+  forgotPassword: async (_: any, { email }: any) => {
+    try {
+      const user = await User.findOne(
+        { email: email },
+        {
+          userName: 1,
+          email: 1,
+        }
+      );
+
+      let nonce: string;
+      if (user) {
+        randomBytes(64, async (err, buffer) => {
+          if (err) {
+            throw newGqlError(
+              "Could not process your request. Please try again.",
+              500
+            );
+          }
+          nonce = buffer.toString("hex");
+          user.passwordReset = {
+            token: nonce,
+            expiresAt: new Date(Date.now() + 900000), // 15 minutes
+          };
+          await user.save();
+
+          const token = signJwt(
+            {
+              sub: user.id,
+              aud: user.userName,
+              jti: nonce,
+              purpose: "password-reset",
+            },
+            {
+              expiresIn: "15m",
+            }
+          );
+
+          // Send email here.
+          // await sendEmail(
+          //   user.email,
+          //   "Password Reset.",
+          //   `
+          //   <h1>Password Reset Instructions</h1>
+          //   <p>Click the link below to reset your password. This <a href=${token}>link</a> is valid for 15 minutes.</p>`
+          // );
+        });
+      }
+
+      const message: string =
+        "If an account with that email exists, we have sent password reset instructions to that email.";
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: user
+          ? "Email sent to the user."
+          : "Email not sent as the user does not exist.",
+        data: message,
+      };
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export const authMutations = {
@@ -80,7 +154,8 @@ export const authMutations = {
       validator.isEmpty(signupData.firstName) ||
       validator.isEmpty(signupData.lastName) ||
       validator.isEmpty(signupData.email) ||
-      validator.isEmpty(signupData.password)
+      validator.isEmpty(signupData.password) ||
+      validator.isEmpty(signupData.confirmPassword)
     ) {
       errors.push({
         message: "First Name, Last Name, Email and Password cannot be empty.",
@@ -104,11 +179,20 @@ export const authMutations = {
       !validator.matches(
         signupData.password,
         /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+      ) ||
+      !validator.matches(
+        signupData.confirmPassword,
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
       )
     ) {
       errors.push({
         message:
           "Password should be minimum 8 and maximum 20 characters. Have at least one uppercase letter, one lowercase letter, one number and one special character.",
+      });
+    }
+    if (signupData.password !== signupData.confirmPassword) {
+      errors.push({
+        message: "Password and Confirm Password do not match.",
       });
     }
     if (
@@ -180,7 +264,94 @@ export const authMutations = {
       ctx.res.clearCookie("refreshToken");
       return response.data;
     } catch (error) {
-      console.log(error);
+      throw error;
+    }
+  },
+  changePassword: async (_: any, { passwordResetData }: any) => {
+    const errors: { message: string }[] = [];
+    if (
+      validator.isEmpty(passwordResetData.password) ||
+      validator.isEmpty(passwordResetData.confirmPassword)
+    ) {
+      errors.push({
+        message: "Password cannot be empty.",
+      });
+    }
+    if (
+      !validator.matches(
+        passwordResetData.password,
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+      ) ||
+      !validator.matches(
+        passwordResetData.confirmPassword,
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+      )
+    ) {
+      errors.push({
+        message:
+          "Password should be minimum 8 and maximum 20 characters. Have at least one uppercase letter, one lowercase letter, one number and one special character.",
+      });
+    }
+    if (passwordResetData.password !== passwordResetData.confirmPassword) {
+      errors.push({
+        message: "Password and Confirm Password do not match.",
+      });
+    }
+    if (errors.length > 0)
+      throw newGqlError(
+        `Provided user input is invalid. ${errors[0].message}`,
+        422
+      );
+    try {
+      const { valid, expired, decoded } = verifyJwt(
+        passwordResetData.token
+      ) as JwtPayload;
+
+      if (
+        !valid ||
+        expired ||
+        !decoded ||
+        decoded.purpose !== "password-reset"
+      ) {
+        throw newGqlError(
+          "The password reset link is invalid or expired.",
+          401
+        );
+      }
+
+      const user = await User.findById(decoded.sub);
+      if (!user) {
+        throw newGqlError("User not found.", 404);
+      }
+
+      if (user.passwordReset?.token !== decoded.jti) {
+        throw newGqlError(
+          "The password reset link is invalid or expired.",
+          401
+        );
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      if (user.passwordReset?.expiresAt! < new Date()) {
+        user.passwordReset = undefined;
+        await user.save();
+        throw newGqlError("The password reset link is expired.", 401);
+      }
+
+      const hashedPassword = await bcrypt.hash(passwordResetData.password, 10);
+      user.password = hashedPassword;
+      user.passwordReset = undefined;
+      await user.save();
+
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "Password changed successfully.",
+        data: user.id,
+      };
+
+      return response.data;
+    } catch (error) {
       throw error;
     }
   },

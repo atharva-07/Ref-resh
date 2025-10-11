@@ -24,6 +24,16 @@ enum FollowRequestStatus {
   REMOVED = "REMOVED",
 }
 
+enum BlockStatus {
+  BLOCKED = "BLOCKED",
+  UNBLOCKED = "UNBLOCKED",
+}
+
+enum AccountType {
+  PRIVATE = "PRIVATE",
+  PUBLIC = "PUBLIC",
+}
+
 export const userQueries = {
   fetchUserProfile: async (_: any, { userName }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
@@ -277,21 +287,27 @@ export const userQueries = {
       throw error;
     }
   },
-  fetchBlockedAccounts: async (_: any, __: any, ctx: AppContext) => {
+  // Fetches account type and blocked accounts of logged in user.
+  fetchAccountSettingsData: async (_: any, __: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const user = await User.findById(ctx.loggedInUserId, {
+        privateAccount: 1,
         blockedAccounts: 1,
       });
-      const userblockedAccounts = await user!.populate({
+      if (!user) throw newGqlError("User not found.", 404);
+      await user!.populate({
         path: "blockedAccounts",
         select: "_id userName firstName lastName pfpPath bannerPath bio",
       });
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User blocked accounts fetched successfully.",
-        data: userblockedAccounts.followingRequests || [],
+        message: "User account type and blocked accounts fetched successfully.",
+        data: {
+          privateAccount: user.privateAccount,
+          blockedAccounts: user.blockedAccounts || [],
+        },
       };
       return response.data;
     } catch (error) {
@@ -525,6 +541,7 @@ export const userMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const targetUser = await User.findById(new ObjectId(userId), {
+        userName: 1,
         followers: 1,
         following: 1,
       });
@@ -557,7 +574,15 @@ export const userMutations = {
         message: isTargetUserAlreadyBlocked
           ? "User Unblocked."
           : "User Blocked.",
-        data: targetUserId,
+        data: {
+          user: {
+            _id: targetUserId,
+            userName: targetUser.userName,
+          },
+          status: isTargetUserAlreadyBlocked
+            ? BlockStatus.UNBLOCKED
+            : BlockStatus.BLOCKED,
+        },
       };
       return response.data;
     } catch (error) {
@@ -617,6 +642,32 @@ export const userMutations = {
         message:
           "User's Last Notification Read Timestamp updated successfully.",
         data: user?.readNotificationsAt,
+      };
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  toggleAccountType: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const user = await User.findById(ctx.loggedInUserId, {
+        privateAccount: 1,
+      });
+      if (!user) throw newGqlError("User not found.", 404);
+      user.privateAccount = !user.privateAccount;
+      await user.save();
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User account type toggled successfully.",
+        data: {
+          _id: user._id,
+          updatedAccountType: user.privateAccount
+            ? AccountType.PRIVATE
+            : AccountType.PUBLIC,
+        },
       };
       return response.data;
     } catch (error) {

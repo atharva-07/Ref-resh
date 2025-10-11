@@ -12,6 +12,11 @@ export enum AuthType {
   FACEBOOK = "FACEBOOK",
 }
 
+interface PasswordReset {
+  token?: string;
+  expiresAt?: Date;
+}
+
 export interface UserType {
   firstName: string;
   lastName: string;
@@ -35,7 +40,16 @@ export interface UserType {
   refreshToken?: string;
   lastLoginAt?: Date;
   readNotificationsAt?: Date;
+  passwordReset?: PasswordReset;
 }
+
+const passwordResetSchema = new Schema<PasswordReset>(
+  {
+    token: Schema.Types.String,
+    expiresAt: Schema.Types.Date,
+  },
+  { _id: false }
+);
 
 const userSchema: Schema = new Schema<UserType>(
   {
@@ -99,13 +113,14 @@ const userSchema: Schema = new Schema<UserType>(
     followers: { type: [Schema.Types.ObjectId], ref: "User" },
     following: { type: [Schema.Types.ObjectId], ref: "User" },
     followingRequests: { type: [Schema.Types.ObjectId], ref: "User" },
-    blockedAccounts: [Schema.Types.ObjectId],
+    blockedAccounts: { type: [Schema.Types.ObjectId], ref: "User" },
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     activeStories: [{ type: Schema.Types.ObjectId, ref: "Story" }],
     authType: { type: Schema.Types.String, enum: AuthType, required: true },
     refreshToken: Schema.Types.String,
     lastLoginAt: Schema.Types.Date,
     readNotificationsAt: Schema.Types.Date,
+    passwordReset: passwordResetSchema,
   },
   {
     timestamps: true,
