@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { LOGIN } from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { useAppSelector } from "@/hooks/useAppSelector";
-import { cn } from "@/lib/utils";
 import { authActions, user } from "@/store/auth-slice";
 import { socketActions } from "@/store/middlewares/socket-middleware";
 import { sseActions } from "@/store/middlewares/sse-middleware";
@@ -58,7 +57,6 @@ const formSchema = z.object({
 });
 
 const LoginForm = () => {
-  // const user = useAppSelector(state => state.auth.user);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -72,9 +70,7 @@ const LoginForm = () => {
 
   const [login, { error, loading }] = useLazyQuery(LOGIN);
 
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
     try {
       const { data } = await login({
         variables: {
@@ -96,8 +92,8 @@ const LoginForm = () => {
         navigate("/");
       }
     } catch (error) {
-      /* empty */
-    } // TODO: Is something even required here?
+      //
+    }
   }
 
   return (
@@ -177,12 +173,12 @@ const LoginForm = () => {
                         <FormItem>
                           <div className="flex items-center">
                             <FormLabel htmlFor="password">Password</FormLabel>
-                            {/* <a
-                              href="#"
+                            <Link
+                              to={"/forgot-password"}
                               className="ml-auto text-sm underline-offset-4 hover:underline"
                             >
                               Forgot your password?
-                            </a> */}
+                            </Link>
                           </div>
                           <FormControl>
                             <Input

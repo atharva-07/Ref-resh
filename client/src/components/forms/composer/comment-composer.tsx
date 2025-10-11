@@ -185,7 +185,7 @@ const CommentComposer = ({
               />
 
               {error && (
-                <p className="text-sm text-destructive-foreground mt-1">
+                <p className="text-sm text-destructive mt-1">
                   {error?.message}
                 </p>
               )}

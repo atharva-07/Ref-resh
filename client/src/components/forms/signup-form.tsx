@@ -1,21 +1,14 @@
-"use client";
-
 import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import {
-  Calendar as CalendarIcon,
-  Command,
-  GalleryVerticalEnd,
-  NavigationOff,
-} from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { cn } from "@/components/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -32,7 +25,6 @@ import {
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SIGNUP } from "@/gql-calls/mutation";
-import { useAppDispatch } from "@/hooks/useAppDispatch";
 
 import Calendar13 from "../ui/calendar-13";
 import { FACEBOOK_OAUTH_URI, GOOGLE_OAUTH_URI } from "./login-form";
@@ -96,10 +88,7 @@ const SignupForm = () => {
 
   const [signup, { error, loading }] = useMutation(SIGNUP);
 
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
     try {
       const { data } = await signup({
         variables: {
@@ -113,16 +102,18 @@ const SignupForm = () => {
             gender: values.gender,
             email: values.email,
             password: values.password,
+            confirmPassword: values.confirmpassword,
           },
         },
       });
 
       if (data.signup) {
-        const id = data.signup;
         navigate("/login");
       }
     } catch (error) {
-      //
+      toast.error("Could not signup.", {
+        description: "Please try again.",
+      });
     }
   }
 

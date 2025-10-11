@@ -446,9 +446,7 @@ const PostComposer = () => {
               )}
 
               {error && (
-                <p className="text-sm text-destructive-foreground">
-                  {error?.message}
-                </p>
+                <p className="text-sm text-destructive">{error?.message}</p>
               )}
 
               <div className="h-6 w-px bg-border" />
