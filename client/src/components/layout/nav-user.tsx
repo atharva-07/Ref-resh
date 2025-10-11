@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client";
-import { ChevronsUpDown, Edit, LogOut } from "lucide-react";
+import { ChevronsUpDown, Edit, LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 import {
   SidebarMenu,
@@ -36,13 +37,26 @@ interface NavUserProps {
 
 const NavUser = ({ user }: NavUserProps) => {
   const dispatch = useAppDispatch();
-  const [logout, { data, error, loading }] = useMutation(LOGOUT, {
-    variables: { userId: user?.userId },
-  });
+  const [logout] = useMutation(LOGOUT);
 
   const { isMobile } = useSidebar();
   const [firstName, lastName] = user.fullName.split(" ");
   const userInitials = firstName[0] + lastName[0];
+
+  const handleLogout = async () => {
+    try {
+      const { data } = await logout();
+      if (data?.logout) {
+        dispatch(authActions.logout());
+        dispatch({ type: socketActions.disconnect });
+        dispatch({ type: sseActions.disconnect });
+      }
+    } catch (error) {
+      toast.error("Could not logout.", {
+        description: "Please try again.",
+      });
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -92,25 +106,21 @@ const NavUser = ({ user }: NavUserProps) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem>
+                <Link to="/settings" className="flex w-full">
+                  <Settings className="size-4 mr-2" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => console.log("Password Updated.")}
+                className="bg-destructive"
+                onClick={handleLogout}
               >
-                <Edit />
-                <span>Update Password</span>
+                <LogOut className="size-4 mr-2" />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                logout();
-                dispatch(authActions.logout());
-                dispatch({ type: socketActions.disconnect });
-                dispatch({ type: sseActions.disconnect });
-              }}
-            >
-              <LogOut />
-              <span>Logout</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
