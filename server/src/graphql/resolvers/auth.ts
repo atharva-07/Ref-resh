@@ -79,15 +79,30 @@ export const authQueries = {
       throw error;
     }
   },
-  forgotPassword: async (_: any, { email }: any) => {
+  forgotPassword: async (_: any, { email, userId }: any, ctx: AppContext) => {
+    if (!email && userId) checkAuthorization(ctx.loggedInUserId);
     try {
-      const user = await User.findOne(
-        { email: email },
-        {
+      if ((email && userId) || (!email && !userId))
+        throw newGqlError("Please provide either Email or UserId.", 422);
+
+      let user: (Document & UserType) | null = null;
+      if (email && !userId) {
+        if (!validator.isEmail(email))
+          throw newGqlError("Entered Email Address is invalid.", 422);
+
+        user = await User.findOne(
+          { email: email },
+          {
+            userName: 1,
+            email: 1,
+          }
+        );
+      } else if (!email && userId) {
+        user = await User.findById(new ObjectId(userId), {
           userName: 1,
           email: 1,
-        }
-      );
+        });
+      }
 
       let nonce: string;
       if (user) {
@@ -128,16 +143,13 @@ export const authQueries = {
         });
       }
 
-      const message: string =
-        "If an account with that email exists, we have sent password reset instructions to that email.";
-
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: user
           ? "Email sent to the user."
           : "Email not sent as the user does not exist.",
-        data: message,
+        data: true,
       };
 
       return response.data;

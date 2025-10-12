@@ -47,7 +47,7 @@ const Queries: string = `
     searchUsers(searchQuery: String!): [BasicUserData!]
     searchPosts(searchQuery: String!): [BasicPostData!]
     fetchAccountSettingsData: AccountSettingsData!
-    forgotPassword(email: String!): String!
+    forgotPassword(email: String, userId: ID): Boolean!
   }
 `;
 

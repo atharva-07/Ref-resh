@@ -681,9 +681,9 @@ export const GET_ACCOUNT_SETTINGS_DATA: TypedDocumentNode<{
 `;
 
 export const FORGOT_PASSWORD: TypedDocumentNode<{
-  forgotPassword: string;
+  forgotPassword: boolean;
 }> = gql`
-  query ForgotPassowrd($email: String!) {
-    forgotPassword(email: $email)
+  query ForgotPassowrd($email: String, $userId: ID) {
+    forgotPassword(email: $email, userId: $userId)
   }
 `;

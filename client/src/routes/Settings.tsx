@@ -1,5 +1,6 @@
-import { useMutation, useSuspenseQuery } from "@apollo/client";
-import { Suspense } from "react";
+import { useLazyQuery, useMutation, useSuspenseQuery } from "@apollo/client";
+import { BadgeCheckIcon, ShieldAlertIcon } from "lucide-react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
@@ -13,16 +14,53 @@ import {
 } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { BLOCK_UNBLOCK_USER } from "@/gql-calls/mutation";
-import { GET_ACCOUNT_SETTINGS_DATA } from "@/gql-calls/queries";
+import {
+  FORGOT_PASSWORD,
+  GET_ACCOUNT_SETTINGS_DATA,
+} from "@/gql-calls/queries";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 const Settings = () => {
+  const { user } = useAppSelector((state) => state.auth);
   const { data } = useSuspenseQuery(GET_ACCOUNT_SETTINGS_DATA);
   const blockedAccounts = data?.fetchAccountSettingsData?.blockedAccounts || [];
   const privateAccount =
     data?.fetchAccountSettingsData?.privateAccount || false;
 
+  const [emailSent, setEmailSent] = useState<boolean>(false);
+
   const [unblockUser] = useMutation(BLOCK_UNBLOCK_USER);
+  const [changePassword, { error, loading }] = useLazyQuery(FORGOT_PASSWORD);
+
+  const handlePasswordChange = async () => {
+    try {
+      const { data } = await changePassword({
+        variables: {
+          userId: user!.userId,
+        },
+      });
+
+      if (data?.forgotPassword) {
+        setEmailSent(true);
+        setTimeout(() => {
+          setEmailSent(false);
+        }, 10000);
+      }
+    } catch (error) {
+      toast.error("Could not send email.", {
+        description: "Please try again.",
+      });
+    }
+  };
 
   const handleUnblock = async (userId: string) => {
     try {
@@ -59,6 +97,52 @@ const Settings = () => {
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-2">
+                <AccordionTrigger>Security</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-4 text-balance">
+                  <Item variant="outline">
+                    <ItemMedia variant="icon">
+                      <ShieldAlertIcon />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>Change Password</ItemTitle>
+                      <ItemDescription className="text-sm text-muted-foreground">
+                        A password reset link will be sent to your email
+                        address.
+                      </ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={handlePasswordChange}
+                      >
+                        {loading ? "Working..." : "Change"}
+                      </Button>
+                    </ItemActions>
+                  </Item>
+                  {emailSent && (
+                    <Item
+                      variant="default"
+                      size="sm"
+                      className="text-green-700"
+                      asChild
+                    >
+                      <div>
+                        <ItemMedia>
+                          <BadgeCheckIcon className="size-5" />
+                        </ItemMedia>
+                        <ItemContent>
+                          <ItemTitle>
+                            An email was sent to your account's email address
+                            with instructions to change password.
+                          </ItemTitle>
+                        </ItemContent>
+                      </div>
+                    </Item>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-3">
                 <AccordionTrigger>Blocked Accounts</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">
                   <div className="flex-1">
