@@ -104,7 +104,7 @@ const CommentLoader = () => {
   return (
     <ErrorBoundary fallback={<h2>Failed to fetch comments.</h2>}>
       <Suspense fallback={<MainSpinner message="Fetching comments..." />}>
-        <div>
+        <div className="min-h-screen">
           {allComments && allComments.length > 0 ? (
             allComments.map((node) => {
               const timestamps = transformTimestamps(

@@ -127,7 +127,7 @@ const Conversations = () => {
           <ScrollArea className="h-full">
             <div className="p-2">
               {sortedChats.length === 0 && (
-                <p>So fucking empty. You gotta start talking to people gang.</p>
+                <p>So sooo empty. You gotta start talking to people gang.</p>
               )}
               {sortedChats.length > 0 &&
                 sortedChats.map((chat) => {

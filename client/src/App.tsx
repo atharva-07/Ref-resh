@@ -1,5 +1,6 @@
 import "./styles/global.css";
 
+import { Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Layout from "./components/layout/layout";
@@ -64,7 +65,15 @@ const router = createBrowserRouter([
             ],
           },
           { path: "bookmarks", element: <Bookmarks /> },
-          { path: "requests", element: <Requests /> },
+          {
+            path: "requests",
+            element: (
+              // This is very hacky but let's just keep this for now.
+              <Suspense>
+                <Requests />
+              </Suspense>
+            ),
+          },
           {
             path: ":username",
             element: <Profile />,
@@ -85,7 +94,12 @@ const router = createBrowserRouter([
           },
           {
             path: "settings",
-            element: <Settings />,
+            element: (
+              // Hacky solution. :)
+              <Suspense>
+                <Settings />
+              </Suspense>
+            ),
           },
         ],
       },

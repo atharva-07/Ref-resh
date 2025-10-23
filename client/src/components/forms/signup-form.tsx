@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SIGNUP } from "@/gql-calls/mutation";
+import { Gender } from "@/types/User";
 
 import Calendar13 from "../ui/calendar-13";
 import { FACEBOOK_OAUTH_URI, GOOGLE_OAUTH_URI } from "./login-form";
@@ -185,7 +186,7 @@ const SignupForm = () => {
                               <RadioGroupItem
                                 id="male"
                                 className="hover:cursor-pointer"
-                                value="MALE"
+                                value={Gender.MALE}
                               />
                             </FormControl>
                             <FormLabel
@@ -200,7 +201,7 @@ const SignupForm = () => {
                               <RadioGroupItem
                                 id="female"
                                 className="hover:cursor-pointer"
-                                value="FEMALE"
+                                value={Gender.FEMALE}
                               />
                             </FormControl>
                             <FormLabel
@@ -215,7 +216,7 @@ const SignupForm = () => {
                               <RadioGroupItem
                                 id="other"
                                 className="hover:cursor-pointer"
-                                value="OTHER"
+                                value={Gender.OTHER}
                               />
                             </FormControl>
                             <FormLabel

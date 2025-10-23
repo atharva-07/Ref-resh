@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import z from "zod";
 
-import { UPDATE_USER_INFO } from "@/gql-calls/mutation";
+import { UPDATE_USER_PROFILE } from "@/gql-calls/mutation";
 import { GET_USER_PROFILE } from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { authActions } from "@/store/auth-slice";
@@ -107,7 +107,8 @@ const UpdateProfileForm = forwardRef<
     },
   });
 
-  const [updateUserInfo, { error, loading }] = useMutation(UPDATE_USER_INFO);
+  const [updateUserProfile, { error, loading }] =
+    useMutation(UPDATE_USER_PROFILE);
 
   useImperativeHandle(ref, () => ({
     submitForm: async () => {
@@ -151,7 +152,7 @@ const UpdateProfileForm = forwardRef<
           throw new Error("File Upload Failed.");
         }
 
-        const { data } = await updateUserInfo({
+        const { data } = await updateUserProfile({
           variables: {
             userProfileData: {
               ...payload,
@@ -160,7 +161,7 @@ const UpdateProfileForm = forwardRef<
             },
           },
           update: (cache, { data: mutationResult }) => {
-            const newProfile = mutationResult.updateUserInfo;
+            const newProfile = mutationResult?.updateUserProfile;
             cache.modify({
               fields: {
                 fetchUserProfile() {
@@ -173,14 +174,14 @@ const UpdateProfileForm = forwardRef<
 
         resolverData = data;
       } else {
-        const { data } = await updateUserInfo({
+        const { data } = await updateUserProfile({
           variables: {
             userProfileData: {
               ...payload,
             },
           },
           update: (cache, { data: mutationResult }) => {
-            const newProfile = mutationResult.updateUserInfo;
+            const newProfile = mutationResult?.updateUserProfile;
             cache.modify({
               fields: {
                 fetchUserProfile() {
@@ -194,26 +195,26 @@ const UpdateProfileForm = forwardRef<
         resolverData = data;
       }
 
-      if (resolverData.updateUserInfo) {
+      if (resolverData?.updateUserProfile) {
         toast.success("Profile updated", {
           description: "Your changes have been saved.",
         });
         dispatch(
           authActions.setUser({
-            userId: resolverData.updateUserInfo._id,
+            userId: resolverData.updateUserProfile._id,
             fullName:
-              resolverData.updateUserInfo.firstName +
+              resolverData.updateUserProfile.firstName +
               " " +
-              resolverData.updateUserInfo.lastName,
-            username: resolverData.updateUserInfo.userName,
-            pfpPath: resolverData.updateUserInfo.pfpPath,
+              resolverData.updateUserProfile.lastName,
+            username: resolverData.updateUserProfile.userName,
+            pfpPath: resolverData.updateUserProfile.pfpPath,
           })
         );
         form.reset();
         if (onSubmissionComplete) {
           onSubmissionComplete();
         }
-        navigate(`/${resolverData.updateUserInfo.userName}`);
+        navigate(`/${resolverData.updateUserProfile.userName}`);
       }
     } catch (error) {
       toast.error("Error updating profile info.", {
@@ -336,7 +337,7 @@ const UpdateProfileForm = forwardRef<
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    Profile picture must be less than 2MB
+                    Profile picture must be less than 2MB.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

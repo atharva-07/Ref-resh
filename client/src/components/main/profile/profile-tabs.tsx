@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 const ProfileTabs = ({
   isPrivate,
@@ -11,28 +12,33 @@ const ProfileTabs = ({
   isPrivate: boolean;
   following: boolean;
 }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const params = useParams();
   const username = params.username as string;
 
   return (
     <Tabs defaultValue="posts" value={username} className="w-full">
-      <div className="sticky top-0 z-10 bg-background">
+      <div className="sticky top-0 bg-background">
         <TabsList className="flex w-full justify-around rounded-none border-b bg-transparent">
           <NavLink to={""} end>
             <TabsTrigger value="posts" className="rounded-none">
               Posts
             </TabsTrigger>
           </NavLink>
-          <NavLink to={"likes"}>
-            <TabsTrigger value="likes" className="rounded-none">
-              Likes
-            </TabsTrigger>
-          </NavLink>
-          <NavLink to={"stories"}>
-            <TabsTrigger value="stories" className="rounded-none">
-              Stories
-            </TabsTrigger>
-          </NavLink>
+          {user?.username === username && (
+            <>
+              <NavLink to={"likes"}>
+                <TabsTrigger value="likes" className="rounded-none">
+                  Likes
+                </TabsTrigger>
+              </NavLink>
+              <NavLink to={"stories"}>
+                <TabsTrigger value="stories" className="rounded-none">
+                  Stories
+                </TabsTrigger>
+              </NavLink>
+            </>
+          )}
         </TabsList>
       </div>
       <Separator className="mb-1" />

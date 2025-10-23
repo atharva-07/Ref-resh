@@ -1,5 +1,4 @@
-import { Plus } from "lucide-react";
-import * as React from "react";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -14,9 +13,13 @@ import ChatOpener from "../main/chat/chat-opener";
 import NewChatButton from "../main/chat/new-chat-button";
 import SearchBar from "../main/search-bar";
 import Stories from "../main/story/stories";
+import StoryWriterModal from "../modal/story-writer-modal";
+import { Button } from "../ui/button";
 import ModeToggle from "./theme-toggle";
 
 const RightSidebar = () => {
+  const [open, setOpen] = useState<boolean>(false);
+
   return (
     <Sidebar
       collapsible="none"
@@ -28,6 +31,14 @@ const RightSidebar = () => {
       <SidebarContent>
         <SidebarGroup>
           <Stories />
+        </SidebarGroup>
+        <SidebarSeparator className="mx-0" />
+        <SidebarGroup>
+          <StoryWriterModal>
+            <Button variant="secondary" className="font-semibold w-full">
+              Add a Story
+            </Button>
+          </StoryWriterModal>
         </SidebarGroup>
         <SidebarSeparator className="mx-0" />
         <SidebarGroup>

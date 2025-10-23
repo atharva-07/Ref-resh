@@ -110,7 +110,7 @@ const PostLoader = ({
   return (
     <ErrorBoundary fallback={<h2>Failed to fetch posts.</h2>}>
       <Suspense fallback={<MainSpinner message="Fetching posts..." />}>
-        <div>
+        <div className="min-h-screen">
           {allPosts && allPosts.length > 0 ? (
             allPosts.map((node) => {
               const timestamps = transformTimestamps(
