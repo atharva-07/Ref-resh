@@ -2,6 +2,7 @@ import { gql, TypedDocumentNode } from "@apollo/client/core";
 
 import { CommentProps } from "@/components/main/comment/comment";
 import { BasicUserData, PostProps } from "@/components/main/post/post";
+import { StoryProps } from "@/components/main/story/story";
 
 export const SIGNUP = gql`
   mutation Signup($signupData: SignUpData!) {
@@ -80,9 +81,27 @@ export const UPDATE_LAST_SEEN: TypedDocumentNode<{
   }
 `;
 
-export const UPDATE_USER_INFO = gql`
-  mutation UpdateUserInfo($userProfileData: UserProfileData!) {
-    updateUserInfo(userProfileData: $userProfileData) {
+export const UPDATE_USER_PROFILE: TypedDocumentNode<{
+  updateUserProfile: BasicUserData;
+}> = gql`
+  mutation UpdateUserProfile($userProfileData: UserProfileData!) {
+    updateUserProfile(userProfileData: $userProfileData) {
+      _id
+      firstName
+      lastName
+      userName
+      bio
+      pfpPath
+      bannerPath
+    }
+  }
+`;
+
+export const UPDATE_USER_INFO: TypedDocumentNode<{
+  updateUserInfo: BasicUserData;
+}> = gql`
+  mutation UpdateUserInfo($userInfoData: userInfoData!) {
+    updateUserInfo(userInfoData: $userInfoData) {
       _id
       firstName
       lastName
@@ -292,5 +311,44 @@ export const CHANGE_PASSWORD: TypedDocumentNode<{
 }> = gql`
   mutation ChangePassword($passwordResetData: PasswordResetData!) {
     changePassword(passwordResetData: $passwordResetData)
+  }
+`;
+
+export const CREATE_STORY: TypedDocumentNode<{
+  createStory: StoryProps;
+}> = gql`
+  mutation CreateStory($storyData: StoryData!) {
+    createStory(storyData: $storyData) {
+      _id
+      image
+      caption
+      createdAt
+      updatedAt
+      author {
+        _id
+        firstName
+        lastName
+        userName
+        bio
+        pfpPath
+        bannerPath
+      }
+    }
+  }
+`;
+
+export const DELETE_STORY: TypedDocumentNode<{
+  removeStory: string;
+}> = gql`
+  mutation RemoveStory($storyId: ID!) {
+    removeStory(storyId: $storyId)
+  }
+`;
+
+export const SET_STORY_SEEN: TypedDocumentNode<{
+  setStorySeenBy: string;
+}> = gql`
+  mutation SetStorySeenBy($storyId: ID!) {
+    setStorySeenBy(storyId: $storyId)
   }
 `;

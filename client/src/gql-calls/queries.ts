@@ -7,6 +7,7 @@ import {
   BasicUserData,
   PostProps,
 } from "@/components/main/post/post";
+import { StoryProps } from "@/components/main/story/story";
 import { ProfileInfo } from "@/routes/Profile";
 import { Message } from "@/store/chat-slice";
 
@@ -685,5 +686,96 @@ export const FORGOT_PASSWORD: TypedDocumentNode<{
 }> = gql`
   query ForgotPassowrd($email: String, $userId: ID) {
     forgotPassword(email: $email, userId: $userId)
+  }
+`;
+
+export const LOAD_STORIES: TypedDocumentNode<{
+  loadStories: {
+    totalActiveStories: number;
+    stories: {
+      cursor: string;
+      node: Omit<StoryProps, "author">;
+    }[];
+    author: BasicUserData;
+  }[];
+}> = gql`
+  query LoadStories($page: Int!, $pageSize: Int!) {
+    loadStories(page: $page, pageSize: $pageSize) {
+      totalActiveStories
+      stories {
+        cursor
+        node {
+          _id
+          image
+          caption
+          seen
+          createdAt
+          updatedAt
+        }
+      }
+      author {
+        _id
+        firstName
+        lastName
+        userName
+        bio
+        pfpPath
+        bannerPath
+      }
+    }
+  }
+`;
+
+export const GET_USER_STORIES: TypedDocumentNode<{
+  fetchUserStories: PaginatedData<StoryProps>;
+}> = gql`
+  query FetchUserStories($userId: ID!, $pageSize: Int!, $after: String) {
+    fetchUserStories(userId: $userId, pageSize: $pageSize, after: $after) {
+      edges {
+        cursor
+        node {
+          _id
+          image
+          caption
+          createdAt
+          updatedAt
+          author {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_STORIES_ARCHIVE: TypedDocumentNode<{
+  fetchStoriesArchive: PaginatedData<StoryProps>;
+}> = gql`
+  query FetchStoriesArchive($pageSize: Int!, $after: String) {
+    fetchStoriesArchive(pageSize: $pageSize, after: $after) {
+      edges {
+        cursor
+        node {
+          _id
+          image
+          caption
+          seen
+          createdAt
+          updatedAt
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
   }
 `;

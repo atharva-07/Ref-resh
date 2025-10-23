@@ -23,8 +23,14 @@ export const getRelativeTime = (
   return moment(timestamp, format).fromNow();
 };
 
+// October 2025
 export const getMonthAndYear = (timestamp: string) => {
   return moment(timestamp).format("MMMM YYYY");
+};
+
+// Oct 23, 2025
+export const getDateInShortForm = (timestamp: string) => {
+  return moment(timestamp).format("ll");
 };
 
 export const getAbsoluteTime = (timestamp: string) => {
