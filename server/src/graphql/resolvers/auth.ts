@@ -5,7 +5,7 @@ import { Document, ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 
-import User, { AuthType, UserType } from "../../models/User";
+import User, { AuthType, Gender, UserType } from "../../models/User";
 import { AppContext } from "../../server";
 import {
   accessTokenCookieOptions,
@@ -205,6 +205,11 @@ export const authMutations = {
     if (signupData.password !== signupData.confirmPassword) {
       errors.push({
         message: "Password and Confirm Password do not match.",
+      });
+    }
+    if (!Object.values(Gender).includes(signupData.gender as Gender)) {
+      errors.push({
+        message: "Gender not specified.",
       });
     }
     if (

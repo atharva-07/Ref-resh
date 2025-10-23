@@ -16,7 +16,7 @@ input SignUpData {
   firstName: String!
   lastName: String!
   dob: String!
-  gender: String!
+  gender: Gender!
   email: String!
   password: String!
   confirmPassword: String!

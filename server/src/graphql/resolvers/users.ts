@@ -1,11 +1,12 @@
 import { ObjectId } from "mongodb";
 import { Types } from "mongoose";
+import validator from "validator";
 
 import Notification, {
   NotificationEvents,
   NotificationType,
 } from "../../models/Notification";
-import User from "../../models/User";
+import User, { Gender } from "../../models/User";
 import { AppContext, sseClients } from "../../server";
 import { sendNotification } from "../../utils/sse";
 import { checkAuthorization, newGqlError } from "../utility-functions";
@@ -589,7 +590,11 @@ export const userMutations = {
       throw error;
     }
   },
-  updateUserInfo: async (_: any, { userProfileData }: any, ctx: AppContext) => {
+  updateUserProfile: async (
+    _: any,
+    { userProfileData }: any,
+    ctx: AppContext
+  ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
       if (userProfileData.userName) {
@@ -621,6 +626,60 @@ export const userMutations = {
         success: true,
         code: 200,
         message: "User Profile updated successfully.",
+        data: updatedUserData,
+      };
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  updateUserInfo: async (_: any, { userInfoData }: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      if (userInfoData.userName)
+        throw newGqlError("Username cannot be empty.", 422);
+
+      if (userInfoData.userName) {
+        const userId = await User.exists({
+          userName: userInfoData.userName,
+        });
+        if (userId)
+          throw newGqlError("Username not available (already taken).", 404);
+      }
+
+      if (
+        userInfoData.gender &&
+        !Object.values(Gender).includes(userInfoData.gender as Gender)
+      )
+        throw newGqlError("Gender not specified.", 422);
+
+      if (
+        userInfoData.dob &&
+        !validator.isDate(userInfoData.dob, {
+          format: "YYYY/MM/DD",
+          strictMode: true,
+        })
+      )
+        throw newGqlError("Invalid date provided.", 422);
+
+      const user = await User.findByIdAndUpdate(
+        ctx.loggedInUserId,
+        {
+          userName: userInfoData.userName || undefined,
+          gender: userInfoData.gender || undefined,
+          dob: userInfoData.dob || undefined,
+        },
+        {
+          new: true,
+          lean: true,
+          select: "_id firstName lastName userName pfpPath bannerPath bio",
+        }
+      );
+      const updatedUserData = { ...user };
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: "User Info updated successfully.",
         data: updatedUserData,
       };
       return response.data;

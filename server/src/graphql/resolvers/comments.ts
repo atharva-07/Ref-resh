@@ -546,7 +546,7 @@ export const commentMutations = {
       });
       const response: HttpResponse = {
         success: true,
-        code: 200,
+        code: 204,
         message: "Comment deleted successfully.",
         data: deletedComment!.id,
       };

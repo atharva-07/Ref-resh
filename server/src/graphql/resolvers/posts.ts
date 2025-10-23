@@ -1,5 +1,5 @@
 import { Document, ObjectId } from "mongodb";
-import { PipelineStage, Types } from "mongoose";
+import { Types } from "mongoose";
 import validator from "validator";
 
 import Comment from "../../models/Comment";
@@ -672,7 +672,7 @@ export const postMutations = {
       if (deletedPost) {
         const response: HttpResponse = {
           success: true,
-          code: 200,
+          code: 204,
           message: "Post and associated comments deleted successfully.",
           data: deletedPost.id,
         };
