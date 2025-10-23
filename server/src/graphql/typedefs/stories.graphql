@@ -1,7 +1,30 @@
 type Story implements TimeStamps {
-  image: String!
+  _id: ID!
+  image: String
   caption: String
-  author: User!
+  author: BasicUserData!
+  seen: Boolean
   createdAt: String!
   updatedAt: String!
+}
+
+input StoryData {
+  image: String
+  caption: String
+}
+
+type StoryEdge {
+  node: Story!
+  cursor: String!
+}
+
+type StoryFeed {
+  edges: [StoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type StoryFeedDetail {
+  totalActiveStories: Int!
+  stories: [StoryEdge!]!
+  author: BasicUserData!
 }

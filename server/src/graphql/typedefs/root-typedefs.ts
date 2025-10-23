@@ -48,6 +48,9 @@ const Queries: string = `
     searchPosts(searchQuery: String!): [BasicPostData!]
     fetchAccountSettingsData: AccountSettingsData!
     forgotPassword(email: String, userId: ID): Boolean!
+    loadStories(pageSize: Int!, page: Int!): [StoryFeedDetail!]
+    fetchUserStories(userId: ID!, pageSize: Int!, after: String): StoryFeed!
+    fetchStoriesArchive(pageSize: Int!, after: String): StoryFeed!
   }
 `;
 
@@ -58,7 +61,8 @@ const Mutations: string = `
     acceptFollowRequest(userId: ID!): ID!
     rejectFollowRequest(userId: ID!): ID!
     blockOrUnblockUser(userId: ID!): BlockResult!
-    updateUserInfo(userProfileData: UserProfileData!): BasicUserData!
+    updateUserProfile(userProfileData: UserProfileData!): BasicUserData!
+    updateUserInfo(userInfoData: UserInfoData!): BasicUserData!
     createPost(postData: PostData!): Post!
     editPost(postId: ID!, content: String!): Post!
     likeOrUnlikePost(postId: ID!): ID!
@@ -75,6 +79,9 @@ const Mutations: string = `
     updateLastSeen(chatId: ID!, messageId: ID!): LastSeenData
     toggleAccountType: AccountToggleResult!
     changePassword(passwordResetData: PasswordResetData!): ID!
+    createStory(storyData: StoryData!): Story!
+    removeStory(storyId: ID!): ID!
+    setStorySeenBy(storyId: ID!): ID!
   }
 `;
 

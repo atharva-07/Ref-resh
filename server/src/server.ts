@@ -22,6 +22,7 @@ import {
   CL_BANNER_FOLDER,
   CL_PFP_FOLDER,
   CL_POST_FOLDER,
+  CL_STORY_FOLDER,
   uploadMultipleFiles,
   uploadSingleFile,
 } from "./utils/cloudinary";
@@ -236,6 +237,40 @@ app.post(
       const result = {
         pfpUrl,
         bannerUrl,
+      };
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/upload/story",
+  imageUploadMiddleware.fields([{ name: "image", maxCount: 1 }]),
+  async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated) {
+        throw new GraphQLError("Unauthorized", {
+          extensions: {
+            code: 401,
+          },
+        });
+      }
+
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const imageFile = files?.image ? files.image[0] : null;
+
+      let imageUrl = null;
+
+      if (imageFile) {
+        imageUrl = await uploadSingleFile(imageFile, CL_STORY_FOLDER);
+      }
+
+      const result = {
+        imageUrl,
       };
 
       return res.status(200).json(result);

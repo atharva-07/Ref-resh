@@ -3,6 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 export const CL_POST_FOLDER = "post-images";
 export const CL_PFP_FOLDER = "pfp-images";
 export const CL_BANNER_FOLDER = "banner-images";
+export const CL_STORY_FOLDER = "story-images";
 
 export const uploadSingleFile = (
   file: Express.Multer.File,
