@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LOGOUT } from "@/gql-calls/mutation";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { client } from "@/middlewares/auth";
 import { authActions } from "@/store/auth-slice";
 import { socketActions } from "@/store/middlewares/socket-middleware";
 import { sseActions } from "@/store/middlewares/sse-middleware";
@@ -50,6 +51,7 @@ const NavUser = ({ user }: NavUserProps) => {
         dispatch(authActions.logout());
         dispatch({ type: socketActions.disconnect });
         dispatch({ type: sseActions.disconnect });
+        client.clearStore();
       }
     } catch (error) {
       toast.error("Could not logout.", {
