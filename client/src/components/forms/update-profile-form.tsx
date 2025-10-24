@@ -44,7 +44,11 @@ const formSchema = z.object({
     .optional(),
   username: z
     .string()
-    .max(36, { message: "Username cannot have more than 36 characters." })
+    .max(18, { message: "Username cannot have more than 18 characters." })
+    .regex(/^[a-z_][a-z0-9_.]{5,17}$/g, {
+      message:
+        "Username can only have lowercase characters, numbers, underscore and dot. It can only start with lowercase characters or underscore.",
+    })
     .optional(),
   bio: z
     .string()

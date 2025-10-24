@@ -54,7 +54,7 @@ const formSchema = z
         message: "Password cannot be more than 20 characters long.",
       })
       .regex(
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/g,
         {
           message:
             "Password must have at least one uppercase letter, one lowercase letter, one number and one special character.",
@@ -67,7 +67,7 @@ const formSchema = z
   })
   .refine((data) => data.password === data.confirmpassword, {
     message: "Passwords don't match",
-    path: ["confirmpassword"], // path of error
+    path: ["confirmpassword"],
   });
 
 const SignupForm = () => {
