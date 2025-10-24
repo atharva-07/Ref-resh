@@ -9,13 +9,9 @@ export const PublicRoute = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  if (isAuthenticated) {
-    return <Navigate to={from} replace />;
-  }
+  if (isLoading) return <MainSpinner />;
 
-  if (isLoading) {
-    return <MainSpinner />;
-  }
+  if (isAuthenticated) return <Navigate to={from} replace />;
 
   return <Outlet />;
 };

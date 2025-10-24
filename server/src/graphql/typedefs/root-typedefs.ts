@@ -51,6 +51,7 @@ const Queries: string = `
     loadStories(pageSize: Int!, page: Int!): [StoryFeedDetail!]
     fetchUserStories(userId: ID!, pageSize: Int!, after: String): StoryFeed!
     fetchStoriesArchive(pageSize: Int!, after: String): StoryFeed!
+    me: UserSetupStatus!
   }
 `;
 

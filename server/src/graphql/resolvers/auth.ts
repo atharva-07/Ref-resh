@@ -157,6 +157,32 @@ export const authQueries = {
       throw error;
     }
   },
+  me: async (_: any, __: any, ctx: AppContext) => {
+    checkAuthorization(ctx.loggedInUserId);
+    try {
+      const user = await User.findById(new ObjectId(ctx.loggedInUserId))
+        .select(
+          "_id firstName lastName userName pfpPath bannerPath bio gender dob"
+        )
+        .lean();
+
+      if (!user) throw newGqlError("User not found.", 404);
+
+      const response: HttpResponse = {
+        code: 200,
+        success: true,
+        message: "User 'me' status loaded.",
+        data: {
+          user: user,
+          setupComplete: ctx.userSetupComplete,
+        },
+      };
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export const authMutations = {

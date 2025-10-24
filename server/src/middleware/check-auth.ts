@@ -22,10 +22,11 @@ export const authMiddleware = async (
   }
 
   const { valid, decoded } = verifyJwt(accessToken);
-  if (!valid || !decoded) {
+  if (!valid || !decoded || typeof decoded === "string") {
     req.isAuthenticated = false;
     return next();
   }
+  const setupComplete = decoded.setupComplete;
   const user = await User.findById(decoded.sub); // userId
   if (!user) {
     req.isAuthenticated = false;
@@ -37,5 +38,6 @@ export const authMiddleware = async (
   req.fullName = `${user.firstName} ${user.lastName}`;
   req.email = user.email;
   req.pfp = user.pfpPath || "";
+  req.setupComplete = setupComplete;
   next();
 };

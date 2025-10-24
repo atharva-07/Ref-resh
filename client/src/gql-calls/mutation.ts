@@ -100,7 +100,7 @@ export const UPDATE_USER_PROFILE: TypedDocumentNode<{
 export const UPDATE_USER_INFO: TypedDocumentNode<{
   updateUserInfo: BasicUserData;
 }> = gql`
-  mutation UpdateUserInfo($userInfoData: userInfoData!) {
+  mutation UpdateUserInfo($userInfoData: UserInfoData!) {
     updateUserInfo(userInfoData: $userInfoData) {
       _id
       firstName

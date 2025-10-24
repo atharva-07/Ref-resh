@@ -10,6 +10,7 @@ import {
 import { StoryProps } from "@/components/main/story/story";
 import { ProfileInfo } from "@/routes/Profile";
 import { Message } from "@/store/chat-slice";
+import { Gender } from "@/types/User";
 
 export interface PaginatedData<TData> {
   edges: { node: TData; cursor: string }[];
@@ -776,6 +777,28 @@ export const GET_STORIES_ARCHIVE: TypedDocumentNode<{
         hasNextPage
         endCursor
       }
+    }
+  }
+`;
+
+export const ME: TypedDocumentNode<{
+  me: {
+    user: BasicUserData & { gender: Gender; dob: string };
+    setupComplete: boolean;
+  };
+}> = gql`
+  query Me {
+    me {
+      user {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+        gender
+        dob
+      }
+      setupComplete
     }
   }
 `;

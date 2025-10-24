@@ -27,3 +27,20 @@ input PasswordResetData {
   password: String!
   confirmPassword: String!
 }
+
+type SetupUserData {
+  _id: ID!
+  firstName: String!
+  lastName: String!
+  userName: String!
+  bio: String
+  pfpPath: String!
+  bannerPath: String!
+  gender: Gender
+  dob: String
+}
+
+type UserSetupStatus {
+  user: SetupUserData!
+  setupComplete: Boolean!
+}

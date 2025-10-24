@@ -14,6 +14,7 @@ import StoryGrid from "./components/main/profile/story-grid";
 import UserPosts from "./components/main/profile/user-posts";
 import { ProtectedRoute } from "./components/main/protected-route";
 import { PublicRoute } from "./components/main/public-route";
+import UserSetupModal from "./components/modal/user-setup-modal";
 import { Toaster } from "./components/ui/sonner";
 import { ThemeProvider } from "./context/theme";
 import Bookmarks from "./routes/Bookmarks";
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
                 <Settings />
               </Suspense>
             ),
+          },
+          {
+            path: "setup",
+            element: <UserSetupModal />,
           },
         ],
       },

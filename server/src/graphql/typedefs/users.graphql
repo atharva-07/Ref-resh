@@ -94,6 +94,12 @@ input UserProfileData {
   bannerPath: String
 }
 
+input UserInfoData {
+  userName: String!
+  gender: Gender
+  dob: String
+}
+
 type BasicUserDataEdge {
   node: BasicUserData!
   cursor: String!

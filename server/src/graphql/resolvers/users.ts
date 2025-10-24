@@ -8,6 +8,8 @@ import Notification, {
 } from "../../models/Notification";
 import User, { Gender } from "../../models/User";
 import { AppContext, sseClients } from "../../server";
+import { accessTokenCookieOptions } from "../../utils/common";
+import { createAccessToken } from "../../utils/jwt";
 import { sendNotification } from "../../utils/sse";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
@@ -636,7 +638,7 @@ export const userMutations = {
   updateUserInfo: async (_: any, { userInfoData }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      if (userInfoData.userName)
+      if (!userInfoData.userName)
         throw newGqlError("Username cannot be empty.", 422);
 
       if (userInfoData.userName) {
@@ -660,14 +662,21 @@ export const userMutations = {
           strictMode: true,
         })
       )
-        throw newGqlError("Invalid date provided.", 422);
+        throw newGqlError(
+          "Provided date of birth is not in correct format.",
+          422
+        );
 
       const user = await User.findByIdAndUpdate(
         ctx.loggedInUserId,
         {
           userName: userInfoData.userName || undefined,
           gender: userInfoData.gender || undefined,
-          dob: userInfoData.dob || undefined,
+          dob: userInfoData.dob
+            ? new Date(userInfoData.dob).setDate(
+                new Date(userInfoData.dob).getDate() + 1
+              )
+            : undefined,
         },
         {
           new: true,
@@ -676,6 +685,15 @@ export const userMutations = {
         }
       );
       const updatedUserData = { ...user };
+
+      if (user) {
+        const accessToken = createAccessToken(
+          user._id.toString(),
+          user.userName
+        );
+        ctx.res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+      }
+
       const response: HttpResponse = {
         success: true,
         code: 200,

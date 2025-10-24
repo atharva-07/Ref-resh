@@ -36,12 +36,14 @@ declare module "express-serve-static-core" {
     fullName: string;
     email: string;
     pfp: string;
+    setupComplete: boolean;
   }
 }
 
 export interface AppContext {
   loggedInUserId: Types.ObjectId;
   res: Response;
+  userSetupComplete: boolean;
 }
 
 dotenv.config();
@@ -291,6 +293,7 @@ app.use(
   expressMiddleware(server, {
     context: async ({ req, res }) => {
       return {
+        userSetupComplete: req.setupComplete,
         loggedInUserId: req.userId,
         res,
       };

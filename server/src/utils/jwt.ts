@@ -2,6 +2,9 @@ import { readFileSync } from "fs";
 import jwt from "jsonwebtoken";
 import path from "path";
 
+const UUID_REGEX =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/g;
+
 const privateKey: string = readFileSync(
   path.join(path.resolve(), "private.key"),
   "utf-8"
@@ -42,6 +45,7 @@ export const createAccessToken = (userId: string, userName: string) => {
     {
       sub: userId,
       aud: userName,
+      setupComplete: userName.match(UUID_REGEX) ? false : true,
     },
     {
       expiresIn: "15m",

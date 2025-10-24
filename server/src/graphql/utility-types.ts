@@ -18,6 +18,7 @@ export interface AuthUserInfo extends Request {
   fullName: string;
   email: string;
   pfp: string;
+  setupComplete: boolean;
 }
 
 export interface ResolverFn<Parent, Args, ReturnType> {
