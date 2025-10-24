@@ -59,14 +59,14 @@ const userSchema: Schema = new Schema<UserType>(
       type: Schema.Types.String,
       required: true,
       minlength: 6,
-      maxlength: 36,
+      maxlength: 18,
       lowercase: true,
       /*
-        Minimum 6 and maximum 36 characters
+        Minimum 6 and maximum 18 characters
         can have lowercase characters, numbers, underscore [_] and dot [.] only
         can only start with lowercase characters or underscore
       */
-      // match: RegExp("^[a-z_][a-z0-9_.]{6,30}$"),
+      // match: RegExp("^[a-z_][a-z0-9_.]{5,17}$"),
     },
     email: {
       type: Schema.Types.String,
