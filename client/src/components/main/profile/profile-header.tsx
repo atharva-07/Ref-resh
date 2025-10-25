@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FOLLOW_UNFOLLOW_USER } from "@/gql-calls/mutation";
+import { BLOCK_UNBLOCK_USER, FOLLOW_UNFOLLOW_USER } from "@/gql-calls/mutation";
 import {
   GET_SENT_FOLLOW_REQUESTS,
   GET_USER_FOLLOWERS,
@@ -96,6 +96,8 @@ const ProfileHeader = ({
 
   const ownAccount = loggedInUser?.userId === user._id;
 
+  const [blockUser] = useMutation(BLOCK_UNBLOCK_USER);
+
   const { data: sentRequests } = useSuspenseQuery(GET_SENT_FOLLOW_REQUESTS);
   const alreadyRequested = sentRequests.fetchSentFollowRequests.find(
     (reqUser) => reqUser._id === user._id
@@ -107,7 +109,7 @@ const ProfileHeader = ({
 
   const handleProfileShare = async () => {
     try {
-      // TODO: FIXME: domain name has to manually pre-pended here.
+      // TODO: FIXME: domain name has to be manually pre-pended here.
       await navigator.clipboard.writeText(`${location.pathname}`);
       toast.success("Copied to Clipboard.", {
         description: "Profile URL has been copied.",
@@ -117,13 +119,24 @@ const ProfileHeader = ({
     }
   };
 
-  // const handleAccountBlock = async () => {
-  //   try {
+  const handleAccountBlock = async () => {
+    try {
+      const { data } = await blockUser({
+        variables: {
+          userId: user._id,
+        },
+        refetchQueries: [GET_USER_PROFILE],
+      });
 
-  //   } catch(error) {
-
-  //   }
-  // }
+      if (data?.blockOrUnblockUser.status === "BLOCKED") {
+        toast.success(`${data.blockOrUnblockUser.user.userName} blocked.`);
+      }
+    } catch (error) {
+      toast.error("Could not block user.", {
+        description: "Please try again.",
+      });
+    }
+  };
 
   const handleFollowUnfollow = async () => {
     try {
@@ -166,7 +179,6 @@ const ProfileHeader = ({
 
   return (
     <section className="w-full">
-      {/* Banner */}
       <div className="relative h-44 bg-muted md:h-56">
         {user.bannerPath ? (
           <img
@@ -176,7 +188,6 @@ const ProfileHeader = ({
           />
         ) : null}
 
-        {/* Overlapping avatar */}
         <div className="absolute -bottom-12 left-4">
           <Avatar className="h-24 w-24 border-4 border-background md:h-28 md:w-28">
             <AvatarImage src={user.pfpPath} alt={`${user.firstName} avatar`} />
@@ -187,7 +198,6 @@ const ProfileHeader = ({
         </div>
       </div>
 
-      {/* Actions row */}
       <div className="flex items-center justify-end gap-2 px-4 pt-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -207,7 +217,7 @@ const ProfileHeader = ({
             {!ownAccount && (
               <DropdownMenuItem
                 className="text-destructive"
-                // onClick={handleAccountBlock}
+                onClick={handleAccountBlock}
               >
                 Block Account
               </DropdownMenuItem>
@@ -255,7 +265,6 @@ const ProfileHeader = ({
         )}
       </div>
 
-      {/* Identity and meta */}
       <div className="space-y-3 px-4 py-4">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
