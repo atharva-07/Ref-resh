@@ -13,14 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { PaginatedData } from "@/gql-calls/queries";
 import { USERS_PAGE_SIZE } from "@/utility/constants";
 
@@ -44,9 +37,21 @@ interface SearchListProps {
   children: ReactNode;
   searchQuery: Query<{ [key: string]: BasicUserData[] }>;
   fetchQuery: Query<{ [key: string]: PaginatedData<BasicUserData> }>;
+  renderHeader?: () => React.ReactNode;
+  renderFooter?: () => React.ReactNode;
+  renderCommanItem?: (user: BasicUserData) => React.ReactNode;
+  overwriteCommandItem?: boolean;
 }
 
-const SearchList = ({ children, searchQuery, fetchQuery }: SearchListProps) => {
+const SearchList = ({
+  children,
+  searchQuery,
+  fetchQuery,
+  renderHeader,
+  renderFooter,
+  renderCommanItem,
+  overwriteCommandItem = false,
+}: SearchListProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -168,10 +173,7 @@ const SearchList = ({ children, searchQuery, fetchQuery }: SearchListProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0 outline-none">
-        {/* <DialogHeader className="px-4 pb-4 pt-5">
-          <DialogTitle>Users</DialogTitle>
-          <DialogDescription>This is the user list...</DialogDescription>
-        </DialogHeader> */}
+        {renderHeader && renderHeader()}
         <Command className="overflow-hidden rounded-t-none border-t bg-transparent">
           <CommandInput
             placeholder="Search user..."
@@ -188,36 +190,41 @@ const SearchList = ({ children, searchQuery, fetchQuery }: SearchListProps) => {
               )}
               {users &&
                 users.length >= 0 &&
-                users.map((user) => (
-                  <CommandItem
-                    key={user._id}
-                    className="flex items-center px-2"
-                  >
-                    <Avatar>
-                      <AvatarImage
-                        src={user?.pfpPath}
-                        alt={`${user?.firstName} ${user.lastName}`}
-                      />
-                      <AvatarFallback>
-                        {user.firstName[0] + user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div
-                      className="ml-2 w-full"
-                      onClick={() => {
-                        setOpen(false);
-                        navigate(`/${user.userName}`);
-                      }}
+                users.map((user) => {
+                  const element = overwriteCommandItem ? (
+                    renderCommanItem && renderCommanItem(user)
+                  ) : (
+                    <CommandItem
+                      key={user._id}
+                      className="flex items-center px-2"
                     >
-                      <p className="text-sm font-medium leading-none">
-                        {user.firstName + " " + user.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        @{user.userName}
-                      </p>
-                    </div>
-                  </CommandItem>
-                ))}
+                      <Avatar>
+                        <AvatarImage
+                          src={user?.pfpPath}
+                          alt={`${user?.firstName} ${user.lastName}`}
+                        />
+                        <AvatarFallback>
+                          {user.firstName[0] + user.lastName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div
+                        className="ml-2 w-full"
+                        onClick={() => {
+                          setOpen(false);
+                          navigate(`/${user.userName}`);
+                        }}
+                      >
+                        <p className="text-sm font-medium leading-none">
+                          {user.firstName + " " + user.lastName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          @{user.userName}
+                        </p>
+                      </div>
+                    </CommandItem>
+                  );
+                  return element;
+                })}
               {hasNextPage && <div ref={ref} className="h-1"></div>}
 
               {loadingMore && (
@@ -228,6 +235,7 @@ const SearchList = ({ children, searchQuery, fetchQuery }: SearchListProps) => {
             </CommandGroup>
           </CommandList>
         </Command>
+        {renderFooter && renderFooter()}
       </DialogContent>
     </Dialog>
   );

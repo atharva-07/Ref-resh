@@ -22,15 +22,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CREATE_NEW_CHAT } from "@/gql-calls/mutation";
-import { GET_USER_FOLLOWERS } from "@/gql-calls/queries";
+import {
+  GET_USER_FOLLOWERS,
+  PaginatedData,
+  SEARCH_USER_FOLLOWERS,
+} from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { chatActions } from "@/store/chat-slice";
 import { USERS_PAGE_SIZE } from "@/utility/constants";
 
+import { BasicUserData } from "../post/post";
+import SearchList, { Query } from "../search-list";
+
 const NewChatButton = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const [open, setOpen] = useState<boolean>(false);
   const dispatch = useAppDispatch();
 
   const [selectedRecipients, setSelectedRecipients] = useState<
@@ -43,17 +49,21 @@ const NewChatButton = () => {
     }[]
   >([]);
 
-  const {
-    data: followers,
-    error: flwError,
-    loading: flwLoading,
-  } = useQuery(GET_USER_FOLLOWERS, {
+  const fetchFollowers: Query<{
+    fetchUserFollowers: PaginatedData<BasicUserData>;
+  }> = {
+    query: GET_USER_FOLLOWERS,
     variables: {
-      userId: user?.userId,
-      pageSize: USERS_PAGE_SIZE,
+      userId: user!.userId,
     },
-    fetchPolicy: "network-only", // TODO: Assess this
-  });
+  };
+
+  const searchFollowers: Query<{ searchUserFollowers: BasicUserData[] }> = {
+    query: SEARCH_USER_FOLLOWERS,
+    variables: {
+      userId: user!.userId,
+    },
+  };
 
   const [createNewChat, { error: newChatError, loading: newChatLoading }] =
     useMutation(CREATE_NEW_CHAT);
@@ -106,82 +116,25 @@ const NewChatButton = () => {
         })
       );
       dispatch(chatActions.joinChatRooms([data.createNewChat]));
-      setOpen(false);
     } catch (error) {
       console.error("Error creating new chat:", error);
     }
-    // setSelectedRecipients((prev) => []);
+    setSelectedRecipients((_) => []);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button
-          className="w-full bg-background border-t p-3 hover:cursor-pointer hover:bg-accent"
-          variant="outline"
-        >
-          Start New Chat
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="gap-0 p-0 outline-none">
-        <DialogHeader className="px-4 pb-4 pt-5">
+    <SearchList
+      searchQuery={searchFollowers}
+      fetchQuery={fetchFollowers}
+      renderHeader={() => (
+        <DialogHeader className="px-4 pb-5 pt-5">
           <DialogTitle>Create New Chat</DialogTitle>
           <DialogDescription>
             Please select the people you want to chat with.
           </DialogDescription>
         </DialogHeader>
-        <Command className="overflow-hidden rounded-t-none border-t bg-transparent">
-          <CommandInput placeholder="Search user..." />
-          <CommandList>
-            <CommandEmpty>No users found.</CommandEmpty>
-            <CommandGroup className="p-2">
-              {followers && followers.fetchUserFollowers.edges.length <= 0 && (
-                <div className="text-sm text-center text-destructive font-bold">
-                  You've got no followers yet. Please follow somebody to chat
-                  with them.
-                </div>
-              )}
-              {followers &&
-                followers.fetchUserFollowers.edges.length >= 0 &&
-                followers.fetchUserFollowers.edges.map(({ node: user }) => (
-                  <CommandItem
-                    key={user._id}
-                    className="flex items-center px-2"
-                    onSelect={() =>
-                      handleSelectRecipient({
-                        _id: user._id,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        userName: user.userName,
-                        pfpPath: user.pfpPath,
-                      })
-                    }
-                  >
-                    <Avatar>
-                      <AvatarImage
-                        src={user?.pfpPath}
-                        alt={`${user?.firstName} ${user.lastName}`}
-                      />
-                      <AvatarFallback>
-                        {user.firstName[0] + user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="ml-2">
-                      <p className="text-sm font-medium leading-none">
-                        {user.firstName + " " + user.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        @{user.userName}
-                      </p>
-                    </div>
-                    {selectedRecipients.find((rec) => rec._id === user._id) ? (
-                      <Check className="ml-auto flex h-5 w-5 text-primary" />
-                    ) : null}
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+      )}
+      renderFooter={() => (
         <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
           {selectedRecipients.length > 0 ? (
             <div className="flex -space-x-2 overflow-hidden">
@@ -209,8 +162,50 @@ const NewChatButton = () => {
             Continue
           </Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+      renderCommanItem={(user: BasicUserData) => (
+        <CommandItem
+          key={user._id}
+          className="flex items-center px-2"
+          onSelect={() =>
+            handleSelectRecipient({
+              _id: user._id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              userName: user.userName,
+              pfpPath: user.pfpPath,
+            })
+          }
+        >
+          <Avatar>
+            <AvatarImage
+              src={user?.pfpPath}
+              alt={`${user?.firstName} ${user.lastName}`}
+            />
+            <AvatarFallback>
+              {user.firstName[0] + user.lastName[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="ml-2">
+            <p className="text-sm font-medium leading-none">
+              {user.firstName + " " + user.lastName}
+            </p>
+            <p className="text-sm text-muted-foreground">@{user.userName}</p>
+          </div>
+          {selectedRecipients.find((rec) => rec._id === user._id) ? (
+            <Check className="ml-auto flex h-5 w-5 text-primary" />
+          ) : null}
+        </CommandItem>
+      )}
+      overwriteCommandItem={true}
+    >
+      <Button
+        className="w-full bg-background border-t p-3 hover:cursor-pointer hover:bg-accent"
+        variant="outline"
+      >
+        Start New Chat
+      </Button>
+    </SearchList>
   );
 };
 

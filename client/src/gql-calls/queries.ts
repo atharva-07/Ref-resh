@@ -493,7 +493,7 @@ export const SEARCH_LIKES_ON_POST: TypedDocumentNode<{
   searchLikesOnPost: BasicUserData[];
 }> = gql`
   query SearchLikesInPost($searchQuery: String!, $postId: ID!) {
-    searchLikesOnPost(searchQuery: $searchQuery, postd: $postId) {
+    searchLikesOnPost(searchQuery: $searchQuery, postId: $postId) {
       _id
       firstName
       lastName
