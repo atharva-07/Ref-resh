@@ -52,6 +52,8 @@ const Queries: string = `
     fetchUserStories(userId: ID!, pageSize: Int!, after: String): StoryFeed!
     fetchStoriesArchive(pageSize: Int!, after: String): StoryFeed!
     me: UserSetupStatus!
+    fetchCallsHistory(pageSize: Int!, after: String): CallFeed!
+    fetchCallsHistoryByChat(chatId: ID!, pageSize: Int!, after: String): CallFeed!
   }
 `;
 
@@ -83,6 +85,9 @@ const Mutations: string = `
     createStory(storyData: StoryData!): Story!
     removeStory(storyId: ID!): ID!
     setStorySeenBy(storyId: ID!): ID!
+    createCall(chatId: ID!): Call!
+    addUserToCall(callId: ID!): ID!
+    removeUserFromCall(callId: ID!, userId: ID): ID!
   }
 `;
 

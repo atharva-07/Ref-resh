@@ -2,6 +2,7 @@
 import { authQueries } from "./auth";
 // Mutation Imports
 import { authMutations } from "./auth";
+import { callMutations, callQueries } from "./calls";
 import { chatMutations, chatQueries } from "./chats";
 import { commentQueries } from "./comments";
 import { commentMutations } from "./comments";
@@ -23,6 +24,7 @@ export const resolvers = {
     ...chatQueries,
     ...searchQueries,
     ...storyQueries,
+    ...callQueries,
   },
   Mutation: {
     ...authMutations,
@@ -31,5 +33,6 @@ export const resolvers = {
     ...commentMutations,
     ...chatMutations,
     ...storyMutations,
+    ...callMutations,
   },
 };

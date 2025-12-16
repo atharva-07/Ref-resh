@@ -1,10 +1,25 @@
+type CallTimeData {
+  user: BasicUserData!
+  timestamp: String!
+}
+
 type Call implements TimeStamps {
   _id: ID!
-  caller: ID!
-  receiver: ID!
-  chat: Chat!
-  startTime: String!
-  endTime: String!
+  chatId: ID!
+  chatName: String!
+  initiator: BasicUserData!
+  acceptedAt: [CallTimeData!]
+  disconnectedAt: [CallTimeData!]
   createdAt: String!
   updatedAt: String!
+}
+
+type CallEdge {
+  node: Call!
+  cursor: String!
+}
+
+type CallFeed {
+  edges: [CallEdge!]!
+  pageInfo: PageInfo!
 }

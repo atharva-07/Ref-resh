@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UPDATE_LAST_SEEN } from "@/gql-calls/mutation";
@@ -14,9 +15,8 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { cn } from "@/lib/utils";
 import { chatActions, getUsersLastSeenInChat, User } from "@/store/chat-slice";
-import { ISO_STRING_FORMAT } from "@/utility/utility-functions";
 
-import { TimeStamps } from "../post/post";
+import { BasicUserData, TimeStamps } from "../post/post";
 
 export interface MessageProps extends TimeStamps {
   _id: string;
@@ -25,7 +25,7 @@ export interface MessageProps extends TimeStamps {
   own: boolean;
   isLastMessage: boolean;
   chatId: string;
-  lastSeenByAvatars: string[];
+  lastSeenByAvatars: BasicUserData[];
 }
 
 const Message = ({
@@ -48,7 +48,6 @@ const Message = ({
 
   const { ref, inView } = useInView({
     triggerOnce: true,
-    // rootMargin: "200px 0px",
   });
 
   const [updateLastSeen] = useMutation(UPDATE_LAST_SEEN);
@@ -69,7 +68,6 @@ const Message = ({
           });
 
           if (data?.updateLastSeen) {
-            console.log(data);
             dispatch(
               chatActions.setSeen({
                 chatId,
@@ -78,6 +76,7 @@ const Message = ({
                 timestamp: data.updateLastSeen.timestamp,
               })
             );
+            dispatch(chatActions.resetUnreadCount({ chatId }));
           }
         } catch (error) {
           console.error("Error updating last seen:", error);
@@ -100,7 +99,7 @@ const Message = ({
   ]);
 
   return (
-    <div ref={isLastMessage ? ref : null} className="flex gap-2 mx-2 mr-5 my-4">
+    <div ref={isLastMessage ? ref : null} className="flex gap-2 ml-4 mr-5 my-4">
       {!own && (
         <Avatar className="h-8 w-8 rounded-lg">
           <AvatarImage
@@ -110,49 +109,44 @@ const Message = ({
           <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
         </Avatar>
       )}
-      <Tooltip delayDuration={800}>
-        <TooltipTrigger asChild>
-          <div
+      <TooltipProvider>
+        <Tooltip delayDuration={800}>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "flex max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                own ? "ml-auto bg-primary text-primary-foreground" : "bg-muted"
+              )}
+            >
+              {content}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
             className={cn(
-              "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-              own ? "ml-auto bg-primary text-primary-foreground" : "bg-muted"
+              own
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
             )}
           >
-            {content}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          className={cn(
-            own
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          )}
-        >
-          <p>{moment(createdAt).format("LT")}</p>
-        </TooltipContent>
-      </Tooltip>
+            <p>{moment(createdAt).format("LT")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       {lastSeenByAvatars && lastSeenByAvatars.length > 0 && (
         <div className="flex items-end">
-          {lastSeenByAvatars.map((avatar, index) => (
-            <img
-              key={index}
-              src={avatar}
-              alt="Last seen by"
-              className="w-4 h-4 rounded-full"
-            />
+          {lastSeenByAvatars.map((user) => (
+            <Avatar key={user._id} className="h-4 w-4 rounded-full text-[10px]">
+              <AvatarImage
+                src={user.pfpPath}
+                alt={user.firstName[0] + user.lastName[0]}
+              ></AvatarImage>
+              <AvatarFallback className="rounded-lg">
+                {user.firstName[0] + user.lastName[0]}
+              </AvatarFallback>
+            </Avatar>
           ))}
         </div>
       )}
-      {/* <div
-        className={`max-w-sm p-2 rounded-xl mx-2 my-1 border child:mt-1 ${
-          own ? "ml-auto bg-secondary" : "mr-auto bg-primary"
-        }`}
-      >
-        <p className="text-sm">{content}</p>
-        <p className="text-right text-xs opacity-40">
-          {moment(createdAt).format("LT")}
-        </p>
-      </div> */}
     </div>
   );
 };

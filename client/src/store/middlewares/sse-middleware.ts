@@ -18,6 +18,7 @@ const createSseMiddleware = (): Middleware<object, RootState> => {
       switch (action.type) {
         case sseActions.connect: {
           sseSingleton.connect(store.dispatch, action.payload.userId);
+          console.log("SSE connected.");
           store.dispatch(fetchUnreadNotifications() as any);
           break;
         }

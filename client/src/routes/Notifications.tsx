@@ -141,14 +141,14 @@ const Notifications = () => {
             (!notif.unread && notifications[idx - 1].unread);
 
           return (
-            <>
+            <div key={notif._id}>
               {showSeparator && (
                 <NotificationsSeparator
                   readStatus={notif.unread ? "Unread" : "Read"}
                 />
               )}
               <Notification key={notif._id} {...notif} {...timestamps} />
-            </>
+            </div>
           );
         })}
       {hasNextPage && <div ref={ref} className="h-1"></div>}

@@ -1,5 +1,6 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
+import { CallProps } from "@/components/main/call/call";
 import { CommentProps } from "@/components/main/comment/comment";
 import { BasicUserData, PostProps } from "@/components/main/post/post";
 import { StoryProps } from "@/components/main/story/story";
@@ -350,5 +351,41 @@ export const SET_STORY_SEEN: TypedDocumentNode<{
 }> = gql`
   mutation SetStorySeenBy($storyId: ID!) {
     setStorySeenBy(storyId: $storyId)
+  }
+`;
+
+export const CREATE_CALL: TypedDocumentNode<{
+  createCall: CallProps;
+}> = gql`
+  mutation CreateCall($chatId: ID!) {
+    createCall(chatId: $chatId) {
+      _id
+      chatId
+      initiator {
+        _id
+        firstName
+        lastName
+        userName
+        pfpPath
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const JOIN_CALL: TypedDocumentNode<{
+  addUserToCall: string;
+}> = gql`
+  mutation AddUserToCall($callId: ID!) {
+    addUserToCall(callId: $callId)
+  }
+`;
+
+export const LEAVE_CALL: TypedDocumentNode<{
+  removeUserFromCall: string;
+}> = gql`
+  mutation RemoveUserFromCall($callId: ID!, $userId: ID) {
+    removeUserFromCall(callId: $callId, userId: $userId)
   }
 `;

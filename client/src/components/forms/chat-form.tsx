@@ -1,9 +1,8 @@
 import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { stat } from "fs";
 import { debounce } from "lodash";
 import { Send, SendHorizonal } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { z } from "zod";
@@ -27,7 +26,7 @@ const formSchema = z.object({
   message: z.string({ required_error: "Message cannot be empty." }).max(400),
 });
 
-const ChatForm = () => {
+const ChatForm = ({ chatId }: { chatId: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,7 +35,6 @@ const ChatForm = () => {
   });
 
   const { user } = useAppSelector((state) => state.auth);
-  const { chatId } = useParams();
 
   const socket = useSocket();
 
@@ -85,7 +83,6 @@ const ChatForm = () => {
 
       if (data.sendChatMessage) {
         form.reset();
-        console.log("Message sent. Resetting form.", data.sendChatMessage);
         dispatch(chatActions.messageSent({ message: data.sendChatMessage }));
       }
     } catch (err) {

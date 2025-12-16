@@ -150,7 +150,12 @@ export const chatQueries = {
                             input: "$members",
                             as: "m",
                             cond: {
-                              $not: { $eq: ["$$m._id", ctx.loggedInUserId] },
+                              $not: {
+                                $eq: [
+                                  "$$m._id",
+                                  new ObjectId(ctx.loggedInUserId),
+                                ],
+                              },
                             },
                           },
                         },
@@ -310,14 +315,6 @@ export const chatQueries = {
 };
 
 export const chatMutations = {
-  //   type Chat implements TimeStamps {
-  //   _id: ID!
-  //   chatName: String!
-  //   members: [BasicUserData!]!
-  //   lastMessage: LastMessageData
-  //   createdAt: String!
-  //   updatedAt: String!
-  // }
   createNewChat: async (
     _: any,
     {

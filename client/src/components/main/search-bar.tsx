@@ -1,5 +1,3 @@
-"use client";
-
 import { useLazyQuery } from "@apollo/client";
 import { debounce } from "lodash";
 import { ArrowRight, Loader2, Search } from "lucide-react";
@@ -27,7 +25,6 @@ const SearchBar = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [people, setPeople] = useState<BasicUserData[]>([]);
   const [posts, setPosts] = useState<BasicPostData[]>([]);
-  // const router = useRouter()
   const navigate = useNavigate();
 
   const [searchUsers] = useLazyQuery(SEARCH_USERS);

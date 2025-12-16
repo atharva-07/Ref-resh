@@ -1,35 +1,61 @@
 import { model, Schema, Types } from "mongoose";
 
-interface CallType {
-  caller: Types.ObjectId;
-  receiver: Types.ObjectId;
-  chat: Types.ObjectId;
-  startTime: Date;
-  endTime: Date;
+export interface CallType {
+  chatId: Types.ObjectId;
+  initiator: Types.ObjectId;
+  acceptedAt?: Map<
+    string,
+    {
+      timestamp: Date;
+    }
+  >;
+  disconnectedAt?: Map<
+    string,
+    {
+      timestamp: Date;
+    }
+  >;
 }
 
 const callSchema: Schema = new Schema<CallType>(
   {
-    caller: {
+    chatId: {
       type: Schema.Types.ObjectId,
       required: true,
-    },
-    receiver: {
-      type: Schema.Types.ObjectId,
-      required: true,
-    },
-    chat: {
-      type: Schema.Types.ObjectId,
       ref: "Chat",
-      required: true,
     },
-    startTime: {
-      type: Schema.Types.Date,
+    initiator: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
-    endTime: {
-      type: Schema.Types.Date,
-      required: true,
+    acceptedAt: {
+      type: Schema.Types.Map,
+      of: new Schema({
+        timestamp: { type: Date, default: Date.now },
+      }),
+      ref: "User",
+      default: () =>
+        new Map<
+          string,
+          {
+            timestamp: Date;
+          }
+        >(),
+    },
+    disconnectedAt: {
+      type: Schema.Types.Map,
+      of: new Schema({
+        timestamp: { type: Date, default: Date.now },
+      }),
+      ref: "User",
+      default: () =>
+        new Map<
+          string,
+          {
+            timestamp: Date;
+          }
+        >(),
     },
   },
   { timestamps: true }

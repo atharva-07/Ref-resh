@@ -20,15 +20,12 @@ export const ProtectedRoute = () => {
   const { isUsernameSetupComplete, loading } = useMe();
 
   useEffect(() => {
-    if (isAuthenticated && user?.userId) {
+    // TODO: FIXME: This is causing issues when not commented out. So, commenting out for now. Ideally, this check should be there.
+    if (user && !isLoading) {
       dispatch({ type: socketActions.connect });
-      dispatch({ type: sseActions.connect, payload: user?.userId });
+      dispatch({ type: sseActions.connect, payload: user.userId });
     }
-    // return () => {
-    //   dispatch({ type: socketActions.disconnect });
-    //   dispatch({ type: sseActions.disconnect });
-    // };
-  }, [dispatch, user, user?.userId, isAuthenticated]);
+  }, [dispatch, user, isLoading]);
 
   if (isLoading || loading) return <MainSpinner />;
 

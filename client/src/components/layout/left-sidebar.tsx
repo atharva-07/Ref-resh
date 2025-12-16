@@ -5,6 +5,7 @@ import {
   Heart,
   Home,
   MessageSquarePlus,
+  Phone,
   User2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -51,6 +52,11 @@ const LeftSidebar = () => {
       url: "/conversations",
       icon: MessageSquarePlus,
       data: unreadChatsCount,
+    },
+    {
+      title: "Calls",
+      url: "/calls",
+      icon: Phone,
     },
     {
       title: "Bookmarks",

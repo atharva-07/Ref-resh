@@ -224,7 +224,6 @@ const Post = ({
         )}
       >
         <div className="flex gap-3">
-          {/* Avatar */}
           <Avatar className="h-8 w-8 rounded-lg">
             {/* <Link to={`@${author.userName}`}> */}
             <AvatarImage src={author.pfpPath} alt={authorInitials} />
@@ -237,9 +236,7 @@ const Post = ({
             {/* </Link> */}
           </Avatar>
 
-          {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Header */}
             <div className="flex items-start gap-2 mb-1">
               <span className="font-semibold leading-5 text-foreground">
                 {author.firstName + " " + author.lastName}
@@ -297,14 +294,11 @@ const Post = ({
               )}
             </div>
 
-            {/* Content */}
             {/* <div className="text-foreground mb-3 leading-relaxed whitespace-pre-wrap text-base"> */}
             <Link to={`/post/${_id}`}>
               <p className="cursor-pointer">{content}</p>
             </Link>
-            {/* </div> */}
 
-            {/* Images */}
             {images && images.length > 0 && (
               <div
                 className={cn(
@@ -347,9 +341,7 @@ const Post = ({
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex items-center justify-between max-w-md mt-2">
-              {/* Like */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -369,7 +361,6 @@ const Post = ({
                 </span>
               </Button>
 
-              {/* Comment */}
               <CommentWriterModal postId={_id} parentCommentId={null}>
                 <Button
                   variant="ghost"
@@ -383,7 +374,6 @@ const Post = ({
                 </Button>
               </CommentWriterModal>
 
-              {/* Bookmark */}
               <Button
                 variant="ghost"
                 size="sm"

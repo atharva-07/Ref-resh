@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosResponse } from "axios";
@@ -10,7 +8,6 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { UPDATE_USER_PROFILE } from "@/gql-calls/mutation";
-import { GET_USER_PROFILE } from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { authActions } from "@/store/auth-slice";
 import {

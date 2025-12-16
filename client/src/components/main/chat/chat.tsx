@@ -8,6 +8,7 @@ import {
   transformTimestamps,
 } from "@/utility/utility-functions";
 
+import { BasicUserData } from "../post/post";
 import Message from "./message";
 
 interface ChatProps {
@@ -44,7 +45,6 @@ export const Chat = ({ chatId }: ChatProps) => {
     typingMessage,
     ref,
     user,
-    isInitialLoad, // Receive the new state from the hook
   } = useChatMessages(chatId);
 
   // Use a ref to track if the chat is already open.
@@ -83,29 +83,36 @@ export const Chat = ({ chatId }: ChatProps) => {
     return <Loader2 className="mx-auto animate-spin" />;
   }
 
-  if (!allMessages || allMessages.length <= 0) {
-    return <p>No messages in this chat.</p>;
-  }
-
   return (
-    <>
-      <ScrollArea ref={scrollAreaRef} className="grow h-5/6 border">
-        {!hasNextPage && allMessages.length > 0 && (
-          <p className="p-3 text-center text-sm text-gray-500 border-b">
-            This is the beginning of your chat with {chatRecipient}.
-          </p>
-        )}
-        {hasNextPage && (
-          <div
-            ref={ref}
-            style={{
-              height: "1px",
-            }}
-          ></div>
-        )}
-        {loadingMore && <Loader2 className="mx-auto animate-spin" />}
-        <ol>
-          {allMessages.map((message: any) => {
+    <ScrollArea ref={scrollAreaRef} className="relative grow h-5/6 border">
+      {!hasNextPage && allMessages.length > 0 && (
+        <p className="p-3 text-center text-sm text-gray-500 border-b">
+          This is the beginning of your chat with {chatRecipient}.
+        </p>
+      )}
+      {hasNextPage && (
+        <div
+          ref={ref}
+          style={{
+            height: "1px",
+          }}
+        ></div>
+      )}
+      {loadingMore && <Loader2 className="mx-auto animate-spin" />}
+      {!allMessages ||
+        (allMessages && allMessages.length <= 0 && (
+          <div className="flex m-auto items-center justify-center">
+            <div className="mt-20 text-center">
+              <p>This is the beginning of your chat with {chatRecipient}.</p>
+              <p>No messages in this chat yet.</p>
+              <h3 className="mt-10">Say Hi. 👋🏻</h3>
+            </div>
+          </div>
+        ))}
+      <ol>
+        {allMessages &&
+          allMessages.length > 0 &&
+          allMessages.map((message: any) => {
             const timestamps = transformTimestamps(
               message.createdAt,
               message.updatedAt
@@ -121,12 +128,12 @@ export const Chat = ({ chatId }: ChatProps) => {
 
             const usersWhoLastSawThisMessage = Object.entries(
               usersLastSeen || {}
-            ).reduce<string[]>((acc, [userId, seenData]) => {
+            ).reduce<BasicUserData[]>((acc, [userId, seenData]) => {
               if (
                 seenData.messageId === message._id &&
                 seenData.user._id !== user?.userId
               ) {
-                acc.push(seenData.user.pfpPath);
+                acc.push(seenData.user);
               }
               return acc;
             }, []);
@@ -147,14 +154,13 @@ export const Chat = ({ chatId }: ChatProps) => {
               </li>
             );
           })}
-        </ol>
-        {typingMessage && (
-          <div className="text-muted-foreground text-sm m-2">
-            {typingMessage}
-          </div>
-        )}
-        <div ref={bottomDivRef}></div>
-      </ScrollArea>
-    </>
+      </ol>
+      {typingMessage && (
+        <div className="absolute bottom-1 left-1 text-muted-foreground text-sm m-2">
+          {typingMessage}
+        </div>
+      )}
+      <div ref={bottomDivRef}></div>
+    </ScrollArea>
   );
 };

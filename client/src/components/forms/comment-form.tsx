@@ -1,8 +1,5 @@
-"use client";
-
 import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { AxiosResponse } from "axios";
 import { forwardRef, useImperativeHandle } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +9,6 @@ import { z } from "zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { CREATE_COMMENT } from "@/gql-calls/mutation";
-import { useAppSelector } from "@/hooks/useAppSelector";
 
 const FormSchema = z.object({
   content: z

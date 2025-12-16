@@ -1,25 +1,16 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { CommandItem } from "@/components/ui/command";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { CREATE_NEW_CHAT } from "@/gql-calls/mutation";
 import {
@@ -30,7 +21,6 @@ import {
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { chatActions } from "@/store/chat-slice";
-import { USERS_PAGE_SIZE } from "@/utility/constants";
 
 import { BasicUserData } from "../post/post";
 import SearchList, { Query } from "../search-list";
@@ -38,6 +28,8 @@ import SearchList, { Query } from "../search-list";
 const NewChatButton = () => {
   const { user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+
+  const navigate = useNavigate();
 
   const [selectedRecipients, setSelectedRecipients] = useState<
     {
@@ -115,7 +107,7 @@ const NewChatButton = () => {
           chatMembers: data.createNewChat.members,
         })
       );
-      dispatch(chatActions.joinChatRooms([data.createNewChat]));
+      navigate(`/conversations/${data.createNewChat._id}`);
     } catch (error) {
       console.error("Error creating new chat:", error);
     }
@@ -139,7 +131,7 @@ const NewChatButton = () => {
           {selectedRecipients.length > 0 ? (
             <div className="flex -space-x-2 overflow-hidden">
               {selectedRecipients.map((user) => (
-                <Avatar key={user._id} className="h-8 w-8 rounded-lg">
+                <Avatar key={user._id} className="h-8 w-8 rounded-full">
                   <AvatarImage
                     src={user?.pfpPath}
                     alt={`${user?.firstName} ${user.lastName}`}
@@ -163,7 +155,7 @@ const NewChatButton = () => {
           </Button>
         </DialogFooter>
       )}
-      renderCommanItem={(user: BasicUserData) => (
+      renderCommandItem={(user: BasicUserData) => (
         <CommandItem
           key={user._id}
           className="flex items-center px-2"

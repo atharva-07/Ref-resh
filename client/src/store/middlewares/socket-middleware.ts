@@ -2,6 +2,7 @@ import { Middleware } from "@reduxjs/toolkit";
 
 import { getSocket } from "@/context/socket-singleton";
 
+import { callActions, Participant, terminateCall } from "../call-slice";
 import { chatActions, fetchUserConversations } from "../chat-slice";
 import { RootState } from "../store";
 
@@ -24,6 +25,10 @@ const createSocketMiddleware = (): Middleware<object, RootState> => {
             // Optionally dispatch a status update action
             // store.dispatch({ type: 'socket/statusConnected' });
             store.dispatch(fetchUserConversations() as any);
+            const userId = store.getState().auth.user?.userId;
+            if (userId) {
+              socket.emit("authenticate", { userId });
+            }
           });
 
           socket.on("disconnect", () => {
@@ -53,7 +58,82 @@ const createSocketMiddleware = (): Middleware<object, RootState> => {
             store.dispatch(chatActions.setLastSeen(payload));
           });
 
+          socket.on("newChatCreated", (payload: { chatId: string }) => {
+            socket.emit("joinChatRooms", { chatIds: [payload.chatId] });
+          });
+
+          socket.on(
+            "callIncoming",
+            (payload: {
+              chatId: string;
+              callId: string;
+              caller: Participant;
+              peerId: string;
+            }) => {
+              store.dispatch(callActions.incomingCall(payload));
+            }
+          );
+
+          socket.on(
+            "callUserJoined",
+            (payload: {
+              chatId: string;
+              user: Participant;
+              peerId: string;
+              currentParticipants: string[];
+            }) => {
+              store.dispatch(callActions.userJoined(payload));
+            }
+          );
+
+          socket.on(
+            "callUserLeft",
+            (payload: { chatId: string; userId: string }) => {
+              const state = store.getState();
+
+              if (
+                state.call.activeCall &&
+                state.call.activeCall.chatId === payload.chatId
+              ) {
+                store.dispatch(callActions.userLeft(payload));
+              }
+            }
+          );
+
+          socket.on(
+            "callEnded",
+            (payload: { chatId: string; lastUserId: string }) => {
+              console.log("Socket Middleware: callEnded.");
+              // Dispatch action to reset call status and close WebRTC connections
+              if (payload.lastUserId === store.getState().auth.user?.userId) {
+                store.dispatch(terminateCall(payload) as any);
+              } else {
+                store.dispatch(callActions.callEnded(payload));
+              }
+            }
+          );
+
+          socket.on("callExists", () => {
+            console.log("Socket Middleware: callExists");
+            store.dispatch(callActions.setError("Call is already active."));
+          });
+
+          socket.on(
+            "callError",
+            (payload: { chatId: string; reason: string }) => {
+              store.dispatch(callActions.setError(payload.reason));
+            }
+          );
+
+          socket.on("setActiveUsers", (payload: { userIds: string[] }) => {
+            store.dispatch(chatActions.setActiveUsers(payload.userIds));
+          });
+
           listenersInitialized = true;
+        }
+
+        if (socket && !socket.connected) {
+          socket.connect();
         }
       } else if (action.type === socketActions.disconnect) {
         if (socket) {
@@ -77,6 +157,23 @@ const createSocketMiddleware = (): Middleware<object, RootState> => {
 
         if (chatActions.setSeen.match(action)) {
           socket.emit("setSeen", action.payload);
+        }
+
+        if (chatActions.addNewChat.match(action)) {
+          const { chatId, chatMembers, chatName } = action.payload;
+          socket.emit("addNewChat", { chatId, chatMembers, chatName });
+        }
+
+        if (callActions.callInitiate.match(action)) {
+          socket.emit("callInitiate", action.payload);
+        }
+
+        if (callActions.callJoin.match(action)) {
+          socket.emit("callJoin", action.payload);
+        }
+
+        if (callActions.callHangup.match(action)) {
+          socket.emit("callHangup", action.payload);
         }
       }
 

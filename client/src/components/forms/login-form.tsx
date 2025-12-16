@@ -1,11 +1,8 @@
-"use client";
-
 import { useLazyQuery, useQuery } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -21,8 +18,6 @@ import { Input } from "@/components/ui/input";
 import { LOGIN } from "@/gql-calls/queries";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { authActions, user } from "@/store/auth-slice";
-import { socketActions } from "@/store/middlewares/socket-middleware";
-import { sseActions } from "@/store/middlewares/sse-middleware";
 
 import {
   Card,
@@ -87,8 +82,8 @@ const LoginForm = () => {
           data.credentialsLogin;
         dispatch(authActions.setUser(payload));
         dispatch(authActions.setIsAuthenticated(true));
-        dispatch({ type: socketActions.connect });
-        dispatch({ type: sseActions.connect, payload: payload.userId });
+        // dispatch({ type: socketActions.connect });
+        // dispatch({ type: sseActions.connect, payload: payload.userId });
         navigate("/");
       }
     } catch (error) {

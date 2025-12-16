@@ -6,15 +6,11 @@ import User from "../../models/User";
 import { AppContext } from "../../server";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
+import { PageInfo } from "./posts";
 
 interface NotificationEdge {
   node: NotificationType;
   cursor: string;
-}
-
-export interface PageInfo {
-  hasNextPage: boolean;
-  endCursor: string | null;
 }
 
 interface NotificationFeed {

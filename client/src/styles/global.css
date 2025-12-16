@@ -115,7 +115,7 @@
     @apply font-geist_sans;
   }
   body {
-    @apply bg-background text-foreground min-h-[101vh] overflow-x-hidden;
+    @apply bg-background text-foreground min-h-screen overflow-x-hidden;
   }
   h1 {
     @apply scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance;

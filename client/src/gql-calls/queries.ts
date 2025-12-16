@@ -1,5 +1,6 @@
 import { gql, TypedDocumentNode } from "@apollo/client/core";
 
+import { CallProps } from "@/components/main/call/call";
 import { CommentProps } from "@/components/main/comment/comment";
 import { NotificationProps } from "@/components/main/notification/notification";
 import {
@@ -799,6 +800,110 @@ export const ME: TypedDocumentNode<{
         dob
       }
       setupComplete
+    }
+  }
+`;
+
+export const GET_CALLS_HISTORY: TypedDocumentNode<{
+  fetchCallsHistory: PaginatedData<CallProps>;
+}> = gql`
+  query fetchCallsHistory($pageSize: Int!, $after: String) {
+    fetchCallsHistory(pageSize: $pageSize, after: $after) {
+      edges {
+        node {
+          _id
+          chatId
+          chatName
+          initiator {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+          acceptedAt {
+            user {
+              _id
+              firstName
+              lastName
+              userName
+              pfpPath
+            }
+            timestamp
+          }
+          disconnectedAt {
+            user {
+              _id
+              firstName
+              lastName
+              userName
+              pfpPath
+            }
+            timestamp
+          }
+          createdAt
+          updatedAt
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_CALLS_HISTORY_BY_CHAT: TypedDocumentNode<{
+  fetchCallsHistoryByChat: PaginatedData<CallProps>;
+}> = gql`
+  query FetchCallsHistoryByChat($chatId: ID!, $pageSize: Int!, $after: String) {
+    fetchCallsHistoryByChat(
+      chatId: $chatId
+      pageSize: $pageSize
+      after: $after
+    ) {
+      edges {
+        node {
+          _id
+          chatId
+          chatName
+          initiator {
+            _id
+            firstName
+            lastName
+            userName
+            pfpPath
+          }
+          acceptedAt {
+            user {
+              _id
+              firstName
+              lastName
+              userName
+              pfpPath
+            }
+            timestamp
+          }
+          disconnectedAt {
+            user {
+              _id
+              firstName
+              lastName
+              userName
+              pfpPath
+            }
+            timestamp
+          }
+          createdAt
+          updatedAt
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
 `;

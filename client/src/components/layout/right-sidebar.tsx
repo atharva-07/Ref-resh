@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import {
   Sidebar,
   SidebarContent,
@@ -18,8 +16,6 @@ import { Button } from "../ui/button";
 import ModeToggle from "./theme-toggle";
 
 const RightSidebar = () => {
-  const [open, setOpen] = useState<boolean>(false);
-
   return (
     <Sidebar
       collapsible="none"

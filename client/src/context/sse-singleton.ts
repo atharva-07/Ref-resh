@@ -33,9 +33,11 @@ class SSEService {
       try {
         const payload = JSON.parse(event.data);
         const { publisher } = payload;
-        toast.info("You have a new notification.", {
-          description: `${publisher.firstName} ${publisher.lastName} ${eventMessageMap.get(payload.eventType)}`,
-        });
+        if (publisher) {
+          toast.info("You have a new notification.", {
+            description: `${publisher.firstName} ${publisher.lastName} ${eventMessageMap.get(payload.eventType)}`,
+          });
+        }
         this.dispatch!({ type: "sse/notification_received", payload });
       } catch (error) {
         console.error("Error parsing SSE message: ", error);

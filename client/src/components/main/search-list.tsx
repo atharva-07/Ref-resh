@@ -39,7 +39,7 @@ interface SearchListProps {
   fetchQuery: Query<{ [key: string]: PaginatedData<BasicUserData> }>;
   renderHeader?: () => React.ReactNode;
   renderFooter?: () => React.ReactNode;
-  renderCommanItem?: (user: BasicUserData) => React.ReactNode;
+  renderCommandItem?: (user: BasicUserData) => React.ReactNode;
   overwriteCommandItem?: boolean;
 }
 
@@ -49,7 +49,7 @@ const SearchList = ({
   fetchQuery,
   renderHeader,
   renderFooter,
-  renderCommanItem,
+  renderCommandItem,
   overwriteCommandItem = false,
 }: SearchListProps) => {
   const [open, setOpen] = useState<boolean>(false);
@@ -192,7 +192,7 @@ const SearchList = ({
                 users.length >= 0 &&
                 users.map((user) => {
                   const element = overwriteCommandItem ? (
-                    renderCommanItem && renderCommanItem(user)
+                    renderCommandItem && renderCommandItem(user)
                   ) : (
                     <CommandItem
                       key={user._id}

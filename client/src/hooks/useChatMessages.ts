@@ -65,8 +65,6 @@ export const useChatMessages = (chatId: string) => {
         .filter((node) => !existingMessagesIds.has(node._id))
         .reverse();
 
-      const hasNewMessages = messages.length > 0;
-
       dispatch(
         chatActions.setConversationMessages({
           chatId,
@@ -181,7 +179,7 @@ export const useChatMessages = (chatId: string) => {
       socket.off("setTyping");
       socket.off("clearTyping");
     };
-  }, [socket]);
+  }, [socket, chatId]);
 
   const getTypingStatusMessage = () => {
     const typingUsers = Array.from(participantTypingStatus.entries())

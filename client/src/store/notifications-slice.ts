@@ -55,7 +55,9 @@ export const notificationSlice = createAppSlice({
       .addCase(
         createAction<Notification>("sse/notification_received"),
         (state, action) => {
-          state.unreadNotifications.unshift(action.payload);
+          if (action.payload.eventType) {
+            state.unreadNotifications.unshift(action.payload);
+          }
         }
       )
       .addCase("sse/connection_error", (state) => {

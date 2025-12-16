@@ -14,10 +14,14 @@ import StoryGrid from "./components/main/profile/story-grid";
 import UserPosts from "./components/main/profile/user-posts";
 import { ProtectedRoute } from "./components/main/protected-route";
 import { PublicRoute } from "./components/main/public-route";
+import { AudioCallDialog } from "./components/modal/audio-call-modal";
+import IncomingCallDialog from "./components/modal/incoming-call-modal";
 import UserSetupModal from "./components/modal/user-setup-modal";
 import { Toaster } from "./components/ui/sonner";
 import { ThemeProvider } from "./context/theme";
+import { useCallWarning } from "./hooks/useCallWarning";
 import Bookmarks from "./routes/Bookmarks";
+import Calls from "./routes/Calls";
 import Conversations from "./routes/Conversations";
 import Error from "./routes/Error";
 import ForogtPassword from "./routes/ForgotPassword";
@@ -64,6 +68,10 @@ const router = createBrowserRouter([
                 element: <ChatWindow />,
               },
             ],
+          },
+          {
+            path: "calls",
+            element: <Calls />,
           },
           { path: "bookmarks", element: <Bookmarks /> },
           {
@@ -122,11 +130,15 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  useCallWarning();
+
   return (
     <AuthLoader>
       <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
         <RouterProvider router={router} />
         <Toaster />
+        <IncomingCallDialog />
+        <AudioCallDialog />
       </ThemeProvider>
     </AuthLoader>
   );

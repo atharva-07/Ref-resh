@@ -6,12 +6,18 @@ export const USERS_PAGE_SIZE: number = 10;
 export const NOTIFICATIONS_PAGE_SIZE: number = 10;
 export const STORIES_PAGE_SIZE: number = 10;
 export const STORY_GRID_PAGE_SIZE: number = 9;
+export const CALLS_PAGE_SIZE: number = 10;
 
 // IMAGE_SIZES
 export const PFP_MAX_SIZE_IN_BYTES: number = 2 * 1024 * 1024;
 export const BANNER_MAX_SIZE_IN_BYTES: number = 5 * 1024 * 1024;
 export const POST_MAX_SIZE_IN_BYTES: number = 4 * 1024 * 1024;
 export const STORY_MAX_SIZE_IN_BYTES: number = 4 * 1024 * 1024;
+
+// CALL
+export const MAX_CALL_PARTICIPANTS: number = 4;
+export const MAX_RINGING_TIME_MS: number = 30 * 1000;
+export const MAX_RINGING_TIME_SEC: number = 30;
 
 // NOTIFICATIONS
 export enum NotificationEvents {

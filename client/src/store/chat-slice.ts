@@ -1,9 +1,15 @@
-import { CaseReducer, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import {
+  CaseReducer,
+  createAsyncThunk,
+  createSelector,
+  PayloadAction,
+} from "@reduxjs/toolkit";
 
 import { GET_CHATS } from "@/gql-calls/queries";
 import { client } from "@/middlewares/auth";
 
 import { createAppSlice } from "./createAppSlice";
+import { RootState } from "./store";
 
 interface Chat {
   _id: string;
@@ -20,10 +26,10 @@ interface Chat {
 
 export interface User {
   _id: string;
-  pfpPath: string;
   firstName: string;
   lastName: string;
   userName: string;
+  pfpPath: string;
   lastSeen?: {
     messageId: string;
     timestamp: string;
@@ -51,12 +57,14 @@ interface ChatState {
     chatMessages: Message[];
   }[];
   lastMessages: Record<string, Message | null>;
+  activeUsers?: string[];
   error: string | null;
 }
 
 const initialState: ChatState = {
   chats: [],
   lastMessages: {},
+  activeUsers: [],
   error: null,
 };
 
@@ -91,9 +99,7 @@ const messageReceived: CaseReducer<
 const messageSent: CaseReducer<
   ChatState,
   PayloadAction<{ message: SocketMessage }>
-> = (state, action) => {
-  // This is not required.
-};
+> = () => {};
 
 const setSeen: CaseReducer<
   ChatState,
@@ -103,9 +109,7 @@ const setSeen: CaseReducer<
     messageId: string;
     timestamp: string;
   }>
-> = (state, action) => {
-  // This is not required.
-};
+> = () => {};
 
 const setLastSeen: CaseReducer<
   ChatState,
@@ -119,7 +123,6 @@ const setLastSeen: CaseReducer<
   const { chatId, messageId, userId, timestamp } = action.payload;
   const chat = state.chats.find((chat) => chat.chatId === chatId);
   if (chat) {
-    chat.unreadCount = 0;
     const user = chat.chatMembers?.find((user) => user._id === userId);
     if (user) {
       user.lastSeen = {
@@ -127,6 +130,17 @@ const setLastSeen: CaseReducer<
         timestamp,
       };
     }
+  }
+};
+
+const resetUnreadCount: CaseReducer<
+  ChatState,
+  PayloadAction<{ chatId: string }>
+> = (state, action) => {
+  const { chatId } = action.payload;
+  const chat = state.chats.find((chat) => chat.chatId === chatId);
+  if (chat) {
+    chat.unreadCount = 0;
   }
 };
 
@@ -139,7 +153,7 @@ const joinChatRooms: CaseReducer<ChatState, PayloadAction<Chat[]>> = (
     if (!state.chats.some((c) => c.chatId === chat._id)) {
       const lastSeen = chat.lastSeen;
       let chatMembers = chat.members;
-      if (lastSeen && lastSeen.length >= 1) {
+      if (lastSeen && lastSeen.length > 0) {
         chatMembers = chatMembers.map((member) => {
           const seenData = lastSeen.find((seen) => seen.userId === member._id);
           if (seenData) {
@@ -172,20 +186,20 @@ const setConversationMessages: CaseReducer<
 > = (state, action) => {
   const { chatId, chatName, messages } = action.payload;
   const chat = state.chats.find((chat) => chat.chatId === chatId);
-
   if (chat) {
     chat.chatMessages.unshift(...[...messages]);
-  } else {
-    state.chats.push({
-      chatId,
-      chatName,
-      unreadCount: 0,
-      chatMessages: messages,
-    });
   }
+  // TODO: Uncommenting this seems to solve our issue with joinChatRooms and setConversationMessages on refreshing /:chatId
+  // else {
+  //   state.chats.push({
+  //     chatId,
+  //     chatName,
+  //     unreadCount: 0,
+  //     chatMessages: messages,
+  //   });
+  // }
 };
 
-// Calling this when a user creates a new chat
 const addNewChat: CaseReducer<
   ChatState,
   PayloadAction<{ chatId: string; chatName: string; chatMembers: User[] }>
@@ -196,10 +210,17 @@ const addNewChat: CaseReducer<
       chatId,
       chatName,
       chatMembers,
-      unreadCount: 1,
+      unreadCount: 0,
       chatMessages: [],
     });
   }
+};
+
+const setActiveUsers: CaseReducer<ChatState, PayloadAction<string[]>> = (
+  state,
+  action
+) => {
+  state.activeUsers = action.payload;
 };
 
 const setError: CaseReducer<ChatState, PayloadAction<string | null>> = (
@@ -208,6 +229,31 @@ const setError: CaseReducer<ChatState, PayloadAction<string | null>> = (
 ) => {
   state.error = action.payload;
 };
+
+const selectChats = (state: RootState) => state.chat.chats;
+
+export const getAllUsersLastSeenInChat = createSelector(
+  [selectChats, (_state: any, chatId: string) => chatId],
+  (chats, chatId) => {
+    const chatData = chats.find((c) => c.chatId === chatId);
+    const usersLastSeen = chatData?.chatMembers?.map((member) => {
+      return { ...member.lastSeen, user: { ...member } };
+    });
+    return usersLastSeen;
+  }
+);
+
+export const getUsersLastSeenInChat = createSelector(
+  [
+    selectChats,
+    (_state: any, params: { chatId: string; userId: string }) => params,
+  ],
+  (chats, { chatId, userId }) => {
+    const chatData = chats.find((c) => c.chatId === chatId);
+    const user = chatData?.chatMembers?.find((member) => member._id === userId);
+    return user?.lastSeen || null;
+  }
+);
 
 export const chatSlice = createAppSlice({
   name: "chat",
@@ -218,8 +264,10 @@ export const chatSlice = createAppSlice({
     messageSent,
     setSeen,
     setLastSeen,
+    resetUnreadCount,
     joinChatRooms,
     setConversationMessages,
+    setActiveUsers,
     setError,
   },
   extraReducers: (builder) => {
@@ -230,25 +278,28 @@ export const chatSlice = createAppSlice({
     getLastMessages: (chat) => {
       return chat.lastMessages;
     },
-    getAllUsersLastSeenInChat: (chat, chatId: string) => {
-      const chatData = chat.chats.find((c) => c.chatId === chatId);
-      const usersLastSeen = chatData?.chatMembers?.map((member) => {
-        return { ...member.lastSeen, user: { ...member } };
-      });
-      return usersLastSeen;
-    },
-    getUsersLastSeenInChat: (
-      chat,
-      { chatId, userId }: { chatId: string; userId: string }
-    ) => {
-      const chatData = chat.chats.find((c) => c.chatId === chatId);
-      const user = chatData?.chatMembers?.find(
-        (member) => member._id === userId
-      );
-      return user?.lastSeen || null;
-    },
+    // getAllUsersLastSeenInChat: (chat, chatId: string) => {
+    //   const chatData = chat.chats.find((c) => c.chatId === chatId);
+    //   const usersLastSeen = chatData?.chatMembers?.map((member) => {
+    //     return { ...member.lastSeen, user: { ...member } };
+    //   });
+    //   return usersLastSeen;
+    // },
+    // getUsersLastSeenInChat: (
+    //   chat,
+    //   { chatId, userId }: { chatId: string; userId: string }
+    // ) => {
+    //   const chatData = chat.chats.find((c) => c.chatId === chatId);
+    //   const user = chatData?.chatMembers?.find(
+    //     (member) => member._id === userId
+    //   );
+    //   return user?.lastSeen || null;
+    // },
     getUnreadChatCount: (chat) => {
       return chat.chats.filter((chat) => chat.unreadCount > 0).length;
+    },
+    getActiveUsers: (chat) => {
+      return chat.activeUsers || [];
     },
   },
 });
@@ -256,9 +307,10 @@ export const chatSlice = createAppSlice({
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
   getLastMessages,
-  getAllUsersLastSeenInChat,
-  getUsersLastSeenInChat,
+  // getAllUsersLastSeenInChat,
+  // getUsersLastSeenInChat,
   getUnreadChatCount,
+  getActiveUsers,
 } = chatSlice.selectors;
 export const chatActions = chatSlice.actions;
 
@@ -271,8 +323,10 @@ export const fetchUserConversations = createAsyncThunk(
         fetchPolicy: "network-only",
       });
 
-      const fetchedChats = data.fetchChats;
-      dispatch(chatActions.joinChatRooms(fetchedChats));
+      if (data) {
+        const fetchedChats = data.fetchChats;
+        dispatch(chatActions.joinChatRooms(fetchedChats));
+      }
     } catch (error) {
       console.error("Error fetching user conversations through Thunk: ", error);
       return rejectWithValue("Failed to fetch conversations.");

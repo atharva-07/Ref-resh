@@ -1,9 +1,7 @@
-"use client";
-
 import { useMutation, useSuspenseQuery } from "@apollo/client";
 import { Calendar, MoreHorizontal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 import UpdateProfileForm from "@/components/forms/update-profile-form";

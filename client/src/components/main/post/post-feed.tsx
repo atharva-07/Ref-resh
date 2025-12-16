@@ -1,13 +1,8 @@
-import { useSuspenseQuery } from "@apollo/client";
-import { Divide, Loader2 } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
-import { useInView } from "react-intersection-observer";
+import { Suspense } from "react";
 
 import { GET_FEED } from "@/gql-calls/queries";
 import { FEED_PAGE_SIZE } from "@/utility/constants";
-import { transformTimestamps } from "@/utility/utility-functions";
 
-import Post, { PostProps } from "./post";
 import PostLoader from "./post-loader";
 
 const fallbackHeading: string = "Wow, so empty. O_O";

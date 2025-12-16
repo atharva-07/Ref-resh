@@ -1,31 +1,12 @@
-import { Loader2 } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useParams } from "react-router-dom";
 
-import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { chatActions } from "@/store/chat-slice";
-import { socketActions } from "@/store/middlewares/socket-middleware";
-
 import ChatForm from "../../forms/chat-form";
-import { TimeStamps } from "../post/post";
 import { Chat } from "./chat";
 import ChatHeader from "./chat-header";
 
-interface ChatWindowProps extends TimeStamps {
-  members: string[];
-}
-
 const ChatWindow = () => {
   const { chatId } = useParams();
-
-  // const { isConnected, emitEvent, on, off } = useSocket(
-  //   `${import.meta.env.VITE_SOCKET_SERVER_URI}`
-  // );
-
-  // if (!isConnected) {
-  //   return <div>Connecting to chat...</div>;
-  // }
 
   return (
     <>
@@ -37,7 +18,7 @@ const ChatWindow = () => {
         <Chat chatId={chatId as string} />
         {/* </Suspense> */}
       </ErrorBoundary>
-      <ChatForm />
+      <ChatForm chatId={chatId as string} />
     </>
   );
 };
