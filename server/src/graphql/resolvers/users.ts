@@ -290,13 +290,14 @@ export const userQueries = {
       throw error;
     }
   },
-  // Fetches account type and blocked accounts of logged in user.
+  // Fetches account visibility type, auth type and blocked accounts of logged in user.
   fetchAccountSettingsData: async (_: any, __: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const user = await User.findById(ctx.loggedInUserId, {
         privateAccount: 1,
         blockedAccounts: 1,
+        authType: 1,
       });
       if (!user) throw newGqlError("User not found.", 404);
       await user!.populate({
@@ -310,6 +311,7 @@ export const userQueries = {
         data: {
           privateAccount: user.privateAccount,
           blockedAccounts: user.blockedAccounts || [],
+          authType: user.authType,
         },
       };
       return response.data;

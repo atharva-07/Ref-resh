@@ -104,6 +104,15 @@ export const authQueries = {
         });
       }
 
+      if (!user) throw newGqlError("User not found.", 404);
+
+      if (user.authType !== AuthType.EMAIL) {
+        throw newGqlError(
+          `Password reset is not available for ${user.authType} accounts.`,
+          403
+        );
+      }
+
       let nonce: string;
       if (user) {
         randomBytes(64, async (err, buffer) => {
@@ -132,14 +141,17 @@ export const authQueries = {
             }
           );
 
-          // Send email here.
-          // await sendEmail(
-          //   user.email,
-          //   "Password Reset.",
-          //   `
-          //   <h1>Password Reset Instructions</h1>
-          //   <p>Click the link below to reset your password. This <a href=${token}>link</a> is valid for 15 minutes.</p>`
-          // );
+          const passwordResetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+
+          await sendEmail(
+            user.email,
+            "Password Reset Request",
+            `
+            <h1>Password Reset Instructions</h1>
+            <p>Click this <a href=${passwordResetLink}>link</a> to reset your password.
+            <p>Please note that this link is only valid for 15 minutes.</p>
+            `
+          );
         });
       }
 
@@ -363,8 +375,14 @@ export const authMutations = {
       }
 
       const user = await User.findById(decoded.sub);
-      if (!user) {
-        throw newGqlError("User not found.", 404);
+
+      if (!user) throw newGqlError("User not found.", 404);
+
+      if (user.authType !== AuthType.EMAIL) {
+        throw newGqlError(
+          `Password reset is not available for ${user.authType} accounts.`,
+          403
+        );
       }
 
       if (user.passwordReset?.token !== decoded.jti) {

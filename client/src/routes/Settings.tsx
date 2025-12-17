@@ -19,27 +19,55 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
+  ItemFooter,
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { BLOCK_UNBLOCK_USER } from "@/gql-calls/mutation";
+import { BLOCK_UNBLOCK_USER, LOGOUT } from "@/gql-calls/mutation";
 import {
   FORGOT_PASSWORD,
   GET_ACCOUNT_SETTINGS_DATA,
 } from "@/gql-calls/queries";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { client } from "@/middlewares/auth";
+import { authActions } from "@/store/auth-slice";
+import { socketActions } from "@/store/middlewares/socket-middleware";
+import { sseActions } from "@/store/middlewares/sse-middleware";
 
 const Settings = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
   const { data } = useSuspenseQuery(GET_ACCOUNT_SETTINGS_DATA);
   const blockedAccounts = data?.fetchAccountSettingsData?.blockedAccounts || [];
   const privateAccount =
     data?.fetchAccountSettingsData?.privateAccount || false;
+  const authType = data?.fetchAccountSettingsData?.authType;
 
   const [emailSent, setEmailSent] = useState<boolean>(false);
 
   const [unblockUser] = useMutation(BLOCK_UNBLOCK_USER);
-  const [changePassword, { error, loading }] = useLazyQuery(FORGOT_PASSWORD);
+  const [logout] = useMutation(LOGOUT);
+  const [changePassword, { error, loading }] = useLazyQuery(FORGOT_PASSWORD, {
+    fetchPolicy: "network-only",
+  });
+
+  const forceLogout = async () => {
+    try {
+      const { data } = await logout();
+      if (data?.logout) {
+        dispatch(authActions.logout());
+        dispatch({ type: socketActions.disconnect });
+        dispatch({ type: sseActions.disconnect });
+        client.clearStore();
+      }
+    } catch (error) {
+      toast.error("Could not logout.", {
+        description: "Please try again.",
+      });
+    }
+  };
 
   const handlePasswordChange = async () => {
     try {
@@ -53,6 +81,7 @@ const Settings = () => {
         setEmailSent(true);
         setTimeout(() => {
           setEmailSent(false);
+          forceLogout();
         }, 10000);
       }
     } catch (error) {
@@ -96,52 +125,63 @@ const Settings = () => {
                   <AccountTypeForm isPrivateAccount={privateAccount} />
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Security</AccordionTrigger>
-                <AccordionContent className="flex flex-col gap-4 text-balance">
-                  <Item variant="outline">
-                    <ItemMedia variant="icon">
-                      <ShieldAlertIcon />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>Change Password</ItemTitle>
-                      <ItemDescription className="text-sm text-muted-foreground">
-                        A password reset link will be sent to your email
-                        address.
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={handlePasswordChange}
-                      >
-                        {loading ? "Working..." : "Change"}
-                      </Button>
-                    </ItemActions>
-                  </Item>
-                  {emailSent && (
-                    <Item
-                      variant="default"
-                      size="sm"
-                      className="text-green-700"
-                      asChild
-                    >
-                      <div>
-                        <ItemMedia>
-                          <BadgeCheckIcon className="size-5" />
-                        </ItemMedia>
-                        <ItemContent>
-                          <ItemTitle>
-                            An email was sent to your account's email address
-                            with instructions to change password.
-                          </ItemTitle>
-                        </ItemContent>
-                      </div>
+              {authType === "EMAIL" && (
+                <AccordionItem value="item-2">
+                  <AccordionTrigger>Security</AccordionTrigger>
+                  <AccordionContent className="flex flex-col gap-4 text-balance">
+                    <Item variant="outline">
+                      <ItemMedia variant="icon">
+                        <ShieldAlertIcon />
+                      </ItemMedia>
+                      <ItemContent>
+                        <ItemTitle>Change Password</ItemTitle>
+                        <ItemDescription className="text-sm text-muted-foreground">
+                          A password reset link will be sent to your email
+                          address.
+                        </ItemDescription>
+                        <ItemFooter>
+                          <p className="text-destructive">
+                            WARNING: You'll be logged out once you request a
+                            password change.
+                          </p>
+                        </ItemFooter>
+                      </ItemContent>
+                      <ItemActions>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={handlePasswordChange}
+                        >
+                          {loading ? "Working..." : "Change"}
+                        </Button>
+                      </ItemActions>
                     </Item>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+                    {emailSent && (
+                      <Item
+                        variant="default"
+                        size="sm"
+                        className="text-green-700"
+                        asChild
+                      >
+                        <div>
+                          <ItemMedia>
+                            <BadgeCheckIcon className="size-5" />
+                          </ItemMedia>
+                          <ItemContent>
+                            <ItemTitle>
+                              An email was sent to your account's email address
+                              with instructions to change password.
+                            </ItemTitle>
+                            <ItemFooter>
+                              You will be logged out shortly.
+                            </ItemFooter>
+                          </ItemContent>
+                        </div>
+                      </Item>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              )}
               <AccordionItem value="item-3">
                 <AccordionTrigger>Blocked Accounts</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4 text-balance">

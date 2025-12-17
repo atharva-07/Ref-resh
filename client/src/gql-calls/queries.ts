@@ -667,11 +667,13 @@ export const GET_ACCOUNT_SETTINGS_DATA: TypedDocumentNode<{
   fetchAccountSettingsData: {
     privateAccount: boolean;
     blockedAccounts: BasicUserData[];
+    authType: "EMAIL" | "GOOGLE" | "FACEBOOK";
   };
 }> = gql`
   query GetAccountSettingsData {
     fetchAccountSettingsData {
       privateAccount
+      authType
       blockedAccounts {
         _id
         firstName
