@@ -1,4 +1,7 @@
-import { CaseReducer, PayloadAction } from "@reduxjs/toolkit";
+import { CaseReducer, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+
+import { LOGOUT } from "@/gql-calls/mutation";
+import { client } from "@/middlewares/auth";
 
 import { createAppSlice } from "./createAppSlice";
 
@@ -88,3 +91,22 @@ export const authSlice = createAppSlice({
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const { isAuthenticated, user, error, isLoading } = authSlice.selectors;
 export const authActions = authSlice.actions;
+
+export const forceLogout = createAsyncThunk(
+  "auth/forceLogout",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      const { data } = await client.mutate({
+        mutation: LOGOUT,
+        fetchPolicy: "network-only",
+      });
+
+      if (data) {
+        dispatch(authActions.logout());
+      }
+    } catch (error) {
+      console.error("Error forcefully logging out through Thunk: ", error);
+      return rejectWithValue("Failed to force logout.");
+    }
+  }
+);

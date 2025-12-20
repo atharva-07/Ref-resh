@@ -59,6 +59,7 @@ interface SocketEvents {
   callHangup: (payload: { chatId: string; userId: string }) => void;
   callExists: () => void;
   callError: (payload: { chatId: string; reason: string }) => void;
+  tokenExpiring: () => void;
 }
 
 export type ClientSocket = import("socket.io-client").Socket<

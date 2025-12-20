@@ -1,9 +1,21 @@
+import "socket.io"; // Ensure the Socket augmentation is loaded
+
+import cookie from "cookie";
 import * as dotenv from "dotenv";
 import express from "express";
+import { readFileSync } from "fs";
 import http from "http";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import path from "path";
 import { Server } from "socket.io";
 
-import { ClientSocket, SocketMessage, User } from "./types";
+import { SocketMessage, User } from "./types";
+
+declare module "socket.io" {
+  interface Socket {
+    user?: JwtPayload | string;
+  }
+}
 
 dotenv.config();
 
@@ -22,9 +34,73 @@ const activeCalls = new Map<
   }
 >();
 
-const MAX_CALL_PARTICIPANTS = 4;
+const publicKey: string = readFileSync(
+  path.join(path.resolve(), "public.key"),
+  "utf-8"
+);
 
-io.on("connection", (socket: ClientSocket) => {
+const MAX_CALL_PARTICIPANTS = 4;
+const WARNING_BUFFER = 60 * 1000;
+
+io.use((socket, next) => {
+  const req = socket.request;
+  if (!req.headers.cookie) return next(new Error("Authorization error"));
+
+  const cookies = cookie.parse(req.headers.cookie);
+  const accessToken = cookies.accessToken as string;
+
+  jwt.verify(accessToken, publicKey, (err, decoded) => {
+    if (err) return next(new Error("Authorization error"));
+
+    socket.user = decoded;
+
+    if (
+      decoded &&
+      typeof decoded === "object" &&
+      "exp" in decoded &&
+      typeof decoded.exp === "number"
+    ) {
+      const expiresIn = decoded.exp * 1000 - Date.now();
+
+      if (expiresIn > 0) {
+        const timer = setTimeout(() => {
+          socket.disconnect(true);
+        }, expiresIn);
+
+        socket.on("disconnect", () => clearTimeout(timer));
+      }
+    }
+
+    next();
+  });
+});
+
+io.on("connection", (socket) => {
+  const user = socket.user;
+
+  if (!user || typeof user !== "object" || !("exp" in user) || !user.exp)
+    return;
+
+  const now = Date.now();
+  const timeUntilExpiry = user.exp * 1000 - now;
+  const timeUntilWarning = timeUntilExpiry - WARNING_BUFFER;
+
+  if (timeUntilWarning > 0) {
+    const warningTimer = setTimeout(() => {
+      socket.emit("tokenExpiring");
+    }, timeUntilWarning);
+
+    socket.on("disconnect", () => clearTimeout(warningTimer));
+  }
+
+  if (timeUntilExpiry > 0) {
+    const disconnectTimer = setTimeout(() => {
+      socket.disconnect(true);
+    }, timeUntilExpiry);
+
+    socket.on("disconnect", () => clearTimeout(disconnectTimer));
+  }
+
   console.log("A user connected: ", socket.id);
   let currentUserId: string | null = null;
 
@@ -129,7 +205,6 @@ io.on("connection", (socket: ClientSocket) => {
     }
   );
 
-  // 2. Client joins an active call
   socket.on(
     "callJoin",
     (payload: { chatId: string; user: User; peerId: string }) => {
@@ -179,7 +254,6 @@ io.on("connection", (socket: ClientSocket) => {
     }
   );
 
-  // 3. Client hangs up/leaves
   socket.on("callHangup", (payload: { chatId: string; userId: string }) => {
     console.log("Leaving call with payload: ", payload);
 
@@ -216,7 +290,6 @@ io.on("connection", (socket: ClientSocket) => {
       // Remove the user from the map
       activeUsers.delete(currentUserId);
 
-      // 4. Broadcast the updated list again
       const userIds = Array.from(activeUsers.keys());
       io.emit("setActiveUsers", { userIds });
     }

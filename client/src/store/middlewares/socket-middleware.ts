@@ -1,7 +1,9 @@
 import { Middleware } from "@reduxjs/toolkit";
+import axios from "axios";
 
 import { getSocket } from "@/context/socket-singleton";
 
+import { authActions, forceLogout } from "../auth-slice";
 import { callActions, Participant, terminateCall } from "../call-slice";
 import { chatActions, fetchUserConversations } from "../chat-slice";
 import { RootState } from "../store";
@@ -22,8 +24,6 @@ const createSocketMiddleware = (): Middleware<object, RootState> => {
           // Set up listeners for incoming socket events
           socket.on("connect", () => {
             console.log("Socket connected!");
-            // Optionally dispatch a status update action
-            // store.dispatch({ type: 'socket/statusConnected' });
             store.dispatch(fetchUserConversations() as any);
             const userId = store.getState().auth.user?.userId;
             if (userId) {
@@ -31,16 +31,41 @@ const createSocketMiddleware = (): Middleware<object, RootState> => {
             }
           });
 
-          socket.on("disconnect", () => {
-            console.log("Socket disconnected!");
-            // Optionally dispatch a status update action
-            // store.dispatch({ type: 'socket/statusDisconnected' });
+          socket.on("tokenExpiring", async () => {
+            try {
+              await axios.post(
+                `${import.meta.env.VITE_OAUTH_SERVER_URI}/refresh-token`,
+                {}, // Empty body object because we are using cookies to send the refresh token.
+                { withCredentials: true }
+              );
+
+              socket.disconnect().connect();
+            } catch (err) {
+              console.error("Failed to silent refresh:", err);
+              store.dispatch(forceLogout() as any);
+            }
           });
 
-          socket.on("connect_error", (error: Error) => {
+          socket.on("disconnect", () => {
+            console.log("Socket disconnected!");
+          });
+
+          socket.on("connect_error", async (error: Error) => {
             console.error("Socket connection error:", error);
-            // Optionally dispatch an error action
-            // store.dispatch({ type: 'socket/connectionError', payload: error.message });
+            if (error.message === "Authorization error") {
+              try {
+                await axios.post(
+                  `${import.meta.env.VITE_OAUTH_SERVER_URI}/refresh-token`,
+                  {}, // Empty body object because we are using cookies to send the refresh token.
+                  { withCredentials: true }
+                );
+
+                socket.connect();
+              } catch (error) {
+                console.log(error);
+                store.dispatch(forceLogout() as any);
+              }
+            }
           });
 
           // Listen for new messages from the server
