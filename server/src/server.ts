@@ -143,12 +143,12 @@ process.on("SIGTERM", () => {
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    console.log("Database Connected.");
+    logger.info("Connected to the database.");
     httpServer.listen({ port: process.env.DEV_PORT || 4000 });
   })
   .then(() => {
-    console.log(`Server is up and running on port ${process.env.DEV_PORT}`);
+    logger.info(`Server is up and running on port ${process.env.DEV_PORT}.`);
   })
   .catch((err) => {
-    console.log("Error establishing the connection.", err);
+    logger.error("Error establishing the connection.", err);
   });

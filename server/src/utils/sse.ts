@@ -2,6 +2,7 @@ import { Response } from "express";
 
 import { BasicUserData } from "../graphql/resolvers/posts";
 import { NotificationEvents } from "../models/Notification";
+import logger from "./winston";
 
 export const SSE_PING_INTERVAL = 30_000;
 
@@ -20,8 +21,8 @@ export const sendHeartbeat = (sseClients: SseClientsMap) => {
       try {
         connection.res.write(HEARTBEAT_MESSAGE);
       } catch (error) {
-        console.warn(
-          `Error sending ping to connection ${connection.connectionId}. Closing stream.`
+        logger.warn(
+          `Error sending ping to connection ${connection.connectionId}. Closing stream.`,
         );
 
         connectionSet.delete(connection);
@@ -36,7 +37,7 @@ export const sendHeartbeat = (sseClients: SseClientsMap) => {
 
 export const findClientsByUserId = (
   sseClients: SseClientsMap,
-  targetUserId: string
+  targetUserId: string,
 ) => {
   return sseClients.get(targetUserId) || new Set();
 };
@@ -46,7 +47,7 @@ export const sendNotification = (
   eventType: NotificationEvents,
   publisher: BasicUserData,
   subscriberId: string,
-  sseClients: SseClientsMap
+  sseClients: SseClientsMap,
 ) => {
   try {
     const targetClients = findClientsByUserId(sseClients, subscriberId);
@@ -61,6 +62,6 @@ export const sendNotification = (
       client.res.write(`data: ${JSON.stringify(payload)}\n\n`);
     });
   } catch (error) {
-    console.error("Could not send notification: ", error);
+    logger.error("Could not send notification: ", error);
   }
 };

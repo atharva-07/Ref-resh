@@ -11,6 +11,7 @@ import Post, { PostType } from "../../models/Post";
 import User from "../../models/User";
 import { AppContext, sseClients } from "../../server";
 import { sendNotification } from "../../utils/sse";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -154,9 +155,8 @@ export const postQueries = {
         countQuery._id = { $gt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Post.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Post.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > posts.length;
 
       const endCursor =
@@ -180,19 +180,21 @@ export const postQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Feed fetched successfully.",
+        message: `Feed fetched successfully for user (${ctx.loggedInUserId}). Post cursor: ${after}`,
         data: feed,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
   fetchUserPosts: async (
     _: any,
     { pageSize, after, userName }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -237,9 +239,8 @@ export const postQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Post.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Post.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > posts.length;
 
       const endCursor =
@@ -263,9 +264,12 @@ export const postQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's posts fetched successfully.",
+        message: `User's (${userName}) ${posts.length} posts fetched successfully. Post cursor: ${after}`,
         data: userPosts,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -274,7 +278,7 @@ export const postQueries = {
   fetchUserBookmarks: async (
     _: any,
     { pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -319,9 +323,8 @@ export const postQueries = {
         countQuery._id = { $gt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Post.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Post.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > posts.length;
 
       const endCursor =
@@ -345,9 +348,12 @@ export const postQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's bookmarked posts fetched successfully.",
+        message: `User's (${ctx.loggedInUserId}) ${posts.length} bookmarked posts fetched successfully. Post cursor: ${after}`,
         data: userBookmarks,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -398,9 +404,8 @@ export const postQueries = {
         countQuery._id = { $gt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Post.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Post.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > posts.length;
 
       const endCursor =
@@ -424,9 +429,12 @@ export const postQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's liked posts fetched successfully.",
+        message: `User's (${ctx.loggedInUserId}) ${posts.length} liked posts fetched successfully. Post cursor: ${after}`,
         data: userLikes,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -445,9 +453,12 @@ export const postQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Post fetched successfully.",
+        message: `Post (${postId}) fetched successfully.`,
         data: post,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -456,7 +467,7 @@ export const postQueries = {
   fetchLikesFromPost: async (
     _: any,
     { pageSize, after, postId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -492,7 +503,7 @@ export const postQueries = {
 
       const userIdsToFetch = likes.slice(
         startFromIndex,
-        startFromIndex + pageSize
+        startFromIndex + pageSize,
       );
 
       const users = (await User.find({
@@ -525,8 +536,10 @@ export const postQueries = {
         success: true,
         code: 200,
         data: paginatedLikes,
-        message: `Fetched ${pageSize} likes from post: ${postId}. Likes cursor: ${after}`,
+        message: `Fetched ${paginatedLikes.edges.length} likes from post: ${postId}. Likes cursor: ${after}`,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -551,9 +564,12 @@ export const postMutations = {
       const response: HttpResponse = {
         success: true,
         code: 201,
-        message: "Post created successfully.",
+        message: `Post (${newPost._id}) created successfully for user (${ctx.loggedInUserId}).`,
         data: newPost,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -576,9 +592,12 @@ export const postMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Post edited successfully.",
+        message: `Post (${postId}) edited successfully.`,
         data: result,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -590,7 +609,7 @@ export const postMutations = {
       const post = await Post.findById(postId);
       if (post) {
         const alreadyLiked = post.likes?.find((val: Types.ObjectId) =>
-          val.equals(ctx.loggedInUserId)
+          val.equals(ctx.loggedInUserId),
         );
         if (alreadyLiked) {
           post.likes?.pull(ctx.loggedInUserId);
@@ -613,7 +632,7 @@ export const postMutations = {
               result.eventType,
               result.publisher as unknown as BasicUserData,
               result.subscriber.toString(),
-              sseClients
+              sseClients,
             );
           }
         }
@@ -622,10 +641,13 @@ export const postMutations = {
           success: true,
           code: 200,
           message: alreadyLiked
-            ? "Post unliked successfully."
-            : "Post liked successfully.",
+            ? `Post (${post.id}) unliked successfully.`
+            : `Post (${post.id}) liked successfully.`,
           data: post.id,
         };
+
+        logger.info(response.message);
+
         return response.data;
       } else {
         throw newGqlError("Post not found.", 404);
@@ -638,28 +660,29 @@ export const postMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const post = await Post.findById(postId);
-      if (post) {
-        const alreadyBookmarked = post.bookmarks?.find((val: Types.ObjectId) =>
-          val.equals(ctx.loggedInUserId)
-        );
-        if (alreadyBookmarked) {
-          post.bookmarks?.pull(ctx.loggedInUserId);
-        } else {
-          post.bookmarks?.push(ctx.loggedInUserId);
-        }
-        await post.save();
-        const response: HttpResponse = {
-          success: true,
-          code: 200,
-          message: alreadyBookmarked
-            ? "Bookmark added successfully."
-            : "Bookmark removed successfully.",
-          data: post.id,
-        };
-        return response.data;
+      if (!post) throw newGqlError("Post not found.", 404);
+
+      const alreadyBookmarked = post.bookmarks?.find((val: Types.ObjectId) =>
+        val.equals(ctx.loggedInUserId),
+      );
+      if (alreadyBookmarked) {
+        post.bookmarks?.pull(ctx.loggedInUserId);
       } else {
-        throw newGqlError("Post not found.", 404);
+        post.bookmarks?.push(ctx.loggedInUserId);
       }
+      await post.save();
+      const response: HttpResponse = {
+        success: true,
+        code: 200,
+        message: alreadyBookmarked
+          ? `Post (${post.id}) bookmarked successfully.`
+          : `Post (${post.id}) unbookmarked successfully.`,
+        data: post.id,
+      };
+
+      logger.info(response.message);
+
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -668,18 +691,20 @@ export const postMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const deletedPost = await Post.findByIdAndDelete(postId);
+      if (!deletedPost) throw newGqlError("Post not found.", 404);
+
       await Comment.deleteMany({ post: postId });
-      if (deletedPost) {
-        const response: HttpResponse = {
-          success: true,
-          code: 204,
-          message: "Post and associated comments deleted successfully.",
-          data: deletedPost.id,
-        };
-        return response.data;
-      } else {
-        throw newGqlError("Post not found.", 404);
-      }
+
+      const response: HttpResponse = {
+        success: true,
+        code: 204,
+        message: `Post (${deletedPost.id}) and associated comments deleted successfully.`,
+        data: deletedPost.id,
+      };
+
+      logger.info(response.message);
+
+      return response.data;
     } catch (error) {
       throw error;
     }

@@ -1,9 +1,10 @@
 import { Document, ObjectId } from "mongodb";
-import { Query, Types } from "mongoose";
+import { Types } from "mongoose";
 
 import Chat, { ChatType } from "../../models/Chat";
 import Message, { MessageType } from "../../models/Message";
 import { AppContext } from "../../server";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -200,25 +201,27 @@ export const chatQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Chats fetched successfully.",
+        message: `Chats for user (${ctx.loggedInUserId}) fetched successfully.`,
         data: chatsWithLastMessage,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
   fetchChatMessages: async (
     _: any,
     { chatId, pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const chat = await Chat.findById(chatId).populate(
         "members",
-        "_id userName pfpPath lastName firstName bio bannerPath"
+        "_id userName pfpPath lastName firstName bio bannerPath",
       );
 
       if (!chat) throw newGqlError("Chat not found.", 404);
@@ -227,7 +230,7 @@ export const chatQueries = {
       if (!chatName) {
         const chatMember: any = chat.members.filter(
           (member: any) =>
-            member._id.toString() !== ctx.loggedInUserId.toString()
+            member._id.toString() !== ctx.loggedInUserId.toString(),
         )[0];
         chatName = `${chatMember.firstName} ${chatMember.lastName} (${chatMember.userName})`;
       }
@@ -275,9 +278,8 @@ export const chatQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Message.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Message.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > messages.length;
 
       const endCursor =
@@ -321,12 +323,12 @@ export const chatMutations = {
       chatMembers,
       chatName,
     }: { chatMembers: Types.Array<Types.ObjectId>; chatName: string },
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
-      //   1v1: This is distinct. So, check if a chat with this 2 members already exist. If yes, do not create a new one.
-      // Group: This is not distinct. We can have 2 chats with same exact members. So, Create a new one.
+      //    1v1: This is distinct. So, check if a chat with this 2 members already exist. If yes, do not create a new one.
+      //    Group: This is not distinct. We can have 2 chats with same exact members. So, Create a new one.
       // 		Group chats should have a name. Enforce a mongodb rule that a chat should have a name if it has more than 2
       // 		members.
 
@@ -345,16 +347,18 @@ export const chatMutations = {
         if (exists) {
           const chatMember: any = exists.members.filter(
             (member: any) =>
-              member._id.toString() !== ctx.loggedInUserId.toString()
+              member._id.toString() !== ctx.loggedInUserId.toString(),
           )[0];
           const chatName = chatMember.firstName + " " + chatMember.lastName;
 
           const response: HttpResponse = {
             success: true,
             code: 200,
-            message: "Chat already exists.",
+            message: `Chat (${exists._id}) already exists.`,
             data: { ...exists, chatName },
           };
+
+          logger.info(response.message);
 
           return response.data;
         } else {
@@ -370,16 +374,18 @@ export const chatMutations = {
 
           const chatMember: any = chat.members.filter(
             (member: any) =>
-              member._id.toString() !== ctx.loggedInUserId.toString()
+              member._id.toString() !== ctx.loggedInUserId.toString(),
           )[0];
           const chatName = chatMember.firstName + " " + chatMember.lastName;
 
           const response: HttpResponse = {
             success: true,
             code: 201,
-            message: "New chat created.",
+            message: `New chat (${newChat._doc._id}) created.`,
             data: { ...newChat._doc, chatName },
           };
+
+          logger.info(response.message);
 
           return response.data;
         }
@@ -398,14 +404,15 @@ export const chatMutations = {
         const response: HttpResponse = {
           success: true,
           code: 201,
-          message: "New group chat created.",
+          message: `New group chat (${newGroupChat._doc._id}) created.`,
           data: newGroupChat,
         };
+
+        logger.info(response.message);
 
         return response.data;
       }
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -445,7 +452,7 @@ export const chatMutations = {
       if (!chat.chatName) {
         const chatMember: any = chat.members.filter(
           (member: any) =>
-            member._id.toString() === ctx.loggedInUserId.toString()
+            member._id.toString() === ctx.loggedInUserId.toString(),
         )[0];
         message.chat.chatName =
           chatMember.firstName + " " + chatMember.lastName;
@@ -454,13 +461,14 @@ export const chatMutations = {
       const response: HttpResponse = {
         success: true,
         code: 201,
-        message: "New message sent.",
+        message: `New message sent in chat (${message.chat._id}) by user (${message.sender._id}).`,
         data: message,
       };
 
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -468,7 +476,7 @@ export const chatMutations = {
   updateLastSeen: async (
     _: any,
     { chatId, messageId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -489,7 +497,7 @@ export const chatMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Last seen updated successfully.",
+        message: `Last seen updated successfully for user (${ctx.loggedInUserId}) in chat (${chat._id}).`,
         data: {
           userId: ctx.loggedInUserId,
           messageId: chat.lastSeen?.get(ctx.loggedInUserId.toString())
@@ -499,9 +507,10 @@ export const chatMutations = {
         },
       };
 
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },

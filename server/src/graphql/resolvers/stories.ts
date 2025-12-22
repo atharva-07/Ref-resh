@@ -4,6 +4,7 @@ import validator from "validator";
 import Story, { StoryType } from "../../models/Story";
 import User from "../../models/User";
 import { AppContext } from "../../server";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import { PageInfo } from "./posts";
@@ -114,9 +115,11 @@ export const storyQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Stories feed fetched successfully.",
+        message: `${stories.length} stories loaded for page: ${page} with pageSize: ${pageSize} for user (${ctx.loggedInUserId}).`,
         data: stories,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -126,7 +129,7 @@ export const storyQueries = {
   fetchUserStories: async (
     _: any,
     { userId, pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -192,9 +195,8 @@ export const storyQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Story.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Story.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > stories.length;
 
       const endCursor =
@@ -220,9 +222,12 @@ export const storyQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's stories fetched successfully.",
+        message: `User's (${ctx.loggedInUserId}) stories fetched successfully.`,
         data: userStories,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -231,12 +236,12 @@ export const storyQueries = {
   fetchStoriesArchive: async (
     _: any,
     { pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const { _id: authorId } = await User.exists(
-        new ObjectId(ctx.loggedInUserId)
+        new ObjectId(ctx.loggedInUserId),
       ).lean();
       if (!authorId) throw newGqlError("User not found.", 404);
 
@@ -279,9 +284,8 @@ export const storyQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Story.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Story.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > stories.length;
 
       const endCursor =
@@ -307,9 +311,12 @@ export const storyQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's stories archive fetched successfully.",
+        message: `User's (${ctx.loggedInUserId}) stories archive fetched successfully.`,
         data: userStories,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -336,9 +343,12 @@ export const storyMutations = {
       const response: HttpResponse = {
         success: true,
         code: 201,
-        message: "Story created successfully.",
+        message: `Story (${newStory._id}) created successfully for user (${ctx.loggedInUserId}).`,
         data: newStory,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -353,9 +363,11 @@ export const storyMutations = {
       const response: HttpResponse = {
         success: true,
         code: 204,
-        message: "Story deleted successfully.",
+        message: `Story (${deletedStory._id}) deleted successfully for user (${ctx.loggedInUserId}).`,
         data: deletedStory.id,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -383,6 +395,8 @@ export const storyMutations = {
         } seen by user with id:  ${ctx.loggedInUserId.toString()}`,
         data: story._id,
       };
+
+      logger.debug(response.message);
 
       return response.data;
     } catch (error) {

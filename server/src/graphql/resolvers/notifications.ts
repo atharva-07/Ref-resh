@@ -1,9 +1,10 @@
 import { ObjectId } from "mongodb";
-import { FilterQuery, Types } from "mongoose";
+import { FilterQuery } from "mongoose";
 
 import Notification, { NotificationType } from "../../models/Notification";
 import User from "../../models/User";
 import { AppContext } from "../../server";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import { PageInfo } from "./posts";
@@ -29,7 +30,7 @@ export const notificationQueries = {
   fetchNotifications: async (
     _: any,
     { pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -100,9 +101,8 @@ export const notificationQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Notification.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Notification.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > notifications.length;
 
       const endCursor =
@@ -128,9 +128,12 @@ export const notificationQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Unread notifications fetched successfully.",
+        message: `${notifications.length} unread notifications fetched successfully for user (${ctx.loggedInUserId}).`,
         data: userNotifications,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;

@@ -11,6 +11,7 @@ import Post from "../../models/Post";
 import User from "../../models/User";
 import { AppContext, sseClients } from "../../server";
 import { sendNotification } from "../../utils/sse";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import {
@@ -41,7 +42,7 @@ export const commentQueries = {
   fetchParentCommentsRecursively: async (
     _: any,
     { commentId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -168,9 +169,11 @@ export const commentQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Comments fetched successfully.",
+        message: `Fetched parent comments recursively for commentId: ${commentId} successfully.`,
         data: commentsWithPost,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -180,7 +183,7 @@ export const commentQueries = {
   fetchChildComments: async (
     _: any,
     { pageSize, after, postId, commentId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -256,9 +259,8 @@ export const commentQueries = {
         query._id = { $lt: new Types.ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Comment.countDocuments(
-        query
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Comment.countDocuments(query).exec();
 
       const hasNextPage = totalDocumentsAfterCursor > comments.length;
 
@@ -283,9 +285,11 @@ export const commentQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Child comments fetched successfully.",
+        message: `Fetched ${comments.length} child comments for ${commentId ? `commentId: ${commentId}` : `postId: ${postId}`} successfully. Comments cursor: ${after}`,
         data: feed,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -295,7 +299,7 @@ export const commentQueries = {
   fetchLikesFromComment: async (
     _: any,
     { pageSize, after, commentId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -331,7 +335,7 @@ export const commentQueries = {
 
       const userIdsToFetch = likes.slice(
         startFromIndex,
-        startFromIndex + pageSize
+        startFromIndex + pageSize,
       );
 
       const users = (await User.find({
@@ -364,8 +368,10 @@ export const commentQueries = {
         success: true,
         code: 200,
         data: paginatedLikes,
-        message: `Fetched ${pageSize} likes from comment: ${comment}. Likes cursor: ${after}`,
+        message: `Fetched ${paginatedLikes.edges.length} likes from comment: ${commentId}. Likes cursor: ${after}`,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -378,7 +384,7 @@ export const commentMutations = {
   postComment: async (
     _: any,
     { commentData: { content, postId, parentCommentId = null } }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     if (validator.isEmpty(content))
@@ -421,7 +427,7 @@ export const commentMutations = {
           result.eventType,
           result.publisher as unknown as BasicUserData,
           result.subscriber.toString(),
-          sseClients
+          sseClients,
         );
       }
 
@@ -448,18 +454,22 @@ export const commentMutations = {
           result.eventType,
           result.publisher as unknown as BasicUserData,
           result.subscriber.toString(),
-          sseClients
+          sseClients,
         );
       }
 
       await newComment.save();
       await Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
+
       const response: HttpResponse = {
         success: true,
         code: 201,
-        message: "Comment posted successfully.",
+        message: `Comment (${newComment._id}) posted successfully.`,
         data: newComment,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -475,12 +485,16 @@ export const commentMutations = {
       editableComment!.edited = true;
       const result = await editableComment!.save();
       await result.populate("likes author");
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Comment edited successfully.",
+        message: `Comment (${result._id}) edited successfully.`,
         data: result,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -492,7 +506,7 @@ export const commentMutations = {
       const comment = await Comment.findById(commentId);
       if (comment) {
         const alreadyLiked = comment.likes?.find((val: Types.ObjectId) =>
-          val.equals(ctx.loggedInUserId)
+          val.equals(ctx.loggedInUserId),
         );
         if (alreadyLiked) {
           comment.likes?.pull(ctx.loggedInUserId);
@@ -516,7 +530,7 @@ export const commentMutations = {
               result.eventType,
               result.publisher as unknown as BasicUserData,
               result.subscriber.toString(),
-              sseClients
+              sseClients,
             );
           }
         }
@@ -525,10 +539,13 @@ export const commentMutations = {
           success: true,
           code: 200,
           message: alreadyLiked
-            ? "Comment unliked successfully."
-            : "Comment liked successfully.",
+            ? `Comment (${comment.id}) unliked successfully by user (${ctx.loggedInUserId}).`
+            : `Comment (${comment.id}) liked successfully by user (${ctx.loggedInUserId}).`,
           data: comment.id,
         };
+
+        logger.info(response.message);
+
         return response.data;
       } else {
         throw newGqlError("Comment not found.", 404);
@@ -544,12 +561,16 @@ export const commentMutations = {
       await Post.findByIdAndUpdate(postId, {
         $inc: { commentsCount: -1 },
       });
+
       const response: HttpResponse = {
         success: true,
         code: 204,
-        message: "Comment deleted successfully.",
+        message: `Comment (${deletedComment!.id}) deleted successfully.`,
         data: deletedComment!.id,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;

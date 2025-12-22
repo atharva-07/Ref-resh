@@ -2,6 +2,7 @@ import Comment from "../../models/Comment";
 import Post from "../../models/Post";
 import User from "../../models/User";
 import { AppContext } from "../../server";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -9,7 +10,7 @@ export const searchQueries = {
   searchLikesOnPost: async (
     _: any,
     { searchQuery, postId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -28,7 +29,7 @@ export const searchQueries = {
               },
             },
           },
-          select: "_id firstName lastName userName pfpPath bannerPath bio", // Only include necessary fields
+          select: "_id firstName lastName userName pfpPath bannerPath bio",
         })
         .lean()
         .limit(10)
@@ -43,6 +44,9 @@ export const searchQueries = {
         data: matchingLikes,
         message: `Matching likes fetched. SearchQuery: ${searchQuery}, Post: ${postId}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -51,7 +55,7 @@ export const searchQueries = {
   searchLikesOnComment: async (
     _: any,
     { searchQuery, commentId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -70,7 +74,7 @@ export const searchQueries = {
               },
             },
           },
-          select: "_id firstName lastName userName pfpPath bannerPath bio", // Only include necessary fields
+          select: "_id firstName lastName userName pfpPath bannerPath bio",
         })
         .lean()
         .limit(10)
@@ -85,6 +89,9 @@ export const searchQueries = {
         data: matchingLikes,
         message: `Matching likes fetched. SearchQuery: ${searchQuery}, Comment: ${commentId}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -93,7 +100,7 @@ export const searchQueries = {
   searchUserFollowers: async (
     _: any,
     { searchQuery, userId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -112,7 +119,7 @@ export const searchQueries = {
               },
             },
           },
-          select: "_id firstName lastName userName pfpPath bannerPath bio", // Only include necessary fields
+          select: "_id firstName lastName userName pfpPath bannerPath bio",
         })
         .lean()
         .limit(10)
@@ -127,6 +134,9 @@ export const searchQueries = {
         data: matchingFollowers,
         message: `Matching user followers fetched. SearchQuery: ${searchQuery}, User: ${userId}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -135,7 +145,7 @@ export const searchQueries = {
   searchUserFollowing: async (
     _: any,
     { searchQuery, userId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -154,7 +164,7 @@ export const searchQueries = {
               },
             },
           },
-          select: "_id firstName lastName userName pfpPath bannerPath bio", // Only include necessary fields
+          select: "_id firstName lastName userName pfpPath bannerPath bio",
         })
         .lean()
         .limit(10)
@@ -169,6 +179,9 @@ export const searchQueries = {
         data: matchingFollowing,
         message: `Matching user following fetched. SearchQuery: ${searchQuery}, User: ${userId}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -202,6 +215,9 @@ export const searchQueries = {
         data: users,
         message: `Matching users fetched. SearchQuery: ${searchQuery}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -233,6 +249,9 @@ export const searchQueries = {
         data: posts,
         message: `Matching posts fetched. SearchQuery: ${searchQuery}`,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
       throw error;

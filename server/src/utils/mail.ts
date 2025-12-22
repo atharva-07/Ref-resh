@@ -1,9 +1,11 @@
 import { createTransport } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
+import logger from "./winston";
+
 export const transport = createTransport({
   host: process.env.SMTP_SERVER_URI,
-  secure: false, // true
+  secure: true,
   port: process.env.SMTP_SERVER_PORT,
   auth: {
     user: process.env.MAIL_SERVICE_LOGIN,
@@ -20,7 +22,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
       html,
     });
   } catch (error) {
-    console.error("Error sending email:", error);
+    logger.error("Error sending email:", error);
     throw new Error("Could not send email.");
   }
 };

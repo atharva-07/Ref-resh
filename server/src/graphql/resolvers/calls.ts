@@ -1,15 +1,10 @@
 import { ObjectId } from "mongodb";
-import {
-  Callback,
-  Document,
-  FilterQuery,
-  PipelineStage,
-  ProjectionFields,
-} from "mongoose";
+import { Document, FilterQuery, PipelineStage } from "mongoose";
 
 import Call, { CallType } from "../../models/Call";
 import Chat from "../../models/Chat";
 import { AppContext } from "../../server";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import { PageInfo } from "./posts";
@@ -158,7 +153,7 @@ export const callQueries = {
   fetchCallsHistory: async (
     _: any,
     { pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -292,9 +287,12 @@ export const callQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: `Calls fetched successfully.`,
+        message: `${calls.length} calls for user ${ctx.loggedInUserId} fetched successfully. Calls cursor: ${after}`,
         data: userCalls,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -303,7 +301,7 @@ export const callQueries = {
   fetchCallsHistoryByChat: async (
     _: any,
     { chatId, pageSize, after }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -403,9 +401,8 @@ export const callQueries = {
         countQuery._id = { $lt: new ObjectId(after) };
       }
 
-      const totalDocumentsAfterCursor = await Call.countDocuments(
-        countQuery
-      ).exec();
+      const totalDocumentsAfterCursor =
+        await Call.countDocuments(countQuery).exec();
       const hasNextPage = totalDocumentsAfterCursor > calls.length;
 
       const endCursor =
@@ -429,9 +426,12 @@ export const callQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: `Calls made in chat ${chatId} fetched successfully.`,
+        message: `${calls.length} calls made in chat ${chatId} fetched successfully. Calls cursor: ${after}`,
         data: chatCalls,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -458,9 +458,12 @@ export const callMutations = {
       const response: HttpResponse = {
         success: true,
         code: 201,
-        message: "Call created successfully by userId: " + ctx.loggedInUserId,
+        message: `Call (${call._id}) created successfully by userId: ${ctx.loggedInUserId}`,
         data: call,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -476,12 +479,15 @@ export const callMutations = {
         timestamp: new Date(),
       });
       await call.save();
+
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: `User (${ctx.loggedInUserId}) added to call (${callId}) successfully.`,
         data: call._id,
       };
+
+      logger.debug(response.message);
 
       return response.data;
     } catch (error) {
@@ -492,7 +498,7 @@ export const callMutations = {
   removeUserFromCall: async (
     _: any,
     { callId, userId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -502,12 +508,15 @@ export const callMutations = {
         timestamp: new Date(),
       });
       await call.save();
+
       const response: HttpResponse = {
         success: true,
         code: 200,
         message: `User (${ctx.loggedInUserId}) removed from call (${callId}) successfully.`,
         data: call._id,
       };
+
+      logger.debug(response.message);
 
       return response.data;
     } catch (error) {

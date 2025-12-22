@@ -10,6 +10,7 @@ import {
   uploadMultipleFiles,
   uploadSingleFile,
 } from "../utils/cloudinary";
+import logger from "../utils/winston";
 
 const router = Router();
 
@@ -39,7 +40,7 @@ router.post(
 
       return res.status(200).json(result);
     } catch (error) {
-      console.log(error);
+      logger.error("Error uploading post images: ", error);
       next(error);
     }
   },
@@ -83,7 +84,7 @@ router.post(
 
       return res.status(200).json(result);
     } catch (error) {
-      console.log(error);
+      logger.error("Error uploading profile image: ", error);
       next(error);
     }
   },
@@ -117,7 +118,7 @@ router.post(
 
       return res.status(200).json(result);
     } catch (error) {
-      console.log(error);
+      logger.error("Error uploading story image: ", error);
       next(error);
     }
   },

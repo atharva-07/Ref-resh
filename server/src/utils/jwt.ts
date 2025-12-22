@@ -2,17 +2,19 @@ import { readFileSync } from "fs";
 import jwt from "jsonwebtoken";
 import path from "path";
 
+import logger from "./winston";
+
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/g;
 
 const privateKey: string = readFileSync(
   path.join(path.resolve(), "private.key"),
-  "utf-8"
+  "utf-8",
 );
 
 const publicKey: string = readFileSync(
   path.join(path.resolve(), "public.key"),
-  "utf-8"
+  "utf-8",
 );
 
 export function signJwt(object: object, options?: jwt.SignOptions | undefined) {
@@ -31,7 +33,7 @@ export function verifyJwt(token: string) {
       decoded,
     };
   } catch (e: any) {
-    console.error(e);
+    logger.error("JWT verification failed: ", e);
     return {
       valid: false,
       expired: e.message === "jwt expired",
@@ -49,7 +51,7 @@ export const createAccessToken = (userId: string, userName: string) => {
     },
     {
       expiresIn: "15m",
-    }
+    },
   );
 
   return accessToken;
@@ -63,7 +65,7 @@ export const createRefreshToken = (userId: string, userName: string) => {
     },
     {
       expiresIn: "7d",
-    }
+    },
   );
 
   return refreshToken;

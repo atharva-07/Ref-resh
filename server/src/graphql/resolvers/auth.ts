@@ -18,6 +18,7 @@ import {
   verifyJwt,
 } from "../../utils/jwt";
 import { sendEmail } from "../../utils/mail";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 
@@ -29,7 +30,7 @@ export const authQueries = {
     if (errors.length > 0)
       throw newGqlError(
         `Provided user input is invalid. ${errors[0].message}`,
-        422
+        422,
       );
     try {
       const user = await User.findOne({ email: loginData.email });
@@ -40,13 +41,13 @@ export const authQueries = {
       if (user.authType !== AuthType.EMAIL) {
         throw newGqlError(
           `This email address is registered with a different login method. Please login with ${user.authType}.`,
-          403
+          403,
         );
       }
 
       const isEqual = await bcrypt.compare(
         loginData.password,
-        <string>user.password
+        <string>user.password,
       );
       if (!isEqual) throw newGqlError("Invalid Email or Password.", 401);
 
@@ -63,7 +64,7 @@ export const authQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User logged-in successfully.",
+        message: `User (${user.id}) logged-in successfully.`,
         data: {
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -73,6 +74,8 @@ export const authQueries = {
           pfpPath: user.pfpPath,
         },
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -95,7 +98,7 @@ export const authQueries = {
           {
             userName: 1,
             email: 1,
-          }
+          },
         );
       } else if (!email && userId) {
         user = await User.findById(new ObjectId(userId), {
@@ -109,7 +112,7 @@ export const authQueries = {
       if (user.authType !== AuthType.EMAIL) {
         throw newGqlError(
           `Password reset is not available for ${user.authType} accounts.`,
-          403
+          403,
         );
       }
 
@@ -119,7 +122,7 @@ export const authQueries = {
           if (err) {
             throw newGqlError(
               "Could not process your request. Please try again.",
-              500
+              500,
             );
           }
           nonce = buffer.toString("hex");
@@ -138,7 +141,7 @@ export const authQueries = {
             },
             {
               expiresIn: "15m",
-            }
+            },
           );
 
           const passwordResetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
@@ -150,7 +153,7 @@ export const authQueries = {
             <h1>Password Reset Instructions</h1>
             <p>Click this <a href=${passwordResetLink}>link</a> to reset your password.
             <p>Please note that this link is only valid for 15 minutes.</p>
-            `
+            `,
           );
         });
       }
@@ -159,10 +162,12 @@ export const authQueries = {
         success: true,
         code: 200,
         message: user
-          ? "Email sent to the user."
-          : "Email not sent as the user does not exist.",
+          ? `Password reset email sent to the user (${user.email}).`
+          : `Password reset email not sent as the user does not exist.`,
         data: true,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -174,7 +179,7 @@ export const authQueries = {
     try {
       const user = await User.findById(new ObjectId(ctx.loggedInUserId))
         .select(
-          "_id firstName lastName userName pfpPath bannerPath bio gender dob"
+          "_id firstName lastName userName pfpPath bannerPath bio gender dob",
         )
         .lean();
 
@@ -183,12 +188,14 @@ export const authQueries = {
       const response: HttpResponse = {
         code: 200,
         success: true,
-        message: "User 'me' status loaded.",
+        message: `User (${user._id}) 'me' status loaded.`,
         data: {
           user: user,
           setupComplete: ctx.userSetupComplete,
         },
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -228,11 +235,11 @@ export const authMutations = {
     if (
       !validator.matches(
         signupData.password,
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       ) ||
       !validator.matches(
         signupData.confirmPassword,
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       )
     ) {
       errors.push({
@@ -263,14 +270,14 @@ export const authMutations = {
     if (errors.length > 0)
       throw newGqlError(
         `Provided user input is invalid. ${errors[0].message}`,
-        422
+        422,
       );
     try {
       const existingUser = await User.findOne({ email: signupData.email });
       if (existingUser) {
         throw newGqlError(
           "This email address is already registered with us.",
-          409
+          409,
         );
       } else {
         const dateOfBirth = new Date(signupData.dob);
@@ -291,12 +298,16 @@ export const authMutations = {
           joinedDate: new Date(),
         });
         const result: Document = await newUser.save();
+
         const response: HttpResponse = {
           success: true,
           code: 201,
-          message: "User successfully created.",
+          message: `User (${result.id}) successfully created.`,
           data: result.id,
         };
+
+        logger.info(response.message);
+
         return response.data;
       }
     } catch (error) {
@@ -307,16 +318,22 @@ export const authMutations = {
     checkAuthorization(ctx.loggedInUserId);
     try {
       const user = await User.findById(ctx.loggedInUserId);
-      user!.refreshToken = undefined;
+      if (!user) throw newGqlError("User not found.", 404);
+      user.refreshToken = undefined;
       await user!.save();
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User logged-out successfully.",
-        data: user!.id,
+        message: `User (${user.id}) logged-out successfully.`,
+        data: user.id,
       };
+
       ctx.res.clearCookie("accessToken");
       ctx.res.clearCookie("refreshToken");
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -335,11 +352,11 @@ export const authMutations = {
     if (
       !validator.matches(
         passwordResetData.password,
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       ) ||
       !validator.matches(
         passwordResetData.confirmPassword,
-        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm
+        /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       )
     ) {
       errors.push({
@@ -355,11 +372,11 @@ export const authMutations = {
     if (errors.length > 0)
       throw newGqlError(
         `Provided user input is invalid. ${errors[0].message}`,
-        422
+        422,
       );
     try {
       const { valid, expired, decoded } = verifyJwt(
-        passwordResetData.token
+        passwordResetData.token,
       ) as JwtPayload;
 
       if (
@@ -370,7 +387,7 @@ export const authMutations = {
       ) {
         throw newGqlError(
           "The password reset link is invalid or expired.",
-          401
+          401,
         );
       }
 
@@ -381,14 +398,14 @@ export const authMutations = {
       if (user.authType !== AuthType.EMAIL) {
         throw newGqlError(
           `Password reset is not available for ${user.authType} accounts.`,
-          403
+          403,
         );
       }
 
       if (user.passwordReset?.token !== decoded.jti) {
         throw newGqlError(
           "The password reset link is invalid or expired.",
-          401
+          401,
         );
       }
 
@@ -407,9 +424,11 @@ export const authMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Password changed successfully.",
+        message: `Password changed successfully for user (${user.id}).`,
         data: user.id,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {

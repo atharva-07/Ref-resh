@@ -11,6 +11,7 @@ import { AppContext, sseClients } from "../../server";
 import { accessTokenCookieOptions } from "../../utils/common";
 import { createAccessToken } from "../../utils/jwt";
 import { sendNotification } from "../../utils/sse";
+import logger from "../../utils/winston";
 import { checkAuthorization, newGqlError } from "../utility-functions";
 import { HttpResponse } from "../utility-types";
 import {
@@ -50,15 +51,15 @@ export const userQueries = {
           email: 0,
           password: 0,
           followingRequests: 0,
-        }
+        },
       );
       if (!user) throw newGqlError("User not found.", 404);
       const hasLoggedInUserBlocked = loggedInUser.blockedAccounts?.find(
-        (x) => x.toString() === user._id.toString()
+        (x) => x.toString() === user._id.toString(),
       );
 
       const isLoggedInUserBlocked = user?.blockedAccounts?.find(
-        (x) => x.toString() === ctx.loggedInUserId.toString()
+        (x) => x.toString() === ctx.loggedInUserId.toString(),
       );
 
       if (isLoggedInUserBlocked || hasLoggedInUserBlocked)
@@ -70,11 +71,14 @@ export const userQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User fetched successfully.",
+        message: `User (${user.userName}) fetched successfully.`,
         data: user,
       };
       (<any>response.data).email = "Unretreivable";
       (<any>response.data).blockedAccounts = null;
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -83,7 +87,7 @@ export const userQueries = {
   fetchUserFollowers: async (
     _: any,
     { pageSize, after, userId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -119,7 +123,7 @@ export const userQueries = {
 
       const userIdsToFetch = followers.slice(
         startFromIndex,
-        startFromIndex + pageSize
+        startFromIndex + pageSize,
       );
 
       const users = (await User.find({
@@ -152,19 +156,20 @@ export const userQueries = {
         success: true,
         code: 200,
         data: paginatedFollowers,
-        message: `Fetched ${pageSize} followers for user: ${userId}. Followers cursor: ${after}`,
+        message: `Fetched ${edges.length} followers for user: (${userId}). Followers cursor: ${after}`,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
   fetchUserFollowing: async (
     _: any,
     { pageSize, after, userId }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -200,7 +205,7 @@ export const userQueries = {
 
       const userIdsToFetch = following.slice(
         startFromIndex,
-        startFromIndex + pageSize
+        startFromIndex + pageSize,
       );
 
       const users = (await User.find({
@@ -233,8 +238,10 @@ export const userQueries = {
         success: true,
         code: 200,
         data: paginatedFollowing,
-        message: `Fetched ${pageSize} following for user: ${userId}. Following cursor: ${after}`,
+        message: `Fetched ${edges.length} following for user: (${userId}). Following cursor: ${after}`,
       };
+
+      logger.info(response.message);
 
       return response.data;
     } catch (error) {
@@ -254,9 +261,12 @@ export const userQueries = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User's incoming following requests fetched successfully.",
+        message: `User's (${ctx.loggedInUserId}) incoming following requests fetched successfully.`,
         data: userFollowingRequests.followingRequests || [],
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -277,14 +287,17 @@ export const userQueries = {
           pfpPath: 1,
           bannerPath: 1,
           bio: 1,
-        }
+        },
       );
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User-sent following requests fetched successfully.",
+        message: `User-sent (${ctx.loggedInUserId}) following requests fetched successfully.`,
         data: userSentFollowingRequests,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -304,16 +317,20 @@ export const userQueries = {
         path: "blockedAccounts",
         select: "_id userName firstName lastName pfpPath bannerPath bio",
       });
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User account type and blocked accounts fetched successfully.",
+        message: `User (${ctx.loggedInUserId}) account type and blocked accounts fetched successfully.`,
         data: {
           privateAccount: user.privateAccount,
           blockedAccounts: user.blockedAccounts || [],
           authType: user.authType,
         },
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -328,7 +345,7 @@ export const userQueries = {
       const userFollowingsArray = userData.following;
       const userFollowingsData = await User.find(
         { _id: { $in: userFollowingsArray } },
-        "_id userName firstName lastName dob pfpPath bannerPath bio"
+        "_id userName firstName lastName dob pfpPath bannerPath bio",
       ).lean();
       // Users with birthdays in next 7 days (inclusive of current date)
       const usersWithUpcomingBirthdays = [];
@@ -336,19 +353,22 @@ export const userQueries = {
         user.dob!.setFullYear(new Date().getFullYear());
         const oneDay = 1000 * 60 * 60 * 24;
         const diff = Math.ceil(
-          (user.dob!.getTime() - new Date().getTime()) / oneDay
+          (user.dob!.getTime() - new Date().getTime()) / oneDay,
         );
         if (diff <= 7 && diff >= 0) usersWithUpcomingBirthdays.push(user);
       }
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Upcoming Birthdays of user's following fetched successfully.",
+        message: `Upcoming Birthdays of user's (${ctx.loggedInUserId}) following fetched successfully.`,
         data: usersWithUpcomingBirthdays,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -367,7 +387,7 @@ export const userMutations = {
           following: 1,
           followingRequests: 1,
           blockedAccounts: 1,
-        }
+        },
       );
 
       if (!targetUser) throw newGqlError("User not found", 404);
@@ -379,11 +399,11 @@ export const userMutations = {
         throw newGqlError("Blocked/Forbidden", 403);
 
       const alreadyRequested = targetUser.followingRequests?.includes(
-        ctx.loggedInUserId
+        ctx.loggedInUserId,
       );
 
       const alreadyFollowing = targetUser.followers?.includes(
-        ctx.loggedInUserId
+        ctx.loggedInUserId,
       );
 
       const loggedInUser = await User.findById(ctx.loggedInUserId, {
@@ -423,7 +443,7 @@ export const userMutations = {
             result.eventType,
             result.publisher as unknown as BasicUserData,
             result.subscriber.toString(),
-            sseClients
+            sseClients,
           );
         }
       } else {
@@ -454,7 +474,7 @@ export const userMutations = {
             result.eventType,
             result.publisher as unknown as BasicUserData,
             result.subscriber.toString(),
-            sseClients
+            sseClients,
           );
         }
         await loggedInUser?.save();
@@ -470,7 +490,11 @@ export const userMutations = {
           status: action,
         },
       };
-      console.log(response);
+
+      logger.info(
+        `User (${ctx.loggedInUserId}) performed action: ${action} on user (${targetUser._id}).`,
+      );
+
       return response.data;
     } catch (error) {
       throw error;
@@ -508,15 +532,18 @@ export const userMutations = {
         result.eventType,
         result.publisher as unknown as BasicUserData,
         result.subscriber.toString(),
-        sseClients
+        sseClients,
       );
 
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Request Accepted.",
+        message: `User (${ctx.loggedInUserId}) accepted follow request from user (${requester!._id}).`,
         data: requester!._id,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -534,9 +561,12 @@ export const userMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "Request Rejected.",
+        message: `User (${ctx.loggedInUserId}) rejected follow request from user (${requesterId}).`,
         data: requesterId,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -577,8 +607,8 @@ export const userMutations = {
         success: true,
         code: 200,
         message: isTargetUserAlreadyBlocked
-          ? "User Unblocked."
-          : "User Blocked.",
+          ? `User (${ctx.loggedInUserId}) unblocked user (${targetUserId}).`
+          : `User (${ctx.loggedInUserId}) blocked user (${targetUserId}).`,
         data: {
           user: {
             _id: targetUserId,
@@ -589,6 +619,9 @@ export const userMutations = {
             : BlockStatus.BLOCKED,
         },
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -597,7 +630,7 @@ export const userMutations = {
   updateUserProfile: async (
     _: any,
     { userProfileData }: any,
-    ctx: AppContext
+    ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
     try {
@@ -623,15 +656,18 @@ export const userMutations = {
           new: true,
           lean: true,
           select: "_id firstName lastName userName pfpPath bannerPath bio",
-        }
+        },
       );
       const updatedUserData = { ...user };
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User Profile updated successfully.",
+        message: `User's (${ctx.loggedInUserId}) profile updated successfully.`,
         data: updatedUserData,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -666,7 +702,7 @@ export const userMutations = {
       )
         throw newGqlError(
           "Provided date of birth is not in correct format.",
-          422
+          422,
         );
 
       const user = await User.findByIdAndUpdate(
@@ -676,7 +712,7 @@ export const userMutations = {
           gender: userInfoData.gender || undefined,
           dob: userInfoData.dob
             ? new Date(userInfoData.dob).setDate(
-                new Date(userInfoData.dob).getDate() + 1
+                new Date(userInfoData.dob).getDate() + 1,
               )
             : undefined,
         },
@@ -684,14 +720,14 @@ export const userMutations = {
           new: true,
           lean: true,
           select: "_id firstName lastName userName pfpPath bannerPath bio",
-        }
+        },
       );
       const updatedUserData = { ...user };
 
       if (user) {
         const accessToken = createAccessToken(
           user._id.toString(),
-          user.userName
+          user.userName,
         );
         ctx.res.cookie("accessToken", accessToken, accessTokenCookieOptions);
       }
@@ -699,9 +735,12 @@ export const userMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User Info updated successfully.",
+        message: `User's (${ctx.loggedInUserId}) info updated successfully.`,
         data: updatedUserData,
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
       throw error;
@@ -718,13 +757,14 @@ export const userMutations = {
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message:
-          "User's Last Notification Read Timestamp updated successfully.",
+        message: `User's (${ctx.loggedInUserId}) Last Notification Read Timestamp updated successfully.`,
         data: user?.readNotificationsAt,
       };
+
+      logger.debug(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },
@@ -737,10 +777,11 @@ export const userMutations = {
       if (!user) throw newGqlError("User not found.", 404);
       user.privateAccount = !user.privateAccount;
       await user.save();
+
       const response: HttpResponse = {
         success: true,
         code: 200,
-        message: "User account type toggled successfully.",
+        message: `User's (${ctx.loggedInUserId}) account type toggled successfully.`,
         data: {
           _id: user._id,
           updatedAccountType: user.privateAccount
@@ -748,9 +789,11 @@ export const userMutations = {
             : AccountType.PUBLIC,
         },
       };
+
+      logger.info(response.message);
+
       return response.data;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },

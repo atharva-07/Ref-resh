@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 
 import { checkAuthorization } from "../graphql/utility-functions";
 import { sseClients } from "../server";
+import logger from "../utils/winston";
 
 const router = Router();
 
@@ -27,8 +28,8 @@ router.get(
       }
 
       sseClients.get(userId)?.add(newConnection);
-      console.log(
-        `User ${userId} now has ${
+      logger.info(
+        `User (${userId}) now has ${
           sseClients.get(userId)?.size
         } active connections.`,
       );
@@ -51,7 +52,7 @@ router.get(
             sseClients.delete(userId);
           }
         }
-        console.log("SSE Client Disconnected.");
+        logger.info("SSE Client Disconnected.");
       });
     } catch (error) {
       next(error);
