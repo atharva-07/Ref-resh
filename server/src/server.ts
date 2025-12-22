@@ -18,6 +18,7 @@ import { authMiddleware } from "./middleware/check-auth";
 import cloudinaryRoutes from "./routes/cloudinary";
 import notificationRoutes from "./routes/notifications";
 import { sendHeartbeat, SSE_PING_INTERVAL, SseClientsMap } from "./utils/sse";
+import logger from "./utils/winston";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -54,8 +55,8 @@ const server = new ApolloServer<AppContext>({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  formatError(formattedError, error) {
-    console.error("GraphQL Error:", formattedError, error);
+  formatError(formattedError) {
+    logger.error(formattedError);
     const errorResponse: HttpResponse = {
       success: false,
       code: formattedError.extensions?.code || 500,
