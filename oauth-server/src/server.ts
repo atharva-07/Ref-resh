@@ -1,17 +1,22 @@
 import bodyParser from "body-parser";
-import { RedisStore } from "connect-redis";
+// import { RedisStore } from "connect-redis";
 import cors from "cors";
 import * as dotenv from "dotenv";
-import express, { ErrorRequestHandler, Request, Response } from "express";
-import session, { SessionData } from "express-session";
+import express, {
+  ErrorRequestHandler,
+  NextFunction,
+  Request,
+  Response,
+} from "express";
+import session from "express-session";
 import http from "http";
 import mongoose, { Types } from "mongoose";
-import { createClient } from "redis";
 
-import { authMiddleware } from "../middlewares/check-auth";
+// import { createClient } from "redis";
 import facebookRoutes from "./routes/facebook";
 import googleRoutes from "./routes/google";
 import { handleAccessTokenRefresh, verifyActiveSession } from "./utils/common";
+import logger from "./utils/winston";
 
 dotenv.config();
 
@@ -43,7 +48,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 app.use(
@@ -53,7 +58,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false },
-  })
+  }),
 );
 
 app.use(googleRoutes);
@@ -64,19 +69,22 @@ app.use("/api/auth/me", verifyActiveSession);
 
 app.post("/api/refresh-token", handleAccessTokenRefresh);
 
-app.use((error: ErrorRequestHandler, _: Request, res: Response) => {
-  res.status(500).send(error.toString());
-});
+app.use(
+  (error: ErrorRequestHandler, _: Request, res: Response, __: NextFunction) => {
+    logger.error(`Caught in Global Error Handler: ${error}`);
+    res.status(500).send("Internal Server Error.");
+  },
+);
 
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    console.log("Database Connected.");
+    logger.info("Connected to the database.");
     httpServer.listen({ port: process.env.DEV_PORT || 8000 });
   })
   .then(() => {
-    console.log(`Server is up and running on port ${process.env.DEV_PORT}`);
+    logger.info(`Server is up and running on port ${process.env.DEV_PORT}.`);
   })
   .catch((err) => {
-    console.log("Error establishing the database connection.", err);
+    logger.error(`Error establishing the database connection. Error: ${err}`);
   });

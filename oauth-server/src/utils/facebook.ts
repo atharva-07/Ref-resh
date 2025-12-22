@@ -1,6 +1,8 @@
 import axios from "axios";
 import qs from "querystring";
 
+import logger from "./winston";
+
 export interface FacebookTokenResponse {
   access_token: string;
   id_token: string;
@@ -39,7 +41,7 @@ export const getFacebookOAuthUriWithOptions = (state: string): string => {
 };
 
 export const getFacebookIdAndAccessToken = async (
-  authorization_code: string
+  authorization_code: string,
 ): Promise<FacebookTokenResponse> => {
   const url = process.env.FACEBOOK_OAUTH2_TOKEN_URI as string;
 
@@ -59,12 +61,16 @@ export const getFacebookIdAndAccessToken = async (
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-      }
+      },
     );
-    console.log(res.data);
+
+    logger.info(`Facebook OAuth2 response: ${JSON.stringify(res.data)}`);
+
     return res.data;
   } catch (error: any) {
-    console.log(error.response.data.error);
+    logger.error(
+      `Error fetching Facebook OAuth2 token. Error: ${error.message}`,
+    );
     throw new Error(error.message);
   }
 };

@@ -2,12 +2,8 @@ import { CookieOptions, NextFunction, Request, Response } from "express";
 import { HydratedDocument } from "mongoose";
 
 import User, { UserType } from "../models/User";
-import {
-  createAccessToken,
-  createRefreshToken,
-  signJwt,
-  verifyJwt,
-} from "./jwt";
+import { createAccessToken, createRefreshToken, verifyJwt } from "./jwt";
+import logger from "./winston";
 
 const accessTokenCookieOptions: CookieOptions = {
   maxAge: 900000, // 15 mins
@@ -20,7 +16,6 @@ const accessTokenCookieOptions: CookieOptions = {
 
 const refreshTokenCookieOptions: CookieOptions = {
   ...accessTokenCookieOptions,
-  // httpOnly: false, // TODO: FIXME (Should be HttpOnly)
   maxAge: 6.048e8, // 7 days
 };
 
@@ -44,7 +39,7 @@ export const getAccessTokenFromCookie = (req: Request) => {
 
 export const handleTokenCreationAndRedirection = async (
   user: HydratedDocument<UserType>,
-  res: Response
+  res: Response,
 ) => {
   const { id, userName } = user;
 
@@ -58,13 +53,14 @@ export const handleTokenCreationAndRedirection = async (
   res.cookie("accessToken", accessToken, accessTokenCookieOptions);
   res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
+  logger.info(`Logging user in: ${user.email}`);
   res.redirect(process.env.CLIENT_APP_URI as string);
 };
 
 export const handleAccessTokenRefresh = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   //const refreshToken = req.body.refreshToken;
   const refreshToken = getRefreshTokenFromCookie(req);
@@ -91,6 +87,7 @@ export const handleAccessTokenRefresh = async (
     const accessToken = createAccessToken(user.id, user.userName);
 
     res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+    logger.info(`Access token refreshed for user: ${user.email}`);
 
     res.status(200).send({ accessToken });
   } catch (error) {
@@ -115,7 +112,7 @@ export const handleAccessTokenRefresh = async (
 export const verifyActiveSession = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const refreshToken = getRefreshTokenFromCookie(req);

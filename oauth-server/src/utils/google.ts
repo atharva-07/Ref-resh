@@ -1,6 +1,8 @@
 import axios from "axios";
 import qs from "querystring";
 
+import logger from "./winston";
+
 export interface GoogleTokenResponse {
   access_token: string;
   id_token: string;
@@ -42,7 +44,7 @@ export const getGoogleOAuthUriWithOptions = (state: string): string => {
 };
 
 export const getGoogleIdAndAccessToken = async (
-  code: string
+  code: string,
 ): Promise<GoogleTokenResponse> => {
   const url = process.env.GOOGLE_OAUTH2_TOKEN_URI as string;
 
@@ -62,12 +64,14 @@ export const getGoogleIdAndAccessToken = async (
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-      }
+      },
     );
-    console.log(res.data);
+
+    logger.info(`Google OAuth2 Response: ${JSON.stringify(res.data)}`);
+
     return res.data;
   } catch (error: any) {
-    console.log(error);
+    logger.error(`Error fetching Google OAuth2 token. Error: ${error.message}`);
     throw new Error(error.message);
   }
 };
@@ -85,10 +89,10 @@ export const getGoogleIdAndAccessToken = async (
 //         },
 //       }
 //     );
-//     console.log(res.data);
+//     logger.debug(res.data);
 //     return res.data;
 //   } catch (error: any) {
-//     console.log(error, "ERROR: Couldn't fetch Google user.");
+//     logger.error(error, "ERROR: Couldn't fetch Google user.");
 //     throw new Error(error.message);
 //   }
 // };
@@ -114,7 +118,7 @@ export const getGoogleIdAndAccessToken = async (
 //     );
 //     return publicSigningKey;
 //   } catch (error: any) {
-//     console.log(error, "ERROR: Couldn't fetch Google public key.");
+//     logger.error(error, "ERROR: Couldn't fetch Google public key.");
 //     throw new Error(error.message);
 //   }
 // };

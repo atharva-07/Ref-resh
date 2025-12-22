@@ -9,6 +9,7 @@ import {
   getGoogleOAuthUriWithOptions,
   GoogleUserResult,
 } from "../utils/google";
+import logger from "../utils/winston";
 
 const router = Router();
 
@@ -28,19 +29,32 @@ router.get(
     const returnedState = req.query.state as string;
     const storedState = req.session.state as string;
 
+    if (req.query.error === "access_denied") {
+      logger.warn("Google: User denied access.");
+      return res.status(403).send("Access denied by the user.");
+    }
+
     if (!storedState || returnedState !== storedState) {
+      logger.error("Google: Invalid state parameter.");
       return res.status(400).send("Invalid state parameter");
     }
 
     try {
+      if (!code) {
+        logger.error("Google: Missing authorization code.");
+        throw new Error("Missing authorization code.");
+      }
+
+      logger.info(`Google Authorization Code: ${code}`);
       const { id_token } = await getGoogleIdAndAccessToken(code);
 
       // Get userinfo from Google's userinfo endpoint using access_token and id_token
       // const googleUser = await getGoogleUser(access_token, id_token);
       const googleUser: GoogleUserResult = jwt.decode(
-        id_token
+        id_token,
       ) as GoogleUserResult;
-      console.log(googleUser);
+
+      logger.debug(`Google User Info: ${JSON.stringify(googleUser)}`);
 
       if (!googleUser.email_verified) {
         return res.status(403).send("Google account is not verified");
@@ -59,13 +73,14 @@ router.get(
           pfpPath: googleUser.picture,
         });
         user = await user.save();
+        logger.info(`New user created with Google OAuth: ${user.email}`);
       }
 
       handleTokenCreationAndRedirection(user, res);
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

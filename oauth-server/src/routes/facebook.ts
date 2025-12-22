@@ -9,6 +9,7 @@ import {
   getFacebookIdAndAccessToken,
   getFacebookOAuthUriWithOptions,
 } from "../utils/facebook";
+import logger from "../utils/winston";
 
 const router = Router();
 
@@ -28,17 +29,30 @@ router.get(
     const returnedState = req.query.state as string;
     const storedState = req.session.state;
 
+    if (req.query.error === "access_denied") {
+      logger.warn("Facebook: User denied access.");
+      return res.status(403).send("Access denied by the user.");
+    }
+
     if (!storedState || returnedState !== storedState) {
+      logger.error("Facebook: Invalid state parameter.");
       return res.status(400).send("Invalid state parameter");
     }
 
     try {
+      if (!code) {
+        logger.error("Facebook: Missing authorization code.");
+        throw new Error("Missing authorization code.");
+      }
+
+      logger.info(`Facebook Authorization Code: ${code}`);
       const { id_token } = await getFacebookIdAndAccessToken(code);
 
       const facebookUser: FacebookUserResult = jwt.decode(
-        id_token
+        id_token,
       ) as FacebookUserResult;
-      console.log(facebookUser);
+
+      logger.debug(`Facebook User Info: ${JSON.stringify(facebookUser)}`);
 
       // Upsert (Update or Insert) user in database
       let user = await User.findOne({ email: facebookUser.email });
@@ -53,13 +67,14 @@ router.get(
           pfpPath: facebookUser.picture,
         });
         user = await user.save();
+        logger.info(`New user created with Facebook OAuth: ${user.email}`);
       }
 
       handleTokenCreationAndRedirection(user, res);
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;
