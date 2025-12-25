@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -w *.ts -e ts -x ts-node --files -H -T src/server.ts"
+    "dev": "nodemon -w *.ts -e ts -x ts-node --files -H -T src/server.ts",
+    "build": "tsc",
+    "start": "node build/server.js"
   },
   "author": "Atharva Wankhede (atharva-07)",
   "license": "ISC",
@@ -43,5 +45,8 @@
     "uuid": "^11.1.0",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -w *.ts -e ts -x ts-node --files -H -T src/server.ts"
+    "dev": "nodemon -w *.ts -e ts -x ts-node --files -H -T src/server.ts",
+    "build": "tsc",
+    "start": "node build/server.js"
   },
   "author": "Atharva Wankhede (atharva-07)",
   "license": "ISC",
@@ -30,5 +32,8 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "nodemon": "^3.1.0",
     "typescript": "^4.9.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

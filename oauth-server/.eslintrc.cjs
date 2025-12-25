@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   env: { browser: false, es2020: true },
   extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-  ignorePatterns: ["dist", ".eslintrc.cjs"],
+  ignorePatterns: ["build", ".eslintrc.cjs"],
   parser: "@typescript-eslint/parser",
   plugins: ["simple-import-sort"],
   rules: {
