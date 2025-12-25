@@ -1,12 +1,9 @@
-// import crypto from "node:crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export const getFacebookOAuthLink = () => {
   const rootUrl = import.meta.env.VITE_FACEBOOK_OAUTH2_AUTH_URI;
 
-  // TODO
-  // const state = crypto.randomBytes(32).toString("hex");
-  const state = "cringemaniac69";
-  // Generate "nonce" as well and pass in as an option
+  const state = uuidv4();
 
   const options = {
     client_id: import.meta.env.VITE_FACEBOOK_OAUTH2_CLIENT_ID as string,

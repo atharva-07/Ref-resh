@@ -10,11 +10,9 @@ const VideoRenderer: React.FC<{ user: Participant; stream: MediaStream }> = ({
   stream,
 }) => {
   const { user: loggedInUser } = useAppSelector((state) => state.auth);
-  // 1. Create a ref to hold the HTMLVideoElement
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasVideo = stream.getVideoTracks().length > 0;
 
-  // 2. Use useEffect to imperatively set the srcObject when the stream changes
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
@@ -23,28 +21,7 @@ const VideoRenderer: React.FC<{ user: Participant; stream: MediaStream }> = ({
         .play()
         .catch((e) => console.log("Video play failed (often harmless):", e));
     }
-  }, [stream]); // Re-run effect whenever the stream object updates
-
-  // return (
-  //   <div className="video-tile">
-  //     {/* 1. The video element renders the media, whether it's audio or video */}
-  //     <video
-  //       ref={videoRef}
-  //       autoPlay
-  //       muted={userId === "my_local_user_id"}
-  //       className="full-video"
-  //     />
-
-  //     {!hasVideo && (
-  //       <div className="audio-only-overlay">
-  //         <span className="icon">🎤</span>
-  //         <span className="label">Audio Only</span>
-  //       </div>
-  //     )}
-
-  //     <div className="user-label">{userId}</div>
-  //   </div>
-  // );
+  }, [stream]);
 
   return (
     <div

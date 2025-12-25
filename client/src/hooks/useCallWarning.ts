@@ -1,18 +1,14 @@
-// src/hooks/useCallWarning.ts
-
 import { useEffect } from "react";
 
 import { useAppSelector } from "./useAppSelector";
 
-// Type definition for the required event handler
 type BeforeUnloadEventHandler = (
-  event: BeforeUnloadEvent
+  event: BeforeUnloadEvent,
 ) => string | undefined;
 
 export function useCallWarning() {
-  // 1. Get the current call status from Redux
   const callStatus = useAppSelector(
-    (state) => state.call.activeCall?.callStatus
+    (state) => state.call.activeCall?.callStatus,
   );
 
   useEffect(() => {
@@ -20,7 +16,6 @@ export function useCallWarning() {
     const isActiveCall =
       callStatus === "connecting" || callStatus === "connected";
 
-    // 2. Define the event handler function
     const handleBeforeUnload: BeforeUnloadEventHandler = (event) => {
       if (isActiveCall) {
         // Standard browser behavior: setting returnValue triggers the confirmation dialog.
@@ -36,15 +31,12 @@ export function useCallWarning() {
       return undefined;
     };
 
-    // 3. Attach the listener if the call is active, or detach/noop if idle
     if (isActiveCall) {
       window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
-    // 4. Cleanup function: runs when the component unmounts or dependencies change
     return () => {
-      // Ensure the listener is always removed to prevent memory leaks or stale checks
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [callStatus]); // Re-run effect whenever the call status changes
+  }, [callStatus]);
 }

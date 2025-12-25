@@ -1,0 +1,18 @@
+{
+  "name": "ref-resh-peer-server",
+  "version": "1.0.0",
+  "description": "Ref-resh Peer Server",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "peerjs --port $PORT --key peerjs --path /ref-resh --allow-discovery --proxied --expire-timeout 5000",
+    "dev": "peerjs --port 9000 --key peerjs --path /ref-resh"
+  },
+  "author": "Atharva Wankhede (atharva-07)",
+  "license": "ISC",
+  "dependencies": {
+    "peer": "^1.0.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
