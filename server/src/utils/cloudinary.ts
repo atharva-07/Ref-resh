@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 
-import logger from "./winston";
+import logger from "./winston.js";
 
 export const CL_POST_FOLDER = "post-images";
 export const CL_PFP_FOLDER = "pfp-images";

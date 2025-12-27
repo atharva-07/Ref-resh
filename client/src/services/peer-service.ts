@@ -66,7 +66,7 @@ class PeerJSService {
       const myPeerId = store
         .getState()
         .call.activeCall?.participants.find(
-          (p) => p.user._id === userId
+          (p) => p.user._id === userId,
         )?.peerId;
 
       if (userId) {
@@ -74,13 +74,14 @@ class PeerJSService {
           host: import.meta.env.VITE_PEER_SERVER_HOST,
           port: import.meta.env.VITE_PEER_SERVER_PORT,
           path: import.meta.env.VITE_PEER_SERVER_PATH,
+          secure: true,
         });
         this.setupPeerListeners();
 
         mediaStreamStore.setStream(userId, this.localStream!);
 
         store.dispatch(
-          callActions.setStreamReady({ type: "local", ready: true })
+          callActions.setStreamReady({ type: "local", ready: true }),
         );
 
         callActions.callAccepted();
@@ -90,16 +91,16 @@ class PeerJSService {
     } catch (error) {
       console.error(
         "Failed to acquire local media or initialize PeerJS:",
-        error
+        error,
       );
       store.dispatch(
-        callActions.setError("Microphone/Camera access denied or failed.")
+        callActions.setError("Microphone/Camera access denied or failed."),
       );
       store.dispatch(
         callActions.callHangup({
           chatId: store.getState().call.activeCall?.chatId || "",
           userId,
-        })
+        }),
       );
     }
   }
@@ -158,7 +159,7 @@ class PeerJSService {
     this.localPeer.on("error", (err) => {
       console.error("PeerJS Error:", err);
       store.dispatch(
-        callActions.setError(`PeerJS Connection Error: ${err.type}`)
+        callActions.setError(`PeerJS Connection Error: ${err.type}`),
       );
     });
   }
@@ -170,7 +171,7 @@ class PeerJSService {
       mediaStreamStore.setStream(userId, remoteStream);
 
       store.dispatch(
-        callActions.setStreamReady({ type: "remote", ready: true })
+        callActions.setStreamReady({ type: "remote", ready: true }),
       );
 
       store.dispatch(callActions.callConnected());

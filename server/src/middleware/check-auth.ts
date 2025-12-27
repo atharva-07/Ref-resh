@@ -1,13 +1,13 @@
 import { NextFunction, Response } from "express";
 
-import { AuthUserInfo } from "../graphql/utility-types";
-import User from "../models/User";
-import { verifyJwt } from "../utils/jwt";
+import { AuthUserInfo } from "../graphql/utility-types.js";
+import User from "../models/User.js";
+import { verifyJwt } from "../utils/jwt.js";
 
 export const authMiddleware = async (
   req: AuthUserInfo,
   _: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const cookie = req.get("cookie") || "";
 

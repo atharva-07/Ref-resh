@@ -1,18 +1,18 @@
 // Query Imports
-import { authQueries } from "./auth";
+import { authQueries } from "./auth.js";
 // Mutation Imports
-import { authMutations } from "./auth";
-import { callMutations, callQueries } from "./calls";
-import { chatMutations, chatQueries } from "./chats";
-import { commentQueries } from "./comments";
-import { commentMutations } from "./comments";
-import { notificationQueries } from "./notifications";
-import { postQueries } from "./posts";
-import { postMutations } from "./posts";
-import { searchQueries } from "./search";
-import { storyMutations, storyQueries } from "./stories";
-import { userQueries } from "./users";
-import { userMutations } from "./users";
+import { authMutations } from "./auth.js";
+import { callMutations, callQueries } from "./calls.js";
+import { chatMutations, chatQueries } from "./chats.js";
+import { commentQueries } from "./comments.js";
+import { commentMutations } from "./comments.js";
+import { notificationQueries } from "./notifications.js";
+import { postQueries } from "./posts.js";
+import { postMutations } from "./posts.js";
+import { searchQueries } from "./search.js";
+import { storyMutations, storyQueries } from "./stories.js";
+import { userQueries } from "./users.js";
+import { userMutations } from "./users.js";
 
 export const resolvers = {
   Query: {

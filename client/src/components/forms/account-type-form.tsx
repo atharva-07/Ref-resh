@@ -35,7 +35,7 @@ const AccountTypeForm = ({
 
   const [toggleAccountType] = useMutation(TOGGLE_ACCOUNT_TYPE);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(_: z.infer<typeof formSchema>) {
     try {
       const { data } = await toggleAccountType();
 
@@ -49,7 +49,7 @@ const AccountTypeForm = ({
         `Could not make account ${isPrivateAccount ? "public" : "private"}.`,
         {
           description: "Please try again later.",
-        }
+        },
       );
     }
   }

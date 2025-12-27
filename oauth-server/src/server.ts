@@ -9,16 +9,26 @@ import express, {
   Response,
 } from "express";
 import session from "express-session";
+import helmet from "helmet";
 import http from "http";
 import mongoose, { Types } from "mongoose";
+import path from "path";
 
 // import { createClient } from "redis";
-import facebookRoutes from "./routes/facebook";
-import googleRoutes from "./routes/google";
-import { handleAccessTokenRefresh, verifyActiveSession } from "./utils/common";
-import logger from "./utils/winston";
+import facebookRoutes from "./routes/facebook.js";
+import googleRoutes from "./routes/google.js";
+import {
+  handleAccessTokenRefresh,
+  verifyActiveSession,
+} from "./utils/common.js";
+import logger from "./utils/winston.js";
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(
+    process.cwd(),
+    `.env.${process.env.NODE_ENV === "production" ? "prod" : "dev"}`,
+  ),
+});
 
 declare module "express-session" {
   interface SessionData {
@@ -43,10 +53,12 @@ const httpServer = http.createServer(app);
 // const redisClient = createClient();
 // await redisClient.connect();
 
+app.use(helmet());
+
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_APP_URI || "http://localhost:3000",
     credentials: true,
   }),
 );
@@ -57,7 +69,13 @@ app.use(
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    proxy: process.env.NODE_ENV === "production",
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 24,
+    },
   }),
 );
 
@@ -80,10 +98,10 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     logger.info("Connected to the database.");
-    httpServer.listen({ port: process.env.DEV_PORT || 8000 });
+    httpServer.listen({ port: process.env.PORT || 8000 });
   })
   .then(() => {
-    logger.info(`Server is up and running on port ${process.env.DEV_PORT}.`);
+    logger.info(`Server is up and running on port ${process.env.PORT}.`);
   })
   .catch((err) => {
     logger.error(`Error establishing the database connection. Error: ${err}`);

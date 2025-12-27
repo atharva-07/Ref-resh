@@ -5,27 +5,27 @@ import { Document, ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 
-import User, { AuthType, Gender, UserType } from "../../models/User";
-import { AppContext } from "../../server";
+import User, { AuthType, Gender, UserType } from "../../models/User.js";
+import { AppContext } from "../../server.js";
 import {
   accessTokenCookieOptions,
   refreshTokenCookieOptions,
-} from "../../utils/common";
+} from "../../utils/common.js";
 import {
   createAccessToken,
   createRefreshToken,
   signJwt,
   verifyJwt,
-} from "../../utils/jwt";
-import { sendEmail } from "../../utils/mail";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
+} from "../../utils/jwt.js";
+import { sendEmail } from "../../utils/mail.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
 
 export const authQueries = {
   credentialsLogin: async (_: any, { loginData }: any, ctx: AppContext) => {
     const errors: { message: string }[] = [];
-    if (!validator.isEmail(loginData.email))
+    if (!validator.default.isEmail(loginData.email))
       errors.push({ message: "Entered Email Address is invalid." });
     if (errors.length > 0)
       throw newGqlError(
@@ -90,7 +90,7 @@ export const authQueries = {
 
       let user: (Document & UserType) | null = null;
       if (email && !userId) {
-        if (!validator.isEmail(email))
+        if (!validator.default.isEmail(email))
           throw newGqlError("Entered Email Address is invalid.", 422);
 
         user = await User.findOne(
@@ -126,16 +126,16 @@ export const authQueries = {
             );
           }
           nonce = buffer.toString("hex");
-          user.passwordReset = {
+          user!.passwordReset = {
             token: nonce,
             expiresAt: new Date(Date.now() + 900000), // 15 minutes
           };
-          await user.save();
+          await user!.save();
 
           const token = signJwt(
             {
-              sub: user.id,
-              aud: user.userName,
+              sub: user!.id,
+              aud: user!.userName,
               jti: nonce,
               purpose: "password-reset",
             },
@@ -144,10 +144,10 @@ export const authQueries = {
             },
           );
 
-          const passwordResetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+          const passwordResetLink = `${process.env.CLIENT_APP_URI}/reset-password?token=${token}`;
 
           await sendEmail(
-            user.email,
+            user!.email,
             "Password Reset Request",
             `
             <h1>Password Reset Instructions</h1>
@@ -162,7 +162,7 @@ export const authQueries = {
         success: true,
         code: 200,
         message: user
-          ? `Password reset email sent to the user (${user.email}).`
+          ? `Password reset email sent to the user (${user!.email}).`
           : `Password reset email not sent as the user does not exist.`,
         data: true,
       };
@@ -208,36 +208,36 @@ export const authMutations = {
   signup: async (_: any, { signupData }: any) => {
     const errors: { message: string }[] = [];
     if (
-      validator.isEmpty(signupData.firstName) ||
-      validator.isEmpty(signupData.lastName) ||
-      validator.isEmpty(signupData.email) ||
-      validator.isEmpty(signupData.password) ||
-      validator.isEmpty(signupData.confirmPassword)
+      validator.default.isEmpty(signupData.firstName) ||
+      validator.default.isEmpty(signupData.lastName) ||
+      validator.default.isEmpty(signupData.email) ||
+      validator.default.isEmpty(signupData.password) ||
+      validator.default.isEmpty(signupData.confirmPassword)
     ) {
       errors.push({
         message: "First Name, Last Name, Email and Password cannot be empty.",
       });
     }
     if (
-      !validator.isAlpha(signupData.firstName) ||
-      !validator.isAlpha(signupData.lastName) ||
-      !validator.isLength(signupData.firstName, { max: 26 }) ||
-      !validator.isLength(signupData.lastName, { max: 26 })
+      !validator.default.isAlpha(signupData.firstName) ||
+      !validator.default.isAlpha(signupData.lastName) ||
+      !validator.default.isLength(signupData.firstName, { max: 26 }) ||
+      !validator.default.isLength(signupData.lastName, { max: 26 })
     ) {
       errors.push({
         message:
           "First Name and Last Name can only be alphabetical and maximum 26 characters long.",
       });
     }
-    if (!validator.isEmail(signupData.email)) {
+    if (!validator.default.isEmail(signupData.email)) {
       errors.push({ message: "Entered email is invalid." });
     }
     if (
-      !validator.matches(
+      !validator.default.matches(
         signupData.password,
         /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       ) ||
-      !validator.matches(
+      !validator.default.matches(
         signupData.confirmPassword,
         /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       )
@@ -258,7 +258,7 @@ export const authMutations = {
       });
     }
     if (
-      !validator.isDate(signupData.dob, {
+      !validator.default.isDate(signupData.dob, {
         format: "YYYY/MM/DD",
         strictMode: true,
       })
@@ -288,7 +288,7 @@ export const authMutations = {
           firstName: signupData.firstName,
           lastName: signupData.lastName,
           userName: uuidv4(),
-          email: validator.normalizeEmail(signupData.email, {
+          email: validator.default.normalizeEmail(signupData.email, {
             gmail_remove_dots: false,
           }) as string,
           password: hashedPassword,
@@ -329,8 +329,8 @@ export const authMutations = {
         data: user.id,
       };
 
-      ctx.res.clearCookie("accessToken");
-      ctx.res.clearCookie("refreshToken");
+      ctx.res.clearCookie("accessToken", accessTokenCookieOptions);
+      ctx.res.clearCookie("refreshToken", refreshTokenCookieOptions);
 
       logger.info(response.message);
 
@@ -342,19 +342,19 @@ export const authMutations = {
   changePassword: async (_: any, { passwordResetData }: any) => {
     const errors: { message: string }[] = [];
     if (
-      validator.isEmpty(passwordResetData.password) ||
-      validator.isEmpty(passwordResetData.confirmPassword)
+      validator.default.isEmpty(passwordResetData.password) ||
+      validator.default.isEmpty(passwordResetData.confirmPassword)
     ) {
       errors.push({
         message: "Password cannot be empty.",
       });
     }
     if (
-      !validator.matches(
+      !validator.default.matches(
         passwordResetData.password,
         /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       ) ||
-      !validator.matches(
+      !validator.default.matches(
         passwordResetData.confirmPassword,
         /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,20}$/gm,
       )

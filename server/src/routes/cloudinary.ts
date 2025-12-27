@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { GraphQLError } from "graphql";
 
-import imageUploadMiddleware from "../middleware/image-upload";
+import imageUploadMiddleware from "../middleware/image-upload.js";
 import {
   CL_BANNER_FOLDER,
   CL_PFP_FOLDER,
@@ -9,8 +9,8 @@ import {
   CL_STORY_FOLDER,
   uploadMultipleFiles,
   uploadSingleFile,
-} from "../utils/cloudinary";
-import logger from "../utils/winston";
+} from "../utils/cloudinary.js";
+import logger from "../utils/winston.js";
 
 const router = Router();
 

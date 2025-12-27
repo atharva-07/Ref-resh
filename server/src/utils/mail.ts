@@ -1,7 +1,7 @@
 import { createTransport } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
-import logger from "./winston";
+import logger from "./winston.js";
 
 export const transport = createTransport({
   host: process.env.SMTP_SERVER_URI,

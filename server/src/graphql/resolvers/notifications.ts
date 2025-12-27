@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 import { FilterQuery } from "mongoose";
 
-import Notification, { NotificationType } from "../../models/Notification";
-import User from "../../models/User";
-import { AppContext } from "../../server";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
-import { PageInfo } from "./posts";
+import Notification, { NotificationType } from "../../models/Notification.js";
+import User from "../../models/User.js";
+import { AppContext } from "../../server.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
+import { PageInfo } from "./posts.js";
 
 interface NotificationEdge {
   node: NotificationType;

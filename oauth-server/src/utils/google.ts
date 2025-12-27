@@ -1,7 +1,7 @@
 import axios from "axios";
 import qs from "querystring";
 
-import logger from "./winston";
+import logger from "./winston.js";
 
 export interface GoogleTokenResponse {
   access_token: string;

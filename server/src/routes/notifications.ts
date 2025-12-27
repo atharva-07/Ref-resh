@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response, Router } from "express";
 
-import { checkAuthorization } from "../graphql/utility-functions";
-import { sseClients } from "../server";
-import logger from "../utils/winston";
+import { checkAuthorization } from "../graphql/utility-functions.js";
+import { sseClients } from "../server.js";
+import logger from "../utils/winston.js";
 
 const router = Router();
 

@@ -2,24 +2,24 @@ import { Document } from "mongodb";
 import { Types } from "mongoose";
 import validator from "validator";
 
-import Comment, { CommentType } from "../../models/Comment";
+import Comment, { CommentType } from "../../models/Comment.js";
 import Notification, {
   NotificationEvents,
   NotificationType,
-} from "../../models/Notification";
-import Post from "../../models/Post";
-import User from "../../models/User";
-import { AppContext, sseClients } from "../../server";
-import { sendNotification } from "../../utils/sse";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
+} from "../../models/Notification.js";
+import Post from "../../models/Post.js";
+import User from "../../models/User.js";
+import { AppContext, sseClients } from "../../server.js";
+import { sendNotification } from "../../utils/sse.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
 import {
   BasicUserData,
   BasicUserDataEdge,
   PageInfo,
   PaginatedBasicUserData,
-} from "./posts";
+} from "./posts.js";
 
 interface CommentEdge {
   node: CommentType;
@@ -387,7 +387,7 @@ export const commentMutations = {
     ctx: AppContext,
   ) => {
     checkAuthorization(ctx.loggedInUserId);
-    if (validator.isEmpty(content))
+    if (validator.default.isEmpty(content))
       throw newGqlError("Comment body cannot be empty.", 422);
     try {
       const post = await Post.findOne({ _id: postId });
@@ -477,7 +477,7 @@ export const commentMutations = {
   },
   editComment: async (_: any, { content, commentId }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
-    if (validator.isEmpty(content))
+    if (validator.default.isEmpty(content))
       throw newGqlError("Comment body cannot be empty.", 422);
     try {
       const editableComment = await Comment.findById(commentId);

@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 import { Document, FilterQuery, PipelineStage } from "mongoose";
 
-import Call, { CallType } from "../../models/Call";
-import Chat from "../../models/Chat";
-import { AppContext } from "../../server";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
-import { PageInfo } from "./posts";
+import Call, { CallType } from "../../models/Call.js";
+import Chat from "../../models/Chat.js";
+import { AppContext } from "../../server.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
+import { PageInfo } from "./posts.js";
 
 interface CallEdge {
   node: CallType;

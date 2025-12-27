@@ -5,21 +5,21 @@ import validator from "validator";
 import Notification, {
   NotificationEvents,
   NotificationType,
-} from "../../models/Notification";
-import User, { Gender } from "../../models/User";
-import { AppContext, sseClients } from "../../server";
-import { accessTokenCookieOptions } from "../../utils/common";
-import { createAccessToken } from "../../utils/jwt";
-import { sendNotification } from "../../utils/sse";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
+} from "../../models/Notification.js";
+import User, { Gender } from "../../models/User.js";
+import { AppContext, sseClients } from "../../server.js";
+import { accessTokenCookieOptions } from "../../utils/common.js";
+import { createAccessToken } from "../../utils/jwt.js";
+import { sendNotification } from "../../utils/sse.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
 import {
   BasicUserData,
   BasicUserDataEdge,
   PageInfo,
   PaginatedBasicUserData,
-} from "./posts";
+} from "./posts.js";
 
 enum FollowRequestStatus {
   FOLLOWED = "FOLLOWED",
@@ -695,7 +695,7 @@ export const userMutations = {
 
       if (
         userInfoData.dob &&
-        !validator.isDate(userInfoData.dob, {
+        !validator.default.isDate(userInfoData.dob, {
           format: "YYYY/MM/DD",
           strictMode: true,
         })

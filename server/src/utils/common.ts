@@ -1,16 +1,17 @@
 import { CookieOptions } from "express";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export const accessTokenCookieOptions: CookieOptions = {
   maxAge: 900000, // 15 mins
-  httpOnly: true,
-  domain: "localhost",
   path: "/",
-  sameSite: "lax",
-  secure: false,
+  httpOnly: true,
+  secure: isProd ? true : false,
+  sameSite: isProd ? "none" : "lax",
+  domain: isProd ? `.${process.env.DOMAIN_NAME}` : "localhost",
 };
 
 export const refreshTokenCookieOptions: CookieOptions = {
   ...accessTokenCookieOptions,
-  // httpOnly: false, // TODO: FIXME (Should be HttpOnly)
   maxAge: 6.048e8, // 7 days,
 };

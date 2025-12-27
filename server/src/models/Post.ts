@@ -1,6 +1,6 @@
 import { model, Schema, Types } from "mongoose";
 
-import Comment from "./Comment";
+import Comment from "./Comment.js";
 
 export interface PostType {
   content: string;
@@ -42,7 +42,7 @@ const postSchema: Schema = new Schema<PostType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 postSchema.pre(
@@ -56,7 +56,7 @@ postSchema.pre(
     } catch (error) {
       next(error as Error);
     }
-  }
+  },
 );
 
 postSchema.pre("findOneAndDelete", async function (next) {

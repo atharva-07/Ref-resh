@@ -1,12 +1,12 @@
 import { Document, ObjectId } from "mongodb";
 import { Types } from "mongoose";
 
-import Chat, { ChatType } from "../../models/Chat";
-import Message, { MessageType } from "../../models/Message";
-import { AppContext } from "../../server";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
+import Chat, { ChatType } from "../../models/Chat.js";
+import Message, { MessageType } from "../../models/Message.js";
+import { AppContext } from "../../server.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
 
 interface MessageEdge {
   node: MessageType;

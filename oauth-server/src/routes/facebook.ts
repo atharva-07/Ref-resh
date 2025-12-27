@@ -2,14 +2,14 @@ import { NextFunction, Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
-import User, { AuthType } from "../models/User";
-import { handleTokenCreationAndRedirection } from "../utils/common";
+import User, { AuthType } from "../models/User.js";
+import { handleTokenCreationAndRedirection } from "../utils/common.js";
 import {
   FacebookUserResult,
   getFacebookIdAndAccessToken,
   getFacebookOAuthUriWithOptions,
-} from "../utils/facebook";
-import logger from "../utils/winston";
+} from "../utils/facebook.js";
+import logger from "../utils/winston.js";
 
 const router = Router();
 

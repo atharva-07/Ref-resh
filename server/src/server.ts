@@ -9,16 +9,22 @@ import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
 import * as dotenv from "dotenv";
 import express, { Response } from "express";
+import helmet from "helmet";
 import http from "http";
 import mongoose, { Types } from "mongoose";
+import path from "path";
 
-import { resolvers, typeDefs } from "./graphql/schema";
-import { HttpResponse } from "./graphql/utility-types";
-import { authMiddleware } from "./middleware/check-auth";
-import cloudinaryRoutes from "./routes/cloudinary";
-import notificationRoutes from "./routes/notifications";
-import { sendHeartbeat, SSE_PING_INTERVAL, SseClientsMap } from "./utils/sse";
-import logger from "./utils/winston";
+import { resolvers, typeDefs } from "./graphql/schema.js";
+import { HttpResponse } from "./graphql/utility-types.js";
+import { authMiddleware } from "./middleware/check-auth.js";
+import cloudinaryRoutes from "./routes/cloudinary.js";
+import notificationRoutes from "./routes/notifications.js";
+import {
+  sendHeartbeat,
+  SSE_PING_INTERVAL,
+  SseClientsMap,
+} from "./utils/sse.js";
+import logger from "./utils/winston.js";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -38,7 +44,12 @@ export interface AppContext {
   userSetupComplete: boolean;
 }
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(
+    process.cwd(),
+    `.env.${process.env.NODE_ENV === "production" ? "prod" : "dev"}`,
+  ),
+});
 
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_CLUSTER_URI}/${process.env.MONGODB_DBNAME}?retryWrites=true`;
 
@@ -102,9 +113,11 @@ await server.start();
 
 export const sseClients: SseClientsMap = new Map();
 
+app.use(helmet());
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_APP_URI || "http://localhost:3000",
     credentials: true,
   }),
 );
@@ -116,7 +129,7 @@ app.use(notificationRoutes);
 app.use(
   "/api",
   cors<cors.CorsRequest>({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_APP_URI || "http://localhost:3000",
     credentials: true,
   }),
   bodyParser.json(),
@@ -144,10 +157,10 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     logger.info("Connected to the database.");
-    httpServer.listen({ port: process.env.DEV_PORT || 4000 });
+    httpServer.listen({ port: process.env.PORT || 4000 });
   })
   .then(() => {
-    logger.info(`Server is up and running on port ${process.env.DEV_PORT}.`);
+    logger.info(`Server is up and running on port ${process.env.PORT}.`);
   })
   .catch((err) => {
     logger.error("Error establishing the connection.", err);

@@ -1,13 +1,13 @@
 import { Document, ObjectId } from "mongodb";
 import validator from "validator";
 
-import Story, { StoryType } from "../../models/Story";
-import User from "../../models/User";
-import { AppContext } from "../../server";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
-import { PageInfo } from "./posts";
+import Story, { StoryType } from "../../models/Story.js";
+import User from "../../models/User.js";
+import { AppContext } from "../../server.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
+import { PageInfo } from "./posts.js";
 
 const storyProjectionPaths: { [key: string]: 1 } = {};
 Object.keys(Story.schema.paths).forEach((path) => {
@@ -328,8 +328,8 @@ export const storyMutations = {
   createStory: async (_: any, { storyData }: any, ctx: AppContext) => {
     checkAuthorization(ctx.loggedInUserId);
     if (
-      validator.isEmpty(storyData.caption) &&
-      validator.isEmpty(storyData.image)
+      validator.default.isEmpty(storyData.caption) &&
+      validator.default.isEmpty(storyData.image)
     )
       throw newGqlError("Both caption and image cannot be empty.", 422);
     try {

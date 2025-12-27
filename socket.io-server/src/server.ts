@@ -1,16 +1,18 @@
 import "socket.io";
 
 import cookie from "cookie";
+import cors from "cors";
 import * as dotenv from "dotenv";
 import express from "express";
 import { readFileSync } from "fs";
+import helmet from "helmet";
 import http from "http";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import path from "path";
 import { Server } from "socket.io";
 
-import { SocketMessage, User } from "./types";
-import logger from "./utils/winston";
+import { SocketMessage, User } from "./types.js";
+import logger from "./utils/winston.js";
 
 declare module "socket.io" {
   interface Socket {
@@ -18,12 +20,22 @@ declare module "socket.io" {
   }
 }
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(
+    process.cwd(),
+    `.env.${process.env.NODE_ENV === "production" ? "prod" : "dev"}`,
+  ),
+});
 
 const app = express();
 const httpServer = http.createServer(app);
 
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_APP_URI || "http://localhost:3000",
+    credentials: true,
+  },
+});
 
 const activeUsers = new Map<string, string>();
 
@@ -35,13 +47,28 @@ const activeCalls = new Map<
   }
 >();
 
-const publicKey: string = readFileSync(
-  path.join(path.resolve(), "public.key"),
-  "utf-8",
-);
+let publicKey: string;
+if (process.env.NODE_ENV === "production") {
+  publicKey = process.env.PUBLIC_KEY || "";
+
+  if (!publicKey) {
+    throw new Error("ERROR: PUBLIC_KEY is not defined in the environment.");
+  }
+} else {
+  publicKey = readFileSync(path.join(path.resolve(), "public.key"), "utf-8");
+}
 
 const MAX_CALL_PARTICIPANTS = 4;
 const WARNING_BUFFER = 60 * 1000;
+
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_APP_URI || "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 io.use((socket, next) => {
   const req = socket.request;
@@ -308,6 +335,6 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen({ port: process.env.DEV_PORT || 7000 }, () => {
-  logger.info(`Server is up and running on port ${process.env.DEV_PORT}.`);
+httpServer.listen({ port: process.env.PORT || 7000 }, () => {
+  logger.info(`Server is up and running on port ${process.env.PORT}.`);
 });

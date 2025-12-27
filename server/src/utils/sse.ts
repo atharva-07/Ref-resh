@@ -1,8 +1,8 @@
 import { Response } from "express";
 
-import { BasicUserData } from "../graphql/resolvers/posts";
-import { NotificationEvents } from "../models/Notification";
-import logger from "./winston";
+import { BasicUserData } from "../graphql/resolvers/posts.js";
+import { NotificationEvents } from "../models/Notification.js";
+import logger from "./winston.js";
 
 export const SSE_PING_INTERVAL = 30_000;
 

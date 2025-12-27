@@ -146,7 +146,7 @@ const resetUnreadCount: CaseReducer<
 
 const joinChatRooms: CaseReducer<ChatState, PayloadAction<Chat[]>> = (
   state,
-  action
+  action,
 ) => {
   const chats = action.payload;
   chats.forEach((chat) => {
@@ -218,14 +218,14 @@ const addNewChat: CaseReducer<
 
 const setActiveUsers: CaseReducer<ChatState, PayloadAction<string[]>> = (
   state,
-  action
+  action,
 ) => {
   state.activeUsers = action.payload;
 };
 
 const setError: CaseReducer<ChatState, PayloadAction<string | null>> = (
   state,
-  action
+  action,
 ) => {
   state.error = action.payload;
 };
@@ -240,7 +240,7 @@ export const getAllUsersLastSeenInChat = createSelector(
       return { ...member.lastSeen, user: { ...member } };
     });
     return usersLastSeen;
-  }
+  },
 );
 
 export const getUsersLastSeenInChat = createSelector(
@@ -252,7 +252,7 @@ export const getUsersLastSeenInChat = createSelector(
     const chatData = chats.find((c) => c.chatId === chatId);
     const user = chatData?.chatMembers?.find((member) => member._id === userId);
     return user?.lastSeen || null;
-  }
+  },
 );
 
 export const chatSlice = createAppSlice({
@@ -271,7 +271,7 @@ export const chatSlice = createAppSlice({
     setError,
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchUserConversations.fulfilled, (state, action) => {});
+    builder.addCase(fetchUserConversations.fulfilled, (_, __) => {});
     // TODO: Handle other async thunk states (pending, rejected) if needed
   },
   selectors: {
@@ -331,5 +331,5 @@ export const fetchUserConversations = createAsyncThunk(
       console.error("Error fetching user conversations through Thunk: ", error);
       return rejectWithValue("Failed to fetch conversations.");
     }
-  }
+  },
 );

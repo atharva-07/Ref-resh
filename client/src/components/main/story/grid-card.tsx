@@ -17,7 +17,7 @@ interface StoryThumbnailProps {
   className?: string;
 }
 
-const GridCard = ({ story, className }: StoryThumbnailProps) => {
+const GridCard = ({ story }: StoryThumbnailProps) => {
   const isTextOnly = !story.image && story.caption;
 
   return (

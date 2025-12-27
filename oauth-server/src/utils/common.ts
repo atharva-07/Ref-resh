@@ -1,17 +1,19 @@
 import { CookieOptions, NextFunction, Request, Response } from "express";
 import { HydratedDocument } from "mongoose";
 
-import User, { UserType } from "../models/User";
-import { createAccessToken, createRefreshToken, verifyJwt } from "./jwt";
-import logger from "./winston";
+import User, { UserType } from "../models/User.js";
+import { createAccessToken, createRefreshToken, verifyJwt } from "./jwt.js";
+import logger from "./winston.js";
+
+const isProd = process.env.NODE_ENV === "production";
 
 const accessTokenCookieOptions: CookieOptions = {
   maxAge: 900000, // 15 mins
-  httpOnly: true,
-  domain: "localhost",
   path: "/",
-  sameSite: "lax",
-  secure: false,
+  httpOnly: true,
+  secure: isProd ? true : false,
+  sameSite: isProd ? "none" : "lax",
+  domain: isProd ? `.${process.env.DOMAIN_NAME}` : "localhost",
 };
 
 const refreshTokenCookieOptions: CookieOptions = {

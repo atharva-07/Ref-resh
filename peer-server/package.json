@@ -4,7 +4,7 @@
   "description": "Ref-resh Peer Server",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "peerjs --port $PORT --key peerjs --path /ref-resh --allow-discovery --proxied --expire-timeout 5000",
+    "start": "peerjs --port $PORT --key peerjs --path /ref-resh --allow-discovery",
     "dev": "peerjs --port 9000 --key peerjs --path /ref-resh"
   },
   "author": "Atharva Wankhede (atharva-07)",

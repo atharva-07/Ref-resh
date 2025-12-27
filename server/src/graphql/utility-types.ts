@@ -2,7 +2,7 @@ import { Request } from "express";
 import { GraphQLResolveInfo } from "graphql";
 import { HydratedDocument, Types } from "mongoose";
 
-import { AppContext } from "../server";
+import { AppContext } from "../server.js";
 
 export interface HttpResponse {
   success: boolean;
@@ -26,6 +26,6 @@ export interface ResolverFn<Parent, Args, ReturnType> {
     parent: Parent,
     args: Args,
     contextValue: AppContext | null,
-    info: GraphQLResolveInfo
+    info: GraphQLResolveInfo,
   ): Promise<HydratedDocument<ReturnType>>;
 }

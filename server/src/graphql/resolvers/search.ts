@@ -1,10 +1,10 @@
-import Comment from "../../models/Comment";
-import Post from "../../models/Post";
-import User from "../../models/User";
-import { AppContext } from "../../server";
-import logger from "../../utils/winston";
-import { checkAuthorization, newGqlError } from "../utility-functions";
-import { HttpResponse } from "../utility-types";
+import Comment from "../../models/Comment.js";
+import Post from "../../models/Post.js";
+import User from "../../models/User.js";
+import { AppContext } from "../../server.js";
+import logger from "../../utils/winston.js";
+import { checkAuthorization, newGqlError } from "../utility-functions.js";
+import { HttpResponse } from "../utility-types.js";
 
 export const searchQueries = {
   searchLikesOnPost: async (

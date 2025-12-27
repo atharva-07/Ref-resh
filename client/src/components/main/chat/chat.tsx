@@ -115,7 +115,7 @@ export const Chat = ({ chatId }: ChatProps) => {
           allMessages.map((message: any) => {
             const timestamps = transformTimestamps(
               message.createdAt,
-              message.updatedAt
+              message.updatedAt,
             );
             const date = timestamps.createdAt;
             const formattedDate = formatDateForChat(date);
@@ -127,8 +127,8 @@ export const Chat = ({ chatId }: ChatProps) => {
             }
 
             const usersWhoLastSawThisMessage = Object.entries(
-              usersLastSeen || {}
-            ).reduce<BasicUserData[]>((acc, [userId, seenData]) => {
+              usersLastSeen || {},
+            ).reduce<BasicUserData[]>((acc, [_, seenData]) => {
               if (
                 seenData.messageId === message._id &&
                 seenData.user._id !== user?.userId

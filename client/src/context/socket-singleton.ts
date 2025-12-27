@@ -73,7 +73,7 @@ export const initializeSocket = (socketUrl: string): ClientSocket => {
   if (!socket) {
     socket = io(socketUrl, {
       autoConnect: false,
-      transports: ["websocket"],
+      transports: ["polling", "websocket"],
       withCredentials: true,
     });
     // socket.connect();
